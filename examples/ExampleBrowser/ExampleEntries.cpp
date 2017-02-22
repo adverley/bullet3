@@ -76,6 +76,7 @@
 #include "../ExtendedTutorials/NewtonsRopeCradle.h"
 #include "../ExtendedTutorials/MultiPendulum.h"
 #include "../Evolution/NN3DWalkers.h"
+#include "../ExtendedTutorials/SimpleGraspOfSoftCloth.h"
 
 struct ExampleEntry
 {
@@ -313,6 +314,7 @@ static ExampleEntry gDefaultExamples[]=
 	ExampleEntry(1,"Multiple Boxes", "Add multiple box rigid bodies that fall under gravity", ET_MultipleBoxesCreateFunc),
 	ExampleEntry(1,"Simple Joint", "Create a single distance constraint between two box rigid bodies", ET_SimpleJointCreateFunc),
 	ExampleEntry(1,"Simple Cloth", "Create a simple piece of cloth", ET_SimpleClothCreateFunc),
+	ExampleEntry(1,"Simple Cloth Grasp", "Grasp a simple piece of cloth", ET_SimpleGraspOfSoftClothCreateFunc),
 	ExampleEntry(1,"Simple Chain", "Create a simple chain using a pair of point2point/distance constraints. You may click and drag any box to see the chain respond.", ET_ChainCreateFunc),
 	ExampleEntry(1,"Simple Bridge", "Create a simple bridge using a pair of point2point/distance constraints. You may click and drag any plank to see the bridge respond.", ET_BridgeCreateFunc),
 	ExampleEntry(1,"Inclined Plane", "Create an inclined plane to show restitution and different types of friction. Use the sliders to vary restitution and friction and press space to reset the scene.", ET_InclinedPlaneCreateFunc),

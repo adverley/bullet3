@@ -147,6 +147,8 @@ SET(ExtendedTutorialsSources
 	../ExtendedTutorials/MultipleBoxes.h
 	../ExtendedTutorials/SimpleCloth.cpp
 	../ExtendedTutorials/SimpleCloth.h
+	../ExtendedTutorials/SimpleGraspOfSoftCloth.cpp
+	../ExtendedTutorials/SimpleGraspOfSoftCloth.h
 	../ExtendedTutorials/SimpleJoint.cpp
 	../ExtendedTutorials/SimpleJoint.h
 	../ExtendedTutorials/NewtonsCradle.cpp
@@ -155,7 +157,7 @@ SET(ExtendedTutorialsSources
 	../ExtendedTutorials/InclinedPlane.h
 	../ExtendedTutorials/MultiPendulum.cpp
 	../ExtendedTutorials/MultiPendulum.h
-)
+		../ExtendedTutorials/SimpleGraspOfSoftCloth.cpp ../ExtendedTutorials/SimpleGraspOfSoftCloth.h)
 
 SET(BulletExampleBrowser_SRCS
 
