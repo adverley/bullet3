@@ -3,6 +3,7 @@
 //
 
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
+#include <BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h>
 #include "SimpleGraspOfSoftCloth.h"
 #include "../CommonInterfaces/CommonExampleInterface.h"
 #include "../CommonInterfaces/CommonRigidBodyBase.h"
@@ -17,6 +18,7 @@ struct SimpleGraspOfSoftCloth : public CommonRigidBodyBase {
     b3RobotSimAPI m_robotSim;
     int m_options;
     int m_gripperIndex;
+    btSoftBodyWorldInfo softBodyWorldInfo;
 
     SimpleGraspOfSoftCloth(struct GUIHelperInterface *helper, int options = 0) : CommonRigidBodyBase(helper) {
         m_options = options;
@@ -57,9 +59,12 @@ struct SimpleGraspOfSoftCloth : public CommonRigidBodyBase {
 
     void addJointBetweenFingerAndMotor();
 
+    virtual btSoftRigidDynamicsWorld *getSoftDynamicsWorld() {
+        ///just make it a btSoftRigidDynamicsWorld please
+        return (btSoftRigidDynamicsWorld *) m_dynamicsWorld;
+    }
 
-
-    void doMotorControl() ;
+    void doMotorControl();
 };
 
 void SimpleGraspOfSoftCloth::initPhysics() {
@@ -75,8 +80,35 @@ void SimpleGraspOfSoftCloth::initPhysics() {
 }
 
 void SimpleGraspOfSoftCloth::createWorld() {
-    m_guiHelper->setUpAxis(2);
-    createEmptyDynamicsWorld();
+    m_guiHelper->setUpAxis(1);
+
+///    setupCollisionDetection
+    /* 3D collision detection can become very complex, especially when using specialized algorithms.
+     * That is why we work in two phases:
+     *  1. Find collision of objects which are close to each other -> broad phase
+     *  2. Use a more accurate collision algorithm for those objects close to each other -> collision dispatcher
+     *  */
+
+    /* The collision configuration specifies how memory will be allocated and managed for collision detection */
+    m_collisionConfiguration = new btSoftBodyRigidBodyCollisionConfiguration();
+    /*  the dispatcher calculates collision of objects close to each other accurately */
+    m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
+    /* The broadphase checks which objects collides and which don't for a quick raw view of colliding objects */
+    m_broadphase = new btDbvtBroadphase();
+
+    /* The constraint solver will attach objects to each other */
+    m_solver = new btSequentialImpulseConstraintSolver;
+
+    /* Throw all the ingredients for collision detection in soft body world together */
+    m_dynamicsWorld = new btSoftRigidDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration);
+    m_dynamicsWorld->setGravity(btVector3(0, -10, 0));
+
+    /* Hold some bookkeeping about the soft body world */
+    softBodyWorldInfo.m_broadphase = m_broadphase;
+    softBodyWorldInfo.m_dispatcher = m_dispatcher;
+    softBodyWorldInfo.m_gravity = m_dynamicsWorld->getGravity();
+    softBodyWorldInfo.m_sparsesdf.Initialize();
+
     m_guiHelper->createPhysicsDebugDrawer(m_dynamicsWorld);
 
     if (m_dynamicsWorld->getDebugDrawer())
