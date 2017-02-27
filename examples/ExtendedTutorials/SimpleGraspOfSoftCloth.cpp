@@ -13,27 +13,51 @@
 static btScalar sGripperVerticalVelocity = 0.f;
 static btScalar sGripperClosingTargetVelocity = -0.7f;
 
-struct SimpleGraspOfSoftCloth : public CommonRigidBodyBase {
+struct SimpleGraspOfSoftCloth : public CommonExampleInterface {
     CommonGraphicsApp *m_app;
+    GUIHelperInterface *m_guiHelper;
+    btDiscreteDynamicsWorld *m_dynamicsWorld;
+    btAlignedObjectArray<btCollisionShape *> m_collisionShapes;
+    btBroadphaseInterface *m_broadphase;
+    btCollisionDispatcher *m_dispatcher;
+    btConstraintSolver *m_solver;
+    btDefaultCollisionConfiguration *m_collisionConfiguration;
+
     b3RobotSimAPI m_robotSim;
     int m_options;
     int m_gripperIndex;
     btSoftBodyWorldInfo softBodyWorldInfo;
 
-    SimpleGraspOfSoftCloth(struct GUIHelperInterface *helper, int options = 0) : CommonRigidBodyBase(helper) {
-        m_options = options;
+    SimpleGraspOfSoftCloth(struct GUIHelperInterface *helper, int options = 0)  {
         m_gripperIndex = -1;
+        m_app = helper->getAppInterface();
+        m_guiHelper = helper;
+        m_options = options;
     }
 
     virtual ~SimpleGraspOfSoftCloth() {
-//        m_app->m_renderer->enableBlend(false);
+        m_app->m_renderer->enableBlend(false);
+    }
+
+    virtual void physicsDebugDraw(int debugFlags) {
+
+    }
+
+    virtual bool mouseMoveCallback(float x, float y) {
+        return false;
+    }
+
+    virtual bool mouseButtonCallback(int button, int state, float x, float y) {
+        return false;
+    }
+
+    virtual bool keyboardCallback(int key, int state) {
+        return false;
     }
 
     virtual void initPhysics();
 
     virtual void exitPhysics();
-
-    virtual void stepSimulation(float deltaTime);
 
     virtual void renderScene();
 
@@ -42,7 +66,12 @@ struct SimpleGraspOfSoftCloth : public CommonRigidBodyBase {
         float pitch = 52;
         float yaw = 35;
         float targetPos[3] = {0, 0, 0};
-        m_guiHelper->resetCamera(dist, pitch, yaw, targetPos[0], targetPos[1], targetPos[2]);
+        if (m_app->m_renderer && m_app->m_renderer->getActiveCamera()) {
+            m_app->m_renderer->getActiveCamera()->setCameraDistance(dist);
+            m_app->m_renderer->getActiveCamera()->setCameraPitch(pitch);
+            m_app->m_renderer->getActiveCamera()->setCameraYaw(yaw);
+            m_app->m_renderer->getActiveCamera()->setCameraTargetPosition(targetPos[0], targetPos[1], targetPos[2]);
+        }
     }
 
     void createGround();
@@ -65,7 +94,13 @@ struct SimpleGraspOfSoftCloth : public CommonRigidBodyBase {
     }
 
     void doMotorControl();
+
+    virtual void stepSimulation(float deltaTime);
+
+    btRigidBody *createRigidBody(btScalar mass, btTransform transform, btBoxShape *pShape);
 };
+
+
 
 void SimpleGraspOfSoftCloth::initPhysics() {
     bool connected = m_robotSim.connect(m_guiHelper);
@@ -80,7 +115,7 @@ void SimpleGraspOfSoftCloth::initPhysics() {
 }
 
 void SimpleGraspOfSoftCloth::createWorld() {
-    m_guiHelper->setUpAxis(1);
+    m_guiHelper->setUpAxis(2);
 
 ///    setupCollisionDetection
     /* 3D collision detection can become very complex, especially when using specialized algorithms.
@@ -119,22 +154,31 @@ void SimpleGraspOfSoftCloth::createWorld() {
 
 
 void SimpleGraspOfSoftCloth::createGround() {
-    btBoxShape *groundShape = createBoxShape(btVector3(btScalar(50.), btScalar(50.), btScalar(50.)));
-    m_collisionShapes.push_back(groundShape);
+    /* btBoxShape *groundShape = createBoxShape(btVector3(btScalar(50.), btScalar(50.), btScalar(50.)));
+     m_collisionShapes.push_back(groundShape);
 
-    btTransform groundTransform;
-    groundTransform.setIdentity();
-    groundTransform.setOrigin(btVector3(0, -50, 0));
+     btTransform groundTransform;
+     groundTransform.setIdentity();
+     groundTransform.setOrigin(btVector3(0, -50, 0));
+
+     {
+         btScalar mass(0.);
+         createRigidBody(mass, groundTransform, groundShape, btVector4(0, 0, 1, 1));
+     }*/
 
     {
-        btScalar mass(0.);
-        createRigidBody(mass, groundTransform, groundShape, btVector4(0, 0, 1, 1));
+        b3RobotSimLoadFileArgs args("");
+        args.m_fileName = "plane.urdf";
+        args.m_startPosition.setValue(0, 0, 0);
+        args.m_forceOverrideFixedBase = true;
+        b3RobotSimLoadFileResults results;
+        m_robotSim.loadFile(args, results);
+        m_robotSim.setGravity(b3MakeVector3(0, 0, -10));
     }
-
 }
 
 void SimpleGraspOfSoftCloth::createObstructingBox() {
-    btBoxShape *colShape = createBoxShape(btVector3(.1, .1, .1));
+    btBoxShape *colShape = new btBoxShape(btVector3(.1, .1, .1));
     m_collisionShapes.push_back(colShape);
 
     btTransform startTransform;
@@ -160,7 +204,7 @@ void SimpleGraspOfSoftCloth::createGripper() {
         args.m_fileType = B3_SDF_FILE;
         args.m_useMultiBody = true;
         args.m_startPosition.setValue(0, 0, 0);
-        args.m_startOrientation.setEulerZYX(SIMD_PI, SIMD_HALF_PI, 0);
+        args.m_startOrientation.setEulerZYX(SIMD_PI, 0, 0);
         b3RobotSimLoadFileResults results;
 
         if (m_robotSim.loadFile(args, results) && results.m_uniqueObjectIds.size() == 1) {
@@ -229,9 +273,9 @@ void SimpleGraspOfSoftCloth::addJointBetweenFingerAndMotor() {
     revoluteJoint2.m_jointAxis[2] = 0.0;
     revoluteJoint2.m_jointType = ePoint2PointType;
 
-    int bodyIndex = 0;
+    int bodyIndex = 1;
     int motor_left_hinge_joint = 2;
-    int motor_right_hinge_joint = 2;
+    int motor_right_hinge_joint = 3;
     int gripper_left_hinge_joint = 4;
     int gripper_right_hinge_joint = 6;
     m_robotSim.createJoint(bodyIndex, motor_left_hinge_joint, bodyIndex, gripper_left_hinge_joint, &revoluteJoint1);
@@ -260,7 +304,10 @@ void SimpleGraspOfSoftCloth::createCloth() {
 }
 
 void SimpleGraspOfSoftCloth::renderScene() {
-    CommonRigidBodyBase::renderScene();
+    m_guiHelper->syncPhysicsToGraphics(m_dynamicsWorld);
+    m_guiHelper->render(m_dynamicsWorld);
+
+    m_robotSim.renderScene();
 }
 
 void SimpleGraspOfSoftCloth::exitPhysics() {
@@ -269,10 +316,7 @@ void SimpleGraspOfSoftCloth::exitPhysics() {
 
 void SimpleGraspOfSoftCloth::stepSimulation(float deltaTime) {
     doMotorControl();
-
     m_robotSim.stepSimulation();
-//    CommonRigidBodyBase::stepSimulation(deltaTime);
-
 }
 
 void SimpleGraspOfSoftCloth::doMotorControl() {
@@ -288,6 +332,37 @@ void SimpleGraspOfSoftCloth::doMotorControl() {
     }
 }
 
-CommonExampleInterface *ET_SimpleGraspOfSoftClothCreateFunc(CommonExampleOptions &options) {
-    return new SimpleGraspOfSoftCloth(options.m_guiHelper);
+btRigidBody *SimpleGraspOfSoftCloth::createRigidBody(btScalar mass, btTransform transform, btBoxShape *pShape) {
+    btAssert((!pShape || pShape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
+
+    //rigidbody is dynamic if and only if mass is non zero, otherwise static
+    bool isDynamic = (mass != 0.f);
+
+    btVector3 localInertia(0, 0, 0);
+    if (isDynamic)
+        pShape->calculateLocalInertia(mass, localInertia);
+
+    //using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
+
+#define USE_MOTIONSTATE 1
+#ifdef USE_MOTIONSTATE
+    btDefaultMotionState *myMotionState = new btDefaultMotionState(transform);
+
+    btRigidBody::btRigidBodyConstructionInfo cInfo(mass, myMotionState, pShape, localInertia);
+
+    btRigidBody *body = new btRigidBody(cInfo);
+    //body->setContactProcessingThreshold(m_defaultContactProcessingThreshold);
+
+#else
+    btRigidBody* body = new btRigidBody(mass, 0, shape, localInertia);
+        body->setWorldTransform(startTransform);
+#endif//
+
+    body->setUserIndex(-1);
+    m_dynamicsWorld->addRigidBody(body);
+    return body;
+}
+
+class CommonExampleInterface *ET_SimpleGraspOfSoftClothCreateFunc(CommonExampleOptions &options) {
+    return new SimpleGraspOfSoftCloth(options.m_guiHelper, options.m_option);
 }
