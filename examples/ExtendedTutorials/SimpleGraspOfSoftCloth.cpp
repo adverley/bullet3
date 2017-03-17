@@ -28,7 +28,7 @@ struct SimpleGraspOfSoftCloth : public CommonExampleInterface {
     int m_gripperIndex;
     btSoftBodyWorldInfo softBodyWorldInfo;
 
-    SimpleGraspOfSoftCloth(struct GUIHelperInterface *helper, int options = 0)  {
+    SimpleGraspOfSoftCloth(struct GUIHelperInterface *helper, int options = 0) {
         m_gripperIndex = -1;
         m_app = helper->getAppInterface();
         m_guiHelper = helper;
@@ -99,7 +99,6 @@ struct SimpleGraspOfSoftCloth : public CommonExampleInterface {
 
     btRigidBody *createRigidBody(btScalar mass, btTransform transform, btBoxShape *pShape);
 };
-
 
 
 void SimpleGraspOfSoftCloth::initPhysics() {
@@ -232,6 +231,9 @@ void SimpleGraspOfSoftCloth::createGripper() {
 
 }
 
+/**
+ * Put joints between the fingers and the motor so the motor will move the fingers. Weird that this isnt by default there.
+ */
 void SimpleGraspOfSoftCloth::addJointBetweenFingerAndMotor() {
     b3JointInfo revoluteJoint1;
     revoluteJoint1.m_parentFrame[0] = -0.055;
