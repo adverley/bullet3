@@ -107,7 +107,7 @@ void SimpleGraspOfSoftCloth::initPhysics() {
 
     createWorld();
     createGround();
-//    createObstructingBox();
+    createObstructingBox();
     createGripper();
     createCloth();
     m_guiHelper->autogenerateGraphicsObjects(m_dynamicsWorld);
@@ -125,10 +125,10 @@ void SimpleGraspOfSoftCloth::createWorld() {
 
     /* The collision configuration specifies how memory will be allocated and managed for collision detection */
     m_collisionConfiguration = new btSoftBodyRigidBodyCollisionConfiguration();
-    /*  the dispatcher calculates collision of objects close to each other accurately */
-    m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
     /* The broadphase checks which objects collides and which don't for a quick raw view of colliding objects */
     m_broadphase = new btDbvtBroadphase();
+    /*  the dispatcher calculates collision of objects close to each other accurately */
+    m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
 
     /* The constraint solver will attach objects to each other */
     m_solver = new btSequentialImpulseConstraintSolver;
