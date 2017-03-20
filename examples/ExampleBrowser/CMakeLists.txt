@@ -193,6 +193,8 @@ SET(BulletExampleBrowser_SRCS
 	../SharedMemory/PhysicsLoopBackC_API.h
 	../SharedMemory/PhysicsServerCommandProcessor.cpp
 	../SharedMemory/PhysicsServerCommandProcessor.h
+	../SharedMemory/SharedMemoryCommands.h
+	../SharedMemory/SharedMemoryPublic.h
 	../BasicDemo/BasicExample.cpp
 	../BasicDemo/BasicExample.h
 	../InverseDynamics/InverseDynamicsExample.cpp
@@ -319,6 +321,8 @@ SET(BulletExampleBrowser_SRCS
   ../Importers/ImportURDFDemo/MyMultiBodyCreator.cpp
   ../Importers/ImportURDFDemo/MyMultiBodyCreator.h
   ../Importers/ImportURDFDemo/UrdfParser.cpp
+  ../Utils/RobotLoggingUtil.cpp
+  ../Utils/RobotLoggingUtil.h
   ../Importers/ImportURDFDemo/urdfStringSplit.cpp
  ../Importers/ImportURDFDemo/urdfStringSplit.h
   ../Importers/ImportURDFDemo/BulletUrdfImporter.cpp

@@ -179,7 +179,9 @@ enum MultiThreadedGUIHelperCommunicationEnums
 	eGUIUserDebugAddParameter,
 	eGUIUserDebugRemoveItem,
 	eGUIUserDebugRemoveAllItems,
+	eGUIDumpFramesToVideo,
 };
+
 
 #include <stdio.h>
 //#include "BulletMultiThreaded/PlatformDefinitions.h"
@@ -255,9 +257,11 @@ struct	MotionArgs
 	btAlignedObjectArray<MyMouseCommand> m_mouseCommands;
 
 	b3VRControllerEvent m_vrControllerEvents[MAX_VR_CONTROLLERS];
-	
 	b3VRControllerEvent m_sendVrControllerEvents[MAX_VR_CONTROLLERS];
 
+	btAlignedObjectArray<b3KeyboardEvent> m_keyboardEvents;
+	btAlignedObjectArray<b3KeyboardEvent> m_sendKeyEvents;
+	
 	PhysicsServerSharedMemory*	m_physicsServerPtr;
 	b3AlignedObjectArray<b3Vector3> m_positions;
 
@@ -277,7 +281,7 @@ struct MotionThreadLocalStorage
 
 
 float clampedDeltaTime  = 0.2;
-float sleepTimeThreshold = 8./1000.;
+extern int gMaxNumCmdPer1ms;
 
 
 void	MotionThreadFunc(void* userPtr,void* lsMemory)
@@ -289,6 +293,7 @@ void	MotionThreadFunc(void* userPtr,void* lsMemory)
 	//int workLeft = true;
 	b3Clock clock;
 	clock.reset();
+	b3Clock sleepClock;
 	bool init = true;
 	if (init)
 	{
@@ -299,6 +304,8 @@ void	MotionThreadFunc(void* userPtr,void* lsMemory)
 
 
 		double deltaTimeInSeconds = 0;
+		int numCmdSinceSleep1ms = 0;
+
 		do
 		{
 			BT_PROFILE("loop");
@@ -306,6 +313,22 @@ void	MotionThreadFunc(void* userPtr,void* lsMemory)
 			{
 				BT_PROFILE("usleep(0)");
 				b3Clock::usleep(0);
+			}
+
+			if (gMaxNumCmdPer1ms>0)
+			{
+				if (numCmdSinceSleep1ms>gMaxNumCmdPer1ms)
+				{
+					BT_PROFILE("usleep(10)");
+					b3Clock::usleep(10);
+					numCmdSinceSleep1ms = 0;
+					sleepClock.reset();
+				}
+			}
+			if (sleepClock.getTimeMilliseconds()>1)
+			{
+				sleepClock.reset();
+				numCmdSinceSleep1ms = 0;
 			}
 			double dt = double(clock.getTimeMicroseconds())/1000000.;
 			clock.reset();
@@ -392,10 +415,33 @@ void	MotionThreadFunc(void* userPtr,void* lsMemory)
 					}
 				}
 
+				args->m_sendKeyEvents.resize(args->m_keyboardEvents.size());
+				for (int i=0;i<args->m_keyboardEvents.size();i++)
+				{
+					args->m_sendKeyEvents[i] = args->m_keyboardEvents[i];
+					if (args->m_keyboardEvents[i].m_keyState&eButtonReleased)
+					{
+						args->m_keyboardEvents[i].m_keyState = 0;
+					} else
+					{
+						args->m_keyboardEvents[i].m_keyState &= ~eButtonTriggered;
+					}
+				}
+				//remove the 'released' events
+				for (int i=args->m_keyboardEvents.size()-1;i>=0;i--)
+				{
+					if (args->m_keyboardEvents[i].m_keyState==0)
+					{
+						args->m_keyboardEvents.removeAtIndex(i);
+					}
+				}
+
+				b3KeyboardEvent* keyEvents = args->m_sendKeyEvents.size()? &args->m_sendKeyEvents[0] : 0;
+
 				args->m_csGUI->unlock();
 				{
 					BT_PROFILE("stepSimulationRealTime");
-					args->m_physicsServerPtr->stepSimulationRealTime(deltaTimeInSeconds, args->m_sendVrControllerEvents,numSendVrControllers);
+					args->m_physicsServerPtr->stepSimulationRealTime(deltaTimeInSeconds, args->m_sendVrControllerEvents,numSendVrControllers, keyEvents, args->m_sendKeyEvents.size());
 				}
 				deltaTimeInSeconds = 0;
 				
@@ -434,6 +480,7 @@ void	MotionThreadFunc(void* userPtr,void* lsMemory)
 			{
 				BT_PROFILE("processClientCommands");
 				args->m_physicsServerPtr->processClientCommands();
+				numCmdSinceSleep1ms++;
 			}
 			
 		} while (args->m_cs->getSharedParam(0)!=eRequestTerminateMotion);
@@ -444,7 +491,7 @@ void	MotionThreadFunc(void* userPtr,void* lsMemory)
 		args->m_cs->unlock();
 	}
 
-
+	args->m_physicsServerPtr->disconnectSharedMemory(true);
 	//do nothing
 
 }
@@ -504,6 +551,13 @@ class MultiThreadedOpenGLGuiHelper : public GUIHelperInterface
 
 public:
 
+    
+    void setVisualizerFlag(int flag, int enable)
+    {
+        m_childGuiHelper->setVisualizerFlag(flag,enable);
+    }
+
+    
 	GUIHelperInterface* m_childGuiHelper;
 
 	int m_uidGenerator;
@@ -907,6 +961,16 @@ public:
 	
 	}
 
+	const char* m_mp4FileName;
+	virtual void	dumpFramesToVideo(const char* mp4FileName)
+	{
+		m_cs->lock();
+		m_mp4FileName = mp4FileName;
+		m_cs->setSharedParam(1, eGUIDumpFramesToVideo);
+		workerThreadWait();
+		m_mp4FileName = 0;
+	}
+
 };
 
 
@@ -1062,6 +1126,59 @@ public:
 		return false;
 	}
 	virtual bool	keyboardCallback(int key, int state){
+
+		//printf("key=%d, state=%d\n", key,state);
+		{
+			int keyIndex = -1;
+			//is already there?
+			for (int i=0;i<m_args[0].m_keyboardEvents.size();i++)
+			{
+				if (m_args[0].m_keyboardEvents[i].m_keyCode == key)
+				{
+					keyIndex = i;
+					break;
+				}
+			}
+
+			if (state)
+			{
+				b3KeyboardEvent ev;
+				ev.m_keyCode = key;
+				ev.m_keyState = eButtonIsDown+eButtonTriggered;
+				m_args[0].m_csGUI->lock();
+				if (keyIndex>=0)
+				{
+					if (0==(m_args[0].m_keyboardEvents[keyIndex].m_keyState & eButtonIsDown))
+					{
+						m_args[0].m_keyboardEvents[keyIndex] = ev;
+					}
+				} else
+				{
+					m_args[0].m_keyboardEvents.push_back(ev);
+				}
+				m_args[0].m_csGUI->unlock();
+			} else
+			{
+				m_args[0].m_csGUI->lock();
+				b3KeyboardEvent ev;
+				ev.m_keyCode = key;
+				ev.m_keyState = eButtonReleased;
+				if (keyIndex>=0)
+				{
+					m_args[0].m_keyboardEvents[keyIndex]=ev;
+				} else
+				{
+					m_args[0].m_keyboardEvents.push_back(ev);
+				}
+				m_args[0].m_csGUI->unlock();
+			}
+		}
+		/*printf("m_args[0].m_keyboardEvents.size()=%d\n", m_args[0].m_keyboardEvents.size());
+		for (int i=0;i<m_args[0].m_keyboardEvents.size();i++)
+		{
+			printf("key[%d]=%d state = %d\n",i,m_args[0].m_keyboardEvents[i].m_keyCode,m_args[0].m_keyboardEvents[i].m_keyState);
+		}
+		*/
 		if (key=='w' && state)
 		{
 			gVRTeleportPos1[0]+=0.1;
@@ -1144,6 +1261,12 @@ public:
 		if (args.CheckCmdLineFlag("robotassets"))
 		{
 			gCreateDefaultRobotAssets = true;
+		}
+
+		if (args.CheckCmdLineFlag("realtimesimulation"))
+		{
+			//gEnableRealTimeSimVR = true;
+			m_physicsServer.enableRealTimeSimulation(true);
 		}
 
 		if (args.CheckCmdLineFlag("norobotassets"))
@@ -1503,6 +1626,14 @@ void	PhysicsServerExample::updateGraphics()
 		m_multiThreadedHelper->mainThreadRelease();
 			break;
 	}
+
+	case eGUIDumpFramesToVideo:
+	{
+		m_multiThreadedHelper->m_childGuiHelper->dumpFramesToVideo(m_multiThreadedHelper->m_mp4FileName);
+		m_multiThreadedHelper->mainThreadRelease();
+		break;
+	}
+
 	case eGUIHelperIdle:
 		{
 			break;
