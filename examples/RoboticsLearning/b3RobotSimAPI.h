@@ -132,7 +132,7 @@ class b3RobotSimAPI
 	struct b3RobotSimAPI_InternalData* m_data;
 	void processMultiThreadedGraphicsRequests();
 	b3SharedMemoryStatusHandle  submitClientCommandAndWaitStatusMultiThreaded(b3PhysicsClientHandle physClient, b3SharedMemoryCommandHandle commandHandle);
-	
+
 public:
 	b3RobotSimAPI();
 	virtual ~b3RobotSimAPI();
@@ -169,6 +169,8 @@ public:
     void getLinkState(int bodyUniqueId, int linkIndex, double* worldPosition, double* worldOrientation);
     
     void loadBunny(double scale, double mass, double collisionMargin);
+
+	void loadPrimitiveRigidBody(b3Vector3 position);
 };
 
 #endif //B3_ROBOT_SIM_API_H
