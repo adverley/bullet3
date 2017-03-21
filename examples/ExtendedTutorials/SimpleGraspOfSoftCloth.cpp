@@ -16,17 +16,10 @@ static btScalar sGripperClosingTargetVelocity = -0.7f;
 struct SimpleGraspOfSoftCloth : public CommonExampleInterface {
     CommonGraphicsApp *m_app;
     GUIHelperInterface *m_guiHelper;
-    btDiscreteDynamicsWorld *m_dynamicsWorld;
-    btAlignedObjectArray<btCollisionShape *> m_collisionShapes;
-    btBroadphaseInterface *m_broadphase;
-    btCollisionDispatcher *m_dispatcher;
-    btConstraintSolver *m_solver;
-    btDefaultCollisionConfiguration *m_collisionConfiguration;
 
     b3RobotSimAPI m_robotSim;
     int m_options;
     int m_gripperIndex;
-    btSoftBodyWorldInfo softBodyWorldInfo;
 
     SimpleGraspOfSoftCloth(struct GUIHelperInterface *helper, int options = 0) {
         m_gripperIndex = -1;
@@ -88,11 +81,6 @@ struct SimpleGraspOfSoftCloth : public CommonExampleInterface {
 
     void addJointBetweenFingerAndMotor();
 
-    virtual btSoftRigidDynamicsWorld *getSoftDynamicsWorld() {
-        ///just make it a btSoftRigidDynamicsWorld please
-        return (btSoftRigidDynamicsWorld *) m_dynamicsWorld;
-    }
-
     void doMotorControl();
 
     virtual void stepSimulation(float deltaTime);
@@ -105,54 +93,15 @@ void SimpleGraspOfSoftCloth::initPhysics() {
     bool connected = m_robotSim.connect(m_guiHelper);
     b3Printf("robotSim connected = %d", connected);
 
-    createWorld();
+//    createWorld();
     createGround();
-    createObstructingBox();
+//    createObstructingBox();
     createGripper();
     createCloth();
-    m_guiHelper->autogenerateGraphicsObjects(m_dynamicsWorld);
 }
-
-void SimpleGraspOfSoftCloth::createWorld() {
-    m_guiHelper->setUpAxis(2);
-
-///    setupCollisionDetection
-    /* 3D collision detection can become very complex, especially when using specialized algorithms.
-     * That is why we work in two phases:
-     *  1. Find collision of objects which are close to each other -> broad phase
-     *  2. Use a more accurate collision algorithm for those objects close to each other -> collision dispatcher
-     *  */
-
-    /* The collision configuration specifies how memory will be allocated and managed for collision detection */
-    m_collisionConfiguration = new btSoftBodyRigidBodyCollisionConfiguration();
-    /* The broadphase checks which objects collides and which don't for a quick raw view of colliding objects */
-    m_broadphase = new btDbvtBroadphase();
-    /*  the dispatcher calculates collision of objects close to each other accurately */
-    m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
-
-    /* The constraint solver will attach objects to each other */
-    m_solver = new btSequentialImpulseConstraintSolver;
-
-    /* Throw all the ingredients for collision detection in soft body world together */
-    m_dynamicsWorld = new btSoftRigidDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration);
-    m_dynamicsWorld->setGravity(btVector3(0, -10, 0));
-
-    /* Hold some bookkeeping about the soft body world */
-    softBodyWorldInfo.m_broadphase = m_broadphase;
-    softBodyWorldInfo.m_dispatcher = m_dispatcher;
-    softBodyWorldInfo.m_gravity = m_dynamicsWorld->getGravity();
-    softBodyWorldInfo.m_sparsesdf.Initialize();
-
-    m_guiHelper->createPhysicsDebugDrawer(m_dynamicsWorld);
-
-    if (m_dynamicsWorld->getDebugDrawer())
-        m_dynamicsWorld->getDebugDrawer()->setDebugMode(
-                btIDebugDraw::DBG_DrawWireframe + btIDebugDraw::DBG_DrawContactPoints);
-    m_robotSim.debugDraw(true);
-}
-
 
 void SimpleGraspOfSoftCloth::createGround() {
+    b3Printf("Creating ground plane...");
     /* btBoxShape *groundShape = createBoxShape(btVector3(btScalar(50.), btScalar(50.), btScalar(50.)));
      m_collisionShapes.push_back(groundShape);
 
@@ -177,21 +126,8 @@ void SimpleGraspOfSoftCloth::createGround() {
 }
 
 void SimpleGraspOfSoftCloth::createObstructingBox() {
-    btBoxShape *colShape = new btBoxShape(btVector3(.1, .1, .1));
-    m_collisionShapes.push_back(colShape);
-
-    btTransform startTransform;
-    startTransform.setIdentity();
-
-    btScalar mass(1.f);
-    bool isDynamic = (mass != 0.f);
-
-    btVector3 localInertia(0, 0, 0);
-    if (isDynamic)
-        colShape->calculateLocalInertia(mass, localInertia);
-
-    startTransform.setOrigin(btVector3(0, 0, 0));
-    createRigidBody(mass, startTransform, colShape);
+    b3Printf("Creating an obstructing box...");
+    m_robotSim.loadPrimitiveRigidBody(b3Vector3());
 }
 
 void SimpleGraspOfSoftCloth::createGripper() {
@@ -306,9 +242,6 @@ void SimpleGraspOfSoftCloth::createCloth() {
 }
 
 void SimpleGraspOfSoftCloth::renderScene() {
-    m_guiHelper->syncPhysicsToGraphics(m_dynamicsWorld);
-    m_guiHelper->render(m_dynamicsWorld);
-
     m_robotSim.renderScene();
 }
 
@@ -334,6 +267,7 @@ void SimpleGraspOfSoftCloth::doMotorControl() {
     }
 }
 
+/*
 btRigidBody *SimpleGraspOfSoftCloth::createRigidBody(btScalar mass, btTransform transform, btBoxShape *pShape) {
     btAssert((!pShape || pShape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
 
@@ -364,6 +298,7 @@ btRigidBody *SimpleGraspOfSoftCloth::createRigidBody(btScalar mass, btTransform 
     m_dynamicsWorld->addRigidBody(body);
     return body;
 }
+*/
 
 class CommonExampleInterface *ET_SimpleGraspOfSoftClothCreateFunc(CommonExampleOptions &options) {
     return new SimpleGraspOfSoftCloth(options.m_guiHelper, options.m_option);
