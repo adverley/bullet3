@@ -630,6 +630,18 @@ int b3GetLinkState(b3PhysicsClientHandle physClient, b3SharedMemoryStatusHandle 
   return 0;
 }
 
+b3SharedMemoryCommandHandle b3CreateSoftBodyCommandInit(b3PhysicsClientHandle physClient) {
+    PhysicsClient* cl = (PhysicsClient* ) physClient;
+            b3Assert(cl);
+            b3Assert(cl->canSubmitCommand());
+    struct SharedMemoryCommand* command = cl->getAvailableSharedMemoryCommand();
+            b3Assert(command);
+    command->m_type = CMD_CREATE_SOFT_BODY;
+    command->m_updateFlags =0;
+    return (b3SharedMemoryCommandHandle) command;
+}
+
+
 b3SharedMemoryCommandHandle b3CreateBoxShapeCommandInit(b3PhysicsClientHandle physClient)
 {
     PhysicsClient* cl = (PhysicsClient* ) physClient;
@@ -2680,3 +2692,4 @@ double b3GetTimeOut(b3PhysicsClientHandle physClient)
 	}
 	return -1;
 }
+

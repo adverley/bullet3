@@ -288,6 +288,9 @@ int	b3CreateBoxCommandSetMass(b3SharedMemoryCommandHandle commandHandle, double 
 int	b3CreateBoxCommandSetCollisionShapeType(b3SharedMemoryCommandHandle commandHandle, int collisionShapeType);
 int	b3CreateBoxCommandSetColorRGBA(b3SharedMemoryCommandHandle commandHandle, double red,double green,double blue, double alpha);
 
+/// Soft cloth stuff
+b3SharedMemoryCommandHandle b3CreateSoftBodyCommandInit(b3PhysicsClientHandle physClient);
+
 
 ///b3CreatePoseCommandInit will initialize (teleport) the pose of a body/robot. You can individually set the base position,
 ///base orientation and joint angles. This will set all velocities of base and joints to zero.
