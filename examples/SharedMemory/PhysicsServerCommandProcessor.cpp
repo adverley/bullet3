@@ -2637,6 +2637,66 @@ bool PhysicsServerCommandProcessor::processCommand(const struct SharedMemoryComm
 
                     break;
                 }
+                case CMD_CREATE_SOFT_BODY: {
+#ifdef USE_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
+					const btScalar s = 4;
+					const int numX = 15;
+					const int numY = 15;
+                    const int noFixedCorners = 0;
+                    const int pinAllFourCornerVertices = 1+2+4+8;
+					const int fixed = pinAllFourCornerVertices;
+					const double mass = 1;
+					btSoftBody *cloth = btSoftBodyHelpers::CreatePatch(m_data->m_softBodyWorldInfo,
+																	   btVector3(-s / 2, s + 1, 0),
+																	   btVector3(+s / 2, s + 1, 0),
+																	   btVector3(-s / 2, s + 1, +s),
+																	   btVector3(+s / 2, s + 1, +s),
+																	   numX, numY,
+																	   fixed, true);
+
+
+
+//					set soft body world information
+					m_data->m_softBodyWorldInfo.air_density = (btScalar) 1.2;
+					m_data->m_softBodyWorldInfo.water_density = 0;
+					m_data->m_softBodyWorldInfo.water_offset = 0;
+					m_data->m_softBodyWorldInfo.water_normal = btVector3(0, 0, 0);
+					btVector3 currentGravity = m_data->m_dynamicsWorld->getGravity();
+                    btVector3 noGravity = btVector3(0,0,0);
+//                    currentGravity = noGravity;
+					m_data->m_softBodyWorldInfo.m_gravity.setValue(currentGravity.x(), currentGravity.y(), currentGravity.z());
+					m_data->m_softBodyWorldInfo.m_broadphase = m_data->m_broadphase;
+					m_data->m_softBodyWorldInfo.m_sparsesdf.Initialize();
+
+//					Set some material
+                    btSoftBody::Material *softBodyMaterial = cloth->appendMaterial();
+                    softBodyMaterial->m_kLST = 0.4;
+                    softBodyMaterial->m_flags -= btSoftBody::fMaterial::DebugDraw;
+//                    add bending distance constraints between every alternate vertex
+                    cloth->generateBendingConstraints(2, softBodyMaterial);
+
+                    cloth->m_cfg.piterations = 50;
+                    cloth->m_cfg.citerations = 50;
+                    cloth->m_cfg.diterations = 50;
+                    cloth->m_cfg.kDP = 0.005f;
+                    cloth->m_cfg.collisions |= btSoftBody::fCollision::VF_SS; // collision algorithm
+
+//
+					cloth->randomizeConstraints();
+					cloth->rotate(btQuaternion(0.70711, 0, 0, 0.70711));
+                    double height = -4;
+					cloth->translate(btVector3(0, 2, height));
+					cloth->scale(btVector3(0.2, 0.2, 0.2));
+					cloth->setTotalMass(mass, true);
+					cloth->getCollisionShape()->setMargin(0.001f);
+
+					m_data->m_dynamicsWorld->addSoftBody(cloth);
+
+                    break;
+#endif
+                }
+
+
                 case CMD_LOAD_BUNNY:
                 {
 #ifdef USE_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
@@ -2662,8 +2722,9 @@ bool PhysicsServerCommandProcessor::processCommand(const struct SharedMemoryComm
                     m_data->m_softBodyWorldInfo.m_gravity.setValue(0,0,-10);
                     m_data->m_softBodyWorldInfo.m_broadphase = m_data->m_broadphase;
                     m_data->m_softBodyWorldInfo.m_sparsesdf.Initialize();
-                    
-                    btSoftBody*	psb=btSoftBodyHelpers::CreateFromTriMesh(m_data->m_softBodyWorldInfo,gVerticesBunny,                                                       &gIndicesBunny[0][0],                                                         BUNNY_NUM_TRIANGLES);
+
+                    btSoftBody *psb = btSoftBodyHelpers::CreateFromTriMesh(m_data->m_softBodyWorldInfo, gVerticesBunny,
+                                                                           &gIndicesBunny[0][0], BUNNY_NUM_TRIANGLES);
                     
                     btSoftBody::Material*	pm=psb->appendMaterial();
                     pm->m_kLST				=	1.0;
@@ -2671,9 +2732,10 @@ bool PhysicsServerCommandProcessor::processCommand(const struct SharedMemoryComm
                     psb->generateBendingConstraints(2,pm);
                     psb->m_cfg.piterations	=	50;
                     psb->m_cfg.kDF			=	0.5;
+                    psb->m_cfg.collisions |= btSoftBody::fCollision::VF_SS;
                     psb->randomizeConstraints();
                     psb->rotate(btQuaternion(0.70711,0,0,0.70711));
-                    psb->translate(btVector3(0,0,1.0));
+                    psb->translate(btVector3(0,0,8));
                     psb->scale(btVector3(scale,scale,scale));
                     psb->setTotalMass(mass,true);
                     psb->getCollisionShape()->setMargin(collisionMargin);
