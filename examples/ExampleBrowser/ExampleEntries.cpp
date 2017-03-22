@@ -174,7 +174,6 @@ static ExampleEntry gDefaultExamples[]=
 
 
 
-#ifdef INCLUDE_CLOTH_DEMOS
 	ExampleEntry(0,"Soft Body"),
 	ExampleEntry(1,"Cloth","Simulate a patch of cloth.", SoftDemoCreateFunc,0),
 
@@ -212,7 +211,6 @@ static ExampleEntry gDefaultExamples[]=
 	ExampleEntry(1,"Tetra Cube","Simulate a volumetric soft body cube defined by tetrahedra.", SoftDemoCreateFunc,30),
 	ExampleEntry(1,"Tetra Bunny","Simulate a volumetric soft body Stanford bunny defined by tetrahedra.", SoftDemoCreateFunc,31),
 
-#endif //INCLUDE_CLOTH_DEMOS
 
 	///we disable the benchmarks in debug mode, they are way too slow and benchmarking in debug mode is not recommended
 //#ifndef _DEBUG
