@@ -2639,22 +2639,44 @@ bool PhysicsServerCommandProcessor::processCommand(const struct SharedMemoryComm
                 }
                 case CMD_CREATE_SOFT_BODY: {
 #ifdef USE_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
-					const btScalar s = 4;
-					const int numX = 15;
+                    m_data->m_softBodyWorldInfo.m_broadphase = m_data->m_broadphase;
+                    m_data->m_softBodyWorldInfo.m_sparsesdf.Initialize();
+
+
+                    const btScalar spawnX =  0;
+                    const btScalar spawnHeight = 1;
+                    const btScalar spawnZ =  0;
+                    const btVector3 centerOfCloth = btVector3(spawnX, spawnHeight, spawnZ);
+                    const int numX = 15;
 					const int numY = 15;
                     const int noFixedCorners = 0;
                     const int pinAllFourCornerVertices = 1+2+4+8;
 					const int fixed = pinAllFourCornerVertices;
-					const double mass = 1;
+					const double mass = 0.01;
 					btSoftBody *cloth = btSoftBodyHelpers::CreatePatch(m_data->m_softBodyWorldInfo,
-																	   btVector3(-s / 2, s + 1, 0),
-																	   btVector3(+s / 2, s + 1, 0),
-																	   btVector3(-s / 2, s + 1, +s),
-																	   btVector3(+s / 2, s + 1, +s),
+                                                                       btVector3(centerOfCloth.x() - 1,spawnHeight, centerOfCloth.z() - 1),
+                                                                       btVector3(centerOfCloth.x() + 1,spawnHeight, centerOfCloth.z() - 1),
+                                                                       btVector3(centerOfCloth.x() - 1,spawnHeight, centerOfCloth.z() + 1),
+                                                                       btVector3(centerOfCloth.x() + 1,spawnHeight, centerOfCloth.z() + 1),
 																	   numX, numY,
 																	   fixed, true);
 
 
+                    cloth->m_materials[0]->m_kLST	=	0.4;
+                    cloth->m_cfg.collisions		|=	btSoftBody::fCollision::VF_SS;
+                    cloth->setTotalMass(mass);
+
+                    cloth->rotate(btQuaternion(0.70711, 0, 0, 0.70711));
+                    cloth->scale(btVector3(0.2, 0.2, 0.2));
+					cloth->randomizeConstraints();
+
+                    /* This guy is extremely important! When the margin is very small e.g. (0.001) it doesnt react with the rigid bodies anymore!
+                     *  Very low Margin values can also lead to an object being penetrated.
+Higher values are generally recommended if faulty rendering and/or incorrect collisions take place. It can, however, also help to increase the Steps per Frame value.
+                     * */
+                    const btScalar bulletDefaultMargin = 0.25;
+                    const btScalar blenderDefaultMargin = 0.04;
+					cloth->getCollisionShape()->setMargin(bulletDefaultMargin);
 
 //					set soft body world information
 					m_data->m_softBodyWorldInfo.air_density = (btScalar) 1.2;
@@ -2665,32 +2687,70 @@ bool PhysicsServerCommandProcessor::processCommand(const struct SharedMemoryComm
                     btVector3 noGravity = btVector3(0,0,0);
 //                    currentGravity = noGravity;
 					m_data->m_softBodyWorldInfo.m_gravity.setValue(currentGravity.x(), currentGravity.y(), currentGravity.z());
-					m_data->m_softBodyWorldInfo.m_broadphase = m_data->m_broadphase;
-					m_data->m_softBodyWorldInfo.m_sparsesdf.Initialize();
 
 //					Set some material
-                    btSoftBody::Material *softBodyMaterial = cloth->appendMaterial();
-                    softBodyMaterial->m_kLST = 0.4;
-                    softBodyMaterial->m_flags -= btSoftBody::fMaterial::DebugDraw;
+//                    btSoftBody::Material *softBodyMaterial = cloth->appendMaterial();
+//                    softBodyMaterial->m_kLST = 0.4;
+//                    softBodyMaterial->m_flags -= btSoftBody::fMaterial::DebugDraw;
+
 //                    add bending distance constraints between every alternate vertex
-                    cloth->generateBendingConstraints(2, softBodyMaterial);
-
-                    cloth->m_cfg.piterations = 50;
-                    cloth->m_cfg.citerations = 50;
-                    cloth->m_cfg.diterations = 50;
-                    cloth->m_cfg.kDP = 0.005f;
-                    cloth->m_cfg.collisions |= btSoftBody::fCollision::VF_SS; // collision algorithm
-
+//                    cloth->generateBendingConstraints(2, softBodyMaterial);
 //
-					cloth->randomizeConstraints();
-					cloth->rotate(btQuaternion(0.70711, 0, 0, 0.70711));
-                    double height = -4;
-					cloth->translate(btVector3(0, 2, height));
-					cloth->scale(btVector3(0.2, 0.2, 0.2));
-					cloth->setTotalMass(mass, true);
-					cloth->getCollisionShape()->setMargin(0.001f);
+                    cloth->m_cfg.piterations = 5;
+                    cloth->m_cfg.citerations = 5;
+                    cloth->m_cfg.diterations = 5;
+                    cloth->m_cfg.kDP = 0.005f;
+
+
 
 					m_data->m_dynamicsWorld->addSoftBody(cloth);
+
+/*
+                    {
+                        m_data->m_softBodyWorldInfo.m_sparsesdf.Initialize();
+                        m_data->m_softBodyWorldInfo.m_broadphase = m_data->m_broadphase;
+                    }
+
+                    {
+                        const btScalar	s=8;
+                        double spawnHeight = 6;
+                        btSoftBody*		cloth=btSoftBodyHelpers::CreatePatch(	m_data->m_softBodyWorldInfo,
+                                                                                    btVector3(s,spawnHeight,s),
+                                                                                    btVector3(2*s,spawnHeight,s),
+                                                                                    btVector3(s,spawnHeight,2*s),
+                                                                                    btVector3(2*s,spawnHeight,2*s),
+                                                                                  15,15,1+2+4+8,true);
+                        cloth->m_materials[0]->m_kLST	=	0.4;
+                        cloth->m_cfg.collisions		|=	btSoftBody::fCollision::VF_SS;
+                        cloth->setTotalMass(150);
+
+                        cloth->rotate(btQuaternion(0.70711, 0, 0, 0.70711));
+                        double height = -4;
+                        cloth->translate(btVector3(0, 2, height));
+                        cloth->scale(btVector3(0.2, 0.2, 0.2));
+
+                        m_data->m_dynamicsWorld->addSoftBody(cloth);
+                    }*/
+
+                    /*{
+                        const btScalar	s=4;
+                        const btVector3	o=btVector3(5,10,0);
+                        btSoftBody*		cloth=btSoftBodyHelpers::CreatePatch(	m_data->m_softBodyWorldInfo,
+                                                                                  btVector3(-s,0,-s)+o,
+                                                                                  btVector3(+s,0,-s)+o,
+                                                                                  btVector3(-s,0,+s)+o,
+                                                                                  btVector3(+s,0,+s)+o,
+                                                                                  7,7,0,true);
+                        btSoftBody::Material*	pm=cloth->appendMaterial();
+                        pm->m_kLST				=	0.1;
+                        pm->m_flags				-=	btSoftBody::fMaterial::DebugDraw;
+                        cloth->generateBendingConstraints(2,pm);
+                        cloth->m_materials[0]->m_kLST	=	0.5;
+                        cloth->m_cfg.collisions		|=	btSoftBody::fCollision::VF_SS;
+                        cloth->setTotalMass(150);
+                        m_data->m_dynamicsWorld->addSoftBody(cloth);
+//                        m_data->m_cutting=true;
+                    }*/
 
                     break;
 #endif
