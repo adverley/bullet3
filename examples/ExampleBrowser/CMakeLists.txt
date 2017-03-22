@@ -253,7 +253,10 @@ SET(BulletExampleBrowser_SRCS
 	../RenderingExamples/DynamicTexturedCubeDemo.h
 	../RenderingExamples/TinyVRGui.cpp
 	../RenderingExamples/TinyVRGui.h
-	
+
+	../SoftDemo/SoftDemo.cpp
+	../SoftDemo/SoftDemo.h
+
 	../RoboticsLearning/GripperGraspExample.cpp
 	../RoboticsLearning/GripperGraspExample.h
 	../RoboticsLearning/b3RobotSimAPI.cpp
