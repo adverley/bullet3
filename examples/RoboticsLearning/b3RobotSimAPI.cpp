@@ -1042,18 +1042,24 @@ void b3RobotSimAPI::loadBunny(double scale, double mass, double collisionMargin)
     b3SubmitClientCommand(m_data->m_physicsClient, command);
 }
 
-void b3RobotSimAPI::loadPrimitiveRigidBody(b3Vector3 position) {
+void b3RobotSimAPI::loadPrimitiveRigidBody(b3Vector3 position, b3Vector3 size, double mass) {
     b3SharedMemoryCommandHandle command = b3CreateBoxShapeCommandInit(m_data->m_physicsClient);
     b3CreateBoxCommandSetStartPosition(command, position.x, position.y, position.z);
-    double mass = 1.0;
     b3CreateBoxCommandSetMass(command, mass);
     int boxShape = 1;
     b3CreateBoxCommandSetCollisionShapeType(command, boxShape);
 //    b3CreateBoxCommandSetStartOrientation(command, 0, 0, 0, 0);
     b3CreateBoxCommandSetColorRGBA(command, 1, 1, 0, 1);
 
-    double radius = 0.2;
-    double halfHeight = 0.5;
-    b3CreateBoxCommandSetHalfExtents(command, radius, halfHeight, radius);
+    double width = size.x;
+	double height = size.y;
+    double length = size.z;
+    b3CreateBoxCommandSetHalfExtents(command, width, length, height);
+    b3SubmitClientCommand(m_data->m_physicsClient, command);
+}
+
+void b3RobotSimAPI::createClothPatch() {
+    b3SharedMemoryCommandHandle command = b3CreateSoftBodyCommandInit(m_data->m_physicsClient);
+
     b3SubmitClientCommand(m_data->m_physicsClient, command);
 }

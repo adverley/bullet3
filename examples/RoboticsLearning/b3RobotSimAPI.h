@@ -170,7 +170,9 @@ public:
     
     void loadBunny(double scale, double mass, double collisionMargin);
 
-	void loadPrimitiveRigidBody(b3Vector3 position);
+	void loadPrimitiveRigidBody(b3Vector3 position, b3Vector3 vector3, double d);
+
+    void createClothPatch();
 };
 
 #endif //B3_ROBOT_SIM_API_H
