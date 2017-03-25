@@ -2676,7 +2676,7 @@ Higher values are generally recommended if faulty rendering and/or incorrect col
                      * */
                     const btScalar bulletDefaultMargin = 0.25;
                     const btScalar blenderDefaultMargin = 0.04;
-					cloth->getCollisionShape()->setMargin(bulletDefaultMargin);
+					cloth->getCollisionShape()->setMargin(blenderDefaultMargin*2);
 
 //					set soft body world information
 					m_data->m_softBodyWorldInfo.air_density = (btScalar) 1.2;
