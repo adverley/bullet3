@@ -60,6 +60,8 @@ int b3GetStatusActualState(b3SharedMemoryStatusHandle statusHandle,
 ///If you re-connected to an existing server, or server changed otherwise, sync the body info and user constraints etc.
 b3SharedMemoryCommandHandle b3InitSyncBodyInfoCommand(b3PhysicsClientHandle physClient);
 
+b3SharedMemoryCommandHandle b3InitRemoveBodyCommand(b3PhysicsClientHandle physClient, int bodyUniqueId);
+
 ///return the total number of bodies in the simulation
 int	b3GetNumBodies(b3PhysicsClientHandle physClient);
 
@@ -74,6 +76,14 @@ int	b3GetNumJoints(b3PhysicsClientHandle physClient, int bodyIndex);
 
 ///given a body and joint index, return the joint information. See b3JointInfo in SharedMemoryPublic.h
 int	b3GetJointInfo(b3PhysicsClientHandle physClient, int bodyIndex, int jointIndex, struct b3JointInfo* info);
+
+b3SharedMemoryCommandHandle b3GetDynamicsInfoCommandInit(b3PhysicsClientHandle physClient, int bodyUniqueId, int linkIndex);
+///given a body unique id and link index, return the dynamics information. See b3DynamicsInfo in SharedMemoryPublic.h
+int b3GetDynamicsInfo(b3SharedMemoryStatusHandle statusHandle, struct b3DynamicsInfo* info);
+	
+b3SharedMemoryCommandHandle b3InitChangeDynamicsInfo(b3PhysicsClientHandle physClient);
+int b3ChangeDynamicsInfoSetMass(b3SharedMemoryCommandHandle commandHandle, int bodyUniqueId, int linkIndex, double mass);
+int b3ChangeDynamicsInfoSetLateralFriction(b3SharedMemoryCommandHandle commandHandle, int bodyUniqueId, int linkIndex, double lateralFriction);
     
 b3SharedMemoryCommandHandle b3InitCreateUserConstraintCommand(b3PhysicsClientHandle physClient, int parentBodyIndex, int parentJointIndex, int childBodyIndex, int childJointIndex, struct b3JointInfo* info);
 
@@ -90,6 +100,8 @@ b3SharedMemoryCommandHandle  b3InitRemoveUserConstraintCommand(b3PhysicsClientHa
 
 int b3GetNumUserConstraints(b3PhysicsClientHandle physClient);
 int b3GetUserConstraintInfo(b3PhysicsClientHandle physClient, int constraintUniqueId, struct b3UserConstraint* info);
+/// return the user constraint id, given the index in range [0 , b3GetNumUserConstraints() )
+int b3GetUserConstraintId(b3PhysicsClientHandle physClient, int serialIndex);
     
 ///Request physics debug lines for debug visualization. The flags in debugMode are the same as used in Bullet
 ///See btIDebugDraw::DebugDrawModes in Bullet/src/LinearMath/btIDebugDraw.h
@@ -103,6 +115,9 @@ void    b3GetDebugLines(b3PhysicsClientHandle physClient, struct b3DebugLines* l
 b3SharedMemoryCommandHandle b3InitConfigureOpenGLVisualizer(b3PhysicsClientHandle physClient);
 void b3ConfigureOpenGLVisualizerSetVisualizationFlags(b3SharedMemoryCommandHandle commandHandle, int flag, int enabled);
 void b3ConfigureOpenGLVisualizerSetViewMatrix(b3SharedMemoryCommandHandle commandHandle, float cameraDistance, float cameraPitch, float cameraYaw, const float cameraTargetPosition[3]);
+
+b3SharedMemoryCommandHandle b3InitRequestOpenGLVisualizerCameraCommand(b3PhysicsClientHandle physClient);
+int b3GetStatusOpenGLVisualizerCamera(b3SharedMemoryStatusHandle statusHandle, struct b3OpenGLVisualizerCameraInfo* camera);
 
     
 /// Add/remove user-specific debug lines and debug text messages
@@ -183,6 +198,7 @@ void b3GetVisualShapeInformation(b3PhysicsClientHandle physClient, struct b3Visu
 
 b3SharedMemoryCommandHandle b3InitLoadTexture(b3PhysicsClientHandle physClient, const char* filename);
 b3SharedMemoryCommandHandle b3InitUpdateVisualShape(b3PhysicsClientHandle physClient, int bodyUniqueId, int jointIndex, int shapeIndex, int textureUniqueId);
+void b3UpdateVisualShapeRGBAColor(b3SharedMemoryCommandHandle commandHandle, double rgbaColor[4]);
 
 b3SharedMemoryCommandHandle	b3InitPhysicsParamCommand(b3PhysicsClientHandle physClient);
 int	b3PhysicsParamSetGravity(b3SharedMemoryCommandHandle commandHandle, double gravx,double gravy, double gravz);
@@ -199,6 +215,7 @@ int b3PhysicsParamSetUseSplitImpulse(b3SharedMemoryCommandHandle commandHandle, 
 int b3PhysicsParamSetSplitImpulsePenetrationThreshold(b3SharedMemoryCommandHandle commandHandle, double splitImpulsePenetrationThreshold);
 int b3PhysicsParamSetContactBreakingThreshold(b3SharedMemoryCommandHandle commandHandle, double contactBreakingThreshold);
 int b3PhysicsParamSetMaxNumCommandsPer1ms(b3SharedMemoryCommandHandle commandHandle, int maxNumCmdPer1ms);
+int b3PhysicsParamSetEnableFileCaching(b3SharedMemoryCommandHandle commandHandle, int enableFileCaching);
 
 //b3PhysicsParamSetInternalSimFlags is for internal/temporary/easter-egg/experimental demo purposes
 //Use at own risk: magic things may or my not happen when calling this API
@@ -217,11 +234,12 @@ int	b3LoadUrdfCommandSetStartPosition(b3SharedMemoryCommandHandle commandHandle,
 int	b3LoadUrdfCommandSetStartOrientation(b3SharedMemoryCommandHandle commandHandle, double startOrnX,double startOrnY,double startOrnZ, double startOrnW);
 int	b3LoadUrdfCommandSetUseMultiBody(b3SharedMemoryCommandHandle commandHandle, int useMultiBody);
 int	b3LoadUrdfCommandSetUseFixedBase(b3SharedMemoryCommandHandle commandHandle, int useFixedBase);
+int	b3LoadUrdfCommandSetFlags(b3SharedMemoryCommandHandle commandHandle, int flags);
 
 b3SharedMemoryCommandHandle	b3LoadBulletCommandInit(b3PhysicsClientHandle physClient, const char* fileName);
 b3SharedMemoryCommandHandle	b3SaveBulletCommandInit(b3PhysicsClientHandle physClient, const char* fileName);
 b3SharedMemoryCommandHandle	b3LoadMJCFCommandInit(b3PhysicsClientHandle physClient, const char* fileName);
-
+void b3LoadMJCFCommandSetFlags(b3SharedMemoryCommandHandle commandHandle, int flags);
 
 
 ///compute the forces to achieve an acceleration, given a state q and qdot using inverse dynamics
@@ -301,6 +319,9 @@ int	b3CreatePoseCommandSetBaseAngularVelocity(b3SharedMemoryCommandHandle comman
 int	b3CreatePoseCommandSetJointPositions(b3SharedMemoryCommandHandle commandHandle, int numJointPositions, const double* jointPositions);
 int	b3CreatePoseCommandSetJointPosition(b3PhysicsClientHandle physClient, b3SharedMemoryCommandHandle commandHandle,  int jointIndex, double jointPosition);
 
+int	b3CreatePoseCommandSetJointVelocities(b3PhysicsClientHandle physClient, b3SharedMemoryCommandHandle commandHandle,  int numJointVelocities, const double* jointVelocities);
+int	b3CreatePoseCommandSetJointVelocity(b3PhysicsClientHandle physClient, b3SharedMemoryCommandHandle commandHandle,  int jointIndex, double jointVelocity);
+
 ///We are currently not reading the sensor information from the URDF file, and programmatically assign sensors.
 ///This is rather inconsistent, to mix programmatical creation with loading from file.
 b3SharedMemoryCommandHandle b3CreateSensorCommandInit(b3PhysicsClientHandle physClient, int bodyUniqueId);
@@ -310,6 +331,8 @@ int b3CreateSensorEnable6DofJointForceTorqueSensor(b3SharedMemoryCommandHandle c
 int b3CreateSensorEnableIMUForLink(b3SharedMemoryCommandHandle commandHandle, int linkIndex, int enable);
 
 b3SharedMemoryCommandHandle b3RequestActualStateCommandInit(b3PhysicsClientHandle physClient,int bodyUniqueId);
+int b3RequestActualStateCommandComputeLinkVelocity(b3SharedMemoryCommandHandle commandHandle, int computeLinkVelocity);
+
 int b3GetJointState(b3PhysicsClientHandle physClient, b3SharedMemoryStatusHandle statusHandle, int jointIndex, struct b3JointSensorState *state);
 int b3GetLinkState(b3PhysicsClientHandle physClient, b3SharedMemoryStatusHandle statusHandle, int linkIndex, struct b3LinkState *state);
 
@@ -325,6 +348,9 @@ b3SharedMemoryCommandHandle b3RemovePickingConstraint(b3PhysicsClientHandle phys
 b3SharedMemoryCommandHandle b3CreateRaycastCommandInit(b3PhysicsClientHandle physClient, double rayFromWorldX,
                                        double rayFromWorldY, double rayFromWorldZ,
                                        double rayToWorldX, double rayToWorldY, double rayToWorldZ);
+
+b3SharedMemoryCommandHandle b3CreateRaycastBatchCommandInit(b3PhysicsClientHandle physClient);
+void b3RaycastBatchAddRay(b3SharedMemoryCommandHandle commandHandle, const double rayFromWorld[3], const double rayToWorld[3]);
 
 void b3GetRaycastInformation(b3PhysicsClientHandle physClient, struct b3RaycastInformation* raycastInfo);
 
@@ -343,12 +369,15 @@ int b3LoadBunnySetCollisionMargin(b3SharedMemoryCommandHandle commandHandle, dou
 
 
 b3SharedMemoryCommandHandle	b3RequestVREventsCommandInit(b3PhysicsClientHandle physClient);
+void b3VREventsSetDeviceTypeFilter(b3SharedMemoryCommandHandle commandHandle, int deviceTypeFilter);
+
 void b3GetVREventsData(b3PhysicsClientHandle physClient, struct b3VREventsData* vrEventsData);
 
 b3SharedMemoryCommandHandle	b3SetVRCameraStateCommandInit(b3PhysicsClientHandle physClient);
 int b3SetVRCameraRootPosition(b3SharedMemoryCommandHandle commandHandle, double rootPos[3]);
 int b3SetVRCameraRootOrientation(b3SharedMemoryCommandHandle commandHandle, double rootOrn[4]);
 int b3SetVRCameraTrackingObject(b3SharedMemoryCommandHandle commandHandle, int objectUniqueId);
+int b3SetVRCameraTrackingObjectFlag(b3SharedMemoryCommandHandle commandHandle, int flag);
 
 b3SharedMemoryCommandHandle	b3RequestKeyboardEventsCommandInit(b3PhysicsClientHandle physClient);
 void b3GetKeyboardEventsData(b3PhysicsClientHandle physClient, struct b3KeyboardEventsData* keyboardEventsData);
@@ -357,11 +386,18 @@ b3SharedMemoryCommandHandle	b3StateLoggingCommandInit(b3PhysicsClientHandle phys
 int b3StateLoggingStart(b3SharedMemoryCommandHandle commandHandle, int loggingType, const char* fileName);
 int b3StateLoggingAddLoggingObjectUniqueId(b3SharedMemoryCommandHandle commandHandle, int objectUniqueId);
 int b3StateLoggingSetMaxLogDof(b3SharedMemoryCommandHandle commandHandle, int maxLogDof);
+int b3StateLoggingSetLinkIndexA(b3SharedMemoryCommandHandle commandHandle, int linkIndexA);
+int b3StateLoggingSetLinkIndexB(b3SharedMemoryCommandHandle commandHandle, int linkIndexB);
+int b3StateLoggingSetBodyAUniqueId(b3SharedMemoryCommandHandle commandHandle, int bodyAUniqueId);
+int b3StateLoggingSetBodyBUniqueId(b3SharedMemoryCommandHandle commandHandle, int bodyBUniqueId);
+int b3StateLoggingSetDeviceTypeFilter(b3SharedMemoryCommandHandle commandHandle, int deviceTypeFilter);
 
 int b3GetStatusLoggingUniqueId(b3SharedMemoryStatusHandle statusHandle);
 int b3StateLoggingStop(b3SharedMemoryCommandHandle commandHandle, int loggingUniqueId);
 
 
+b3SharedMemoryCommandHandle	b3ProfileTimingCommandInit(b3PhysicsClientHandle physClient, const char* name);
+void b3SetProfileTimingDuractionInMicroSeconds(b3SharedMemoryCommandHandle commandHandle, int duration);
 
 void b3SetTimeOut(b3PhysicsClientHandle physClient, double timeOutInSeconds);
 double b3GetTimeOut(b3PhysicsClientHandle physClient);

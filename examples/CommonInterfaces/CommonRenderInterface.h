@@ -23,11 +23,14 @@ struct CommonRenderInterface
 	virtual void init()=0;
 	virtual void updateCamera(int upAxis)=0;
 	virtual void removeAllInstances() = 0;
-	
+	virtual void removeGraphicsInstance(int instanceUid) = 0;
+
 	virtual const CommonCameraInterface* getActiveCamera() const =0;
 	virtual CommonCameraInterface* getActiveCamera()=0;
 	virtual void setActiveCamera(CommonCameraInterface* cam)=0;
 	
+	virtual void setLightPosition(const float lightPos[3]) = 0;
+	virtual void setLightPosition(const double lightPos[3]) = 0;
 
 	virtual void renderScene()=0;
 	virtual void renderSceneInternal(int renderMode=B3_DEFAULT_RENDERMODE){};
@@ -52,10 +55,10 @@ struct CommonRenderInterface
     
 	virtual void writeSingleInstanceTransformToCPU(const float* position, const float* orientation, int srcIndex)=0;
 	virtual void writeSingleInstanceTransformToCPU(const double* position, const double* orientation, int srcIndex)=0;
-	virtual void writeSingleInstanceColorToCPU(float* color, int srcIndex)=0;
-	virtual void writeSingleInstanceColorToCPU(double* color, int srcIndex)=0;
-	virtual void writeSingleInstanceScaleToCPU(float* scale, int srcIndex)=0;
-	virtual void writeSingleInstanceScaleToCPU(double* scale, int srcIndex)=0;
+	virtual void writeSingleInstanceColorToCPU(const float* color, int srcIndex)=0;
+	virtual void writeSingleInstanceColorToCPU(const double* color, int srcIndex)=0;
+	virtual void writeSingleInstanceScaleToCPU(const float* scale, int srcIndex)=0;
+	virtual void writeSingleInstanceScaleToCPU(const double* scale, int srcIndex)=0;
     
     virtual int getTotalNumInstances() const = 0;
     

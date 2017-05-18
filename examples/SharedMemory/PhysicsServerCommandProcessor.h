@@ -35,7 +35,7 @@ protected:
 	bool loadSdf(const char* fileName, char* bufferServerToClient, int bufferSizeInBytes, bool useMultiBody, int flags);
 
 	bool loadUrdf(const char* fileName, const class btVector3& pos, const class btQuaternion& orn,
-		bool useMultiBody, bool useFixedBase, int* bodyUniqueIdPtr, char* bufferServerToClient, int bufferSizeInBytes);
+		bool useMultiBody, bool useFixedBase, int* bodyUniqueIdPtr, char* bufferServerToClient, int bufferSizeInBytes, int flags=0);
 
 	bool loadMjcf(const char* fileName, char* bufferServerToClient, int bufferSizeInBytes, bool useMultiBody, int flags);
 
@@ -78,7 +78,7 @@ public:
 		return false;
 	};
 
-	virtual void renderScene();
+	virtual void renderScene(int renderFlags);
 	virtual void   physicsDebugDraw(int debugDrawFlags);
 	virtual void setGuiHelper(struct GUIHelperInterface* guiHelper);
 	
@@ -95,6 +95,7 @@ public:
 
 	//logging of object states (position etc)
 	void logObjectStates(btScalar timeStep);
+	void processCollisionForces(btScalar timeStep);
 
 	void stepSimulationRealTime(double dtInSec,	const struct b3VRControllerEvent* vrEvents, int numVREvents, const struct b3KeyboardEvent* keyEvents, int numKeyEvents);
 	void enableRealTimeSimulation(bool enableRealTimeSim);

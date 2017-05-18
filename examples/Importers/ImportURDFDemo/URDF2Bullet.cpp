@@ -166,6 +166,10 @@ void processContactParameters(const URDFLinkContactInfo& contactInfo, btCollisio
 	{
 		col->setContactStiffnessAndDamping(contactInfo.m_contactStiffness, contactInfo.m_contactDamping);
 	}
+	if ((contactInfo.m_flags & URDF_CONTACT_HAS_FRICTION_ANCHOR) != 0)
+	{
+		col->setCollisionFlags(col->getCollisionFlags() | btCollisionObject::CF_HAS_FRICTION_ANCHOR);
+	}
 }
 
 
@@ -228,9 +232,11 @@ void ConvertURDF2BulletInternal(
     btScalar jointUpperLimit;
     btScalar jointDamping;
     btScalar jointFriction;
+	btScalar jointMaxForce;
+	btScalar jointMaxVelocity;
 
 
-    bool hasParentJoint = u2b.getJointInfo(urdfLinkIndex, parent2joint, linkTransformInWorldSpace, jointAxisInJointSpace, jointType,jointLowerLimit,jointUpperLimit, jointDamping, jointFriction);
+    bool hasParentJoint = u2b.getJointInfo2(urdfLinkIndex, parent2joint, linkTransformInWorldSpace, jointAxisInJointSpace, jointType,jointLowerLimit,jointUpperLimit, jointDamping, jointFriction,jointMaxForce,jointMaxVelocity);
 	std::string linkName = u2b.getLinkName(urdfLinkIndex);
                           
     if (flags & CUF_USE_SDF)
@@ -279,6 +285,9 @@ void ConvertURDF2BulletInternal(
             if (!(flags & CUF_USE_URDF_INERTIA))
             {
                 compoundShape->calculateLocalInertia(mass, localInertiaDiagonal);
+                btAssert(localInertiaDiagonal[0] < 1e10);
+                btAssert(localInertiaDiagonal[1] < 1e10);
+                btAssert(localInertiaDiagonal[2] < 1e10);
             }
             URDFLinkContactInfo contactInfo;
             u2b.getLinkContactInfo(urdfLinkIndex,contactInfo);
@@ -311,7 +320,7 @@ void ConvertURDF2BulletInternal(
             
 
 
-            //untested: u2b.convertLinkVisualShapes2(urdfLinkIndex,pathPrefix,localInertialFrame,body);
+            //untested: u2b.convertLinkVisualShapes2(linkIndex,urdfLinkIndex,pathPrefix,localInertialFrame,body);
         } else
         {
             if (cache.m_bulletMultiBody==0)
@@ -340,6 +349,17 @@ void ConvertURDF2BulletInternal(
             btQuaternion parentRotToThis = offsetInB.getRotation() * offsetInA.inverse().getRotation();
 
             bool disableParentCollision = true;
+
+			if (createMultiBody && cache.m_bulletMultiBody)
+			{
+				cache.m_bulletMultiBody->getLink(mbLinkIndex).m_jointDamping = jointDamping;
+				cache.m_bulletMultiBody->getLink(mbLinkIndex).m_jointFriction = jointFriction;
+				cache.m_bulletMultiBody->getLink(mbLinkIndex).m_jointLowerLimit = jointLowerLimit;
+				cache.m_bulletMultiBody->getLink(mbLinkIndex).m_jointUpperLimit = jointUpperLimit;
+				cache.m_bulletMultiBody->getLink(mbLinkIndex).m_jointMaxForce = jointMaxForce;
+				cache.m_bulletMultiBody->getLink(mbLinkIndex).m_jointMaxVelocity = jointMaxVelocity;
+			}
+
             switch (jointType)
             {
                 case URDFFixedJoint:
@@ -370,8 +390,6 @@ void ConvertURDF2BulletInternal(
                                                                   parentRotToThis, quatRotate(offsetInB.getRotation(),jointAxisInJointSpace), offsetInA.getOrigin(),//parent2joint.getOrigin(),
                                                                   -offsetInB.getOrigin(),
                                                                   disableParentCollision);
-                        cache.m_bulletMultiBody->getLink(mbLinkIndex).m_jointDamping = jointDamping;
-                        cache.m_bulletMultiBody->getLink(mbLinkIndex).m_jointFriction= jointFriction;
                         creation.addLinkMapping(urdfLinkIndex,mbLinkIndex);
                         if (jointType == URDFRevoluteJoint && jointLowerLimit <= jointUpperLimit) {
                           //std::string name = u2b.getLinkName(urdfLinkIndex);
@@ -455,12 +473,12 @@ void ConvertURDF2BulletInternal(
                 int collisionFilterMask = isDynamic? 	int(btBroadphaseProxy::AllFilter) : 	int(btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter);
 
 				int colGroup=0, colMask=0;
-				int flags = u2b.getCollisionGroupAndMask(urdfLinkIndex,colGroup, colMask);
-				if (flags & URDF_HAS_COLLISION_GROUP)
+				int collisionFlags = u2b.getCollisionGroupAndMask(urdfLinkIndex,colGroup, colMask);
+				if (collisionFlags & URDF_HAS_COLLISION_GROUP)
 				{
 					collisionFilterGroup = colGroup;
 				}
-				if (flags & URDF_HAS_COLLISION_MASK)
+				if (collisionFlags & URDF_HAS_COLLISION_MASK)
 				{
 					collisionFilterMask = colMask;
 				}
@@ -469,8 +487,8 @@ void ConvertURDF2BulletInternal(
                 btVector4 color = selectColor2();//(0.0,0.0,0.5);
 				u2b.getLinkColor(urdfLinkIndex,color);
                 creation.createCollisionObjectGraphicsInstance(urdfLinkIndex,col,color);
-                
-                u2b.convertLinkVisualShapes2(urdfLinkIndex,pathPrefix,localInertialFrame,col, u2b.getBodyUniqueId());
+
+                u2b.convertLinkVisualShapes2(mbLinkIndex, urdfLinkIndex, pathPrefix, localInertialFrame,col, u2b.getBodyUniqueId());
 
 				URDFLinkContactInfo contactInfo;
 				u2b.getLinkContactInfo(urdfLinkIndex,contactInfo);
@@ -480,6 +498,14 @@ void ConvertURDF2BulletInternal(
                 if (mbLinkIndex>=0) //???? double-check +/- 1
                 {
                     cache.m_bulletMultiBody->getLink(mbLinkIndex).m_collider=col;
+					if (flags&CUF_USE_SELF_COLLISION_EXCLUDE_PARENT)
+					{
+						cache.m_bulletMultiBody->getLink(mbLinkIndex).m_flags |= BT_MULTIBODYLINKFLAGS_DISABLE_PARENT_COLLISION;
+					}
+					if (flags&CUF_USE_SELF_COLLISION_EXCLUDE_ALL_PARENTS)
+					{
+						cache.m_bulletMultiBody->getLink(mbLinkIndex).m_flags |= BT_MULTIBODYLINKFLAGS_DISABLE_ALL_PARENT_COLLISION;
+					}
                 } else
                 {
                     cache.m_bulletMultiBody->setBaseCollider(col);
@@ -487,7 +513,7 @@ void ConvertURDF2BulletInternal(
             }
         } else
         {
-            //u2b.convertLinkVisualShapes2(urdfLinkIndex,pathPrefix,localInertialFrame,compoundShape);
+            //u2b.convertLinkVisualShapes2(urdfLinkIndex,urdfIndex,pathPrefix,localInertialFrame,compoundShape);
         }
     }
 
@@ -521,7 +547,9 @@ void ConvertURDF2Bullet(
 	if (world1 && cache.m_bulletMultiBody)
 	{
 		btMultiBody* mb = cache.m_bulletMultiBody;
-		mb->setHasSelfCollision(false);
+
+		mb->setHasSelfCollision((flags&CUF_USE_SELF_COLLISION)!=0);
+		
 		mb->finalizeMultiDof();
 
 		btTransform localInertialFrameRoot = cache.m_urdfLinkLocalInertialFrames[urdfLinkIndex];

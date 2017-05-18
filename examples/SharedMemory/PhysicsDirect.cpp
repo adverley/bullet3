@@ -17,6 +17,7 @@ struct BodyJointInfoCache2
 {
 	std::string m_baseName;
 	btAlignedObjectArray<b3JointInfo> m_jointInfo;
+	std::string m_bodyName;
 };
 
 
@@ -170,7 +171,8 @@ bool PhysicsDirect::connect(struct GUIHelperInterface* guiHelper)
 
 void PhysicsDirect::renderScene()
 {
-	m_data->m_commandProcessor->renderScene();
+	int renderFlags = 0;
+	m_data->m_commandProcessor->renderScene(renderFlags);
 }
 
 void PhysicsDirect::debugDraw(int debugDrawMode)
@@ -605,6 +607,7 @@ void PhysicsDirect::processBodyJointInfo(int bodyUniqueId, const SharedMemorySta
 	
     BodyJointInfoCache2* bodyJoints = new BodyJointInfoCache2;
     m_data->m_bodyJointMap.insert(bodyUniqueId,bodyJoints);
+	bodyJoints->m_bodyName = serverCmd.m_dataStreamArguments.m_bodyName;
 
     for (int i = 0; i < bf.m_multiBodies.size(); i++) 
     {
@@ -722,6 +725,26 @@ void PhysicsDirect::postProcessStatus(const struct SharedMemoryStatus& serverCmd
         m_data->m_userConstraintInfoMap.remove(cid);
         break;
     }
+	case CMD_REMOVE_BODY_FAILED:
+	{
+		b3Warning("Remove body failed\n");
+		break;
+	}
+	case CMD_REMOVE_BODY_COMPLETED:
+	{
+		for (int i=0;i<serverCmd.m_removeObjectArgs.m_numBodies;i++)
+		{
+			int bodyUniqueId = serverCmd.m_removeObjectArgs.m_bodyUniqueIds[i];
+			removeCachedBody(bodyUniqueId);
+		}
+		for (int i=0;i<serverCmd.m_removeObjectArgs.m_numUserConstraints;i++)
+		{
+			int key = serverCmd.m_removeObjectArgs.m_userConstraintUniqueIds[i];
+			m_data->m_userConstraintInfoMap.remove(key);
+		}
+
+		break;
+	}
 	case CMD_CHANGE_USER_CONSTRAINT_COMPLETED:
 	{
         int cid = serverCmd.m_userConstraintResultArgs.m_userConstraintUniqueId;
@@ -832,6 +855,16 @@ void PhysicsDirect::postProcessStatus(const struct SharedMemoryStatus& serverCmd
 		break;
 	}
 	
+	case CMD_REQUEST_OPENGL_VISUALIZER_CAMERA_COMPLETED:
+	{
+		break;
+	}
+
+	case CMD_REQUEST_OPENGL_VISUALIZER_CAMERA_FAILED:
+	{
+		b3Warning("requestOpenGLVisualizeCamera failed");
+		break;
+	}
 	case CMD_REMOVE_USER_CONSTRAINT_FAILED:
 	{
 		b3Warning("removeConstraint failed");
@@ -897,6 +930,28 @@ int PhysicsDirect::getNumBodies() const
 	return m_data->m_bodyJointMap.size();
 }
 
+void PhysicsDirect::removeCachedBody(int bodyUniqueId)
+{
+	BodyJointInfoCache2** bodyJointsPtr = m_data->m_bodyJointMap[bodyUniqueId];
+	if (bodyJointsPtr && *bodyJointsPtr)
+	{
+		BodyJointInfoCache2* bodyJoints = *bodyJointsPtr;
+		for (int j=0;j<bodyJoints->m_jointInfo.size();j++) {
+			if (bodyJoints->m_jointInfo[j].m_jointName)
+			{
+				free(bodyJoints->m_jointInfo[j].m_jointName);
+			}
+			if (bodyJoints->m_jointInfo[j].m_linkName)
+			{
+				free(bodyJoints->m_jointInfo[j].m_linkName);
+			}
+		}
+		delete (*bodyJointsPtr);
+		m_data->m_bodyJointMap.remove(bodyUniqueId);
+	}
+}
+
+
 int PhysicsDirect::getNumUserConstraints() const
 {
     return m_data->m_userConstraintInfoMap.size();
@@ -913,7 +968,14 @@ int PhysicsDirect::getUserConstraintInfo(int constraintUniqueId, struct b3UserCo
     return 0;
 }
 
-
+int PhysicsDirect::getUserConstraintId(int serialIndex) const
+{
+	if ((serialIndex >= 0) && (serialIndex < getNumUserConstraints()))
+	{
+		return m_data->m_userConstraintInfoMap.getKeyAtIndex(serialIndex).getUid1();
+	}
+	return -1;
+}
 
 int PhysicsDirect::getBodyUniqueId(int serialIndex) const
 {
@@ -931,6 +993,7 @@ bool PhysicsDirect::getBodyInfo(int bodyUniqueId, struct b3BodyInfo& info) const
 	{
 		BodyJointInfoCache2* bodyJoints = *bodyJointsPtr;
 		info.m_baseName = bodyJoints->m_baseName.c_str();
+		info.m_bodyName = bodyJoints->m_bodyName.c_str();
 		return true;
 	}
 	

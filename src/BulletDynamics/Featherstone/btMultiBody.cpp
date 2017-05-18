@@ -1965,6 +1965,10 @@ const char*	btMultiBody::serialize(void* dataBuffer, class btSerializer* seriali
 				memPtr->m_parentIndex = getLink(i).m_parent;
 				memPtr->m_jointDamping = getLink(i).m_jointDamping;
 				memPtr->m_jointFriction = getLink(i).m_jointFriction;
+				memPtr->m_jointLowerLimit = getLink(i).m_jointLowerLimit;
+				memPtr->m_jointUpperLimit = getLink(i).m_jointUpperLimit;
+				memPtr->m_jointMaxForce = getLink(i).m_jointMaxForce;
+				memPtr->m_jointMaxVelocity = getLink(i).m_jointMaxVelocity;
 
 				getLink(i).m_eVector.serialize(memPtr->m_parentComToThisComOffset);
 				getLink(i).m_dVector.serialize(memPtr->m_thisPivotToThisComOffset);
@@ -2008,6 +2012,11 @@ const char*	btMultiBody::serialize(void* dataBuffer, class btSerializer* seriali
 			serializer->finalizeChunk(chunk,btMultiBodyLinkDataName,BT_ARRAY_CODE,(void*) &m_links[0]);
 		}
 		mbd->m_links = mbd->m_numLinks? (btMultiBodyLinkData*) serializer->getUniquePointer((void*)&m_links[0]):0;
+
+		// Fill padding with zeros to appease msan.
+#ifdef BT_USE_DOUBLE_PRECISION
+		memset(mbd->m_padding, 0, sizeof(mbd->m_padding));
+#endif
 
 		return btMultiBodyDataName;
 }
