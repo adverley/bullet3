@@ -188,19 +188,24 @@ public:
 
 		unsigned long long int curTime = m_clock.getTimeMicroseconds();
 		unsigned long long int dtMicro = curTime - m_prevTime;
-		m_prevTime = curTime;
+		const SharedMemoryStatus* stat = 0;
+		if (dtMicro>10)
+		{
+			m_prevTime = curTime;
 
-		double dt = double(dtMicro)/1000000.;
+			double dt = double(dtMicro)/1000000.;
 
-		m_physicsServerExample->stepSimulation(dt);
+			m_physicsServerExample->stepSimulation(dt);
+			
+
+			{
+				stat = PhysicsClientSharedMemory::processServerStatus();
+			}
+		}
 		{
 			b3Clock::usleep(0);
 		}
-		const SharedMemoryStatus* stat = 0;
-
-		{
-			stat = PhysicsClientSharedMemory::processServerStatus();
-		}
+		
 
 		return stat;
         

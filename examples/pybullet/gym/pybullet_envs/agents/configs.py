@@ -20,21 +20,21 @@ from __future__ import print_function
 
 import functools
 
-from . import ppo
-from . import networks
+from agents import ppo
+from agents.scripts import networks
 from pybullet_envs.bullet import minitaur_gym_env
 from pybullet_envs.bullet import minitaur_duck_gym_env
 from pybullet_envs.bullet import minitaur_env_randomizer
 import pybullet_envs.bullet.minitaur_gym_env as minitaur_gym_env
 import pybullet_envs
-import tensorflow as tf
+
 
 def default():
   """Default configuration for PPO."""
   # General
   algorithm = ppo.PPOAlgorithm
-  num_agents = 30
-  eval_episodes = 30
+  num_agents = 10
+  eval_episodes = 20
   use_gpu = False
   # Network
   network = networks.feed_forward_gaussian
@@ -44,17 +44,18 @@ def default():
       value=r'.*/value/.*')
   policy_layers = 200, 100
   value_layers = 200, 100
-  init_mean_factor = 0.1
+  init_mean_factor = 0.05
   init_logstd = -1
   # Optimization
-  update_every = 30
-  update_epochs = 25
-  optimizer = tf.train.AdamOptimizer
-  update_epochs_policy = 64
-  update_epochs_value = 64
-  learning_rate = 1e-4  
+  update_every = 20
+  policy_optimizer = 'AdamOptimizer'
+  value_optimizer = 'AdamOptimizer'
+  update_epochs_policy = 50
+  update_epochs_value = 50
+  policy_lr = 1e-4
+  value_lr = 3e-4
   # Losses
-  discount = 0.995
+  discount = 0.985
   kl_target = 1e-2
   kl_cutoff_factor = 2
   kl_cutoff_coef = 1000
@@ -116,15 +117,6 @@ def pybullet_racecar():
   env = 'RacecarBulletEnv-v0' #functools.partial(racecarGymEnv.RacecarGymEnv, isDiscrete=False, renders=True)
   max_length = 10
   steps = 1e7  # 10M
-  return locals()
-
-
-def pybullet_humanoid():
-  locals().update(default())
-  randomizer = (minitaur_env_randomizer.MinitaurEnvRandomizer())
-  env = 'HumanoidBulletEnv-v0'
-  max_length = 1000
-  steps = 3e7  # 30M
   return locals()
 
 

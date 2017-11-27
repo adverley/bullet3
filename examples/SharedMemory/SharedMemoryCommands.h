@@ -358,11 +358,10 @@ struct SendDesiredStateArgs
 {
 	int m_bodyUniqueId;
 	int m_controlMode;
-	
+
 	//PD parameters in case m_controlMode == CONTROL_MODE_POSITION_VELOCITY_PD
 	double m_Kp[MAX_DEGREE_OF_FREEDOM];//indexed by degree of freedom, 6 for base, and then the dofs for each link
 	double m_Kd[MAX_DEGREE_OF_FREEDOM];//indexed by degree of freedom, 6 for base, and then the dofs for each link
-	double m_rhsClamp[MAX_DEGREE_OF_FREEDOM];
 
     int m_hasDesiredStateFlags[MAX_DEGREE_OF_FREEDOM];
     
@@ -390,7 +389,6 @@ enum EnumSimDesiredStateUpdateFlags
 	SIM_DESIRED_STATE_HAS_KD=4,
 	SIM_DESIRED_STATE_HAS_KP=8,
 	SIM_DESIRED_STATE_HAS_MAX_FORCE=16,
-	SIM_DESIRED_STATE_HAS_RHS_CLAMP=32
 };
 
 
@@ -435,6 +433,12 @@ struct LoadBunnyArgs
     double m_scale;
     double m_mass;
     double m_collisionMargin;
+};
+
+
+struct b3LoadBunnyResultArgs
+{
+	int m_objectUniqueId;
 };
 
 struct RequestActualStateArgs
@@ -1046,6 +1050,7 @@ struct SharedMemoryStatus
 		struct b3LoadTextureResultArgs m_loadTextureResultArguments;
 		struct b3CustomCommandResultArgs m_customCommandResultArgs;
 		struct b3PhysicsSimulationParameters m_simulationParameterResultArgs;
+		struct b3LoadBunnyResultArgs m_loadBunnyResultArguments;
 	};
 };
 

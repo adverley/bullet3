@@ -708,8 +708,7 @@ unsigned int btQuickprofGetCurrentThreadIndex2() {
 
 #if BT_THREADSAFE
   return btGetCurrentThreadIndex();
-#else
-#if defined(BT_HAVE_TLS)
+#elif defined(BT_HAVE_TLS)
   static __thread unsigned int sThreadIndex = kNullIndex;
 #elif defined(_WIN32)
   __declspec(thread) static unsigned int sThreadIndex = kNullIndex;
@@ -724,7 +723,6 @@ unsigned int btQuickprofGetCurrentThreadIndex2() {
     sThreadIndex = gThreadCounter++;
   }
   return sThreadIndex;
-#endif //BT_THREADSAFE
 }
 
 void	btEnterProfileZoneDefault(const char* name)

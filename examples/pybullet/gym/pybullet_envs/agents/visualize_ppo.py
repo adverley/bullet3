@@ -24,13 +24,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import functools
 import os
 
 import gym
 import tensorflow as tf
 
-from . import tools
-from . import utility
+from agents import tools
+from agents.scripts import utility
 
 
 def _create_environment(config, outdir):
@@ -96,6 +97,9 @@ def visualize(
     env_processes: Whether to step environments in separate processes.
   """
   config = utility.load_config(logdir)
+  with config.unlocked:
+    config.policy_optimizer = getattr(tf.train, config.policy_optimizer)
+    config.value_optimizer = getattr(tf.train, config.value_optimizer)
   with tf.device('/cpu:0'):
     batch_env = utility.define_batch_env(
         lambda: _create_environment(config, outdir),

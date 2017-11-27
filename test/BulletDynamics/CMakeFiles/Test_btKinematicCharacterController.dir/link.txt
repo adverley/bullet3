@@ -1,0 +1,1 @@
+/usr/bin/c++   -O3 -DNDEBUG   CMakeFiles/Test_btKinematicCharacterController.dir/test_btKinematicCharacterController.o  -o Test_btKinematicCharacterController -rdynamic ../../src/BulletDynamics/libBulletDynamics.a ../../src/BulletCollision/libBulletCollision.a ../../src/LinearMath/libLinearMath.a ../gtest-1.7.0/libgtest.a -lpthread 

@@ -29,9 +29,6 @@ struct PhysicsDirectInternalData
 	btAlignedObjectArray<char> m_serverDNA;
 	SharedMemoryCommand m_command;
 	SharedMemoryStatus m_serverStatus;
-
-	SharedMemoryCommand m_tmpInfoRequestCommand;
-	SharedMemoryStatus m_tmpInfoStatus;
 	bool m_hasStatus;
 	bool m_verboseOutput;
 	
@@ -82,9 +79,6 @@ struct PhysicsDirectInternalData
 
 PhysicsDirect::PhysicsDirect(PhysicsCommandProcessorInterface* physSdk, bool passSdkOwnership)
 {
-	int sz = sizeof(SharedMemoryCommand);
-	int sz2 = sizeof(SharedMemoryStatus);
-
 	m_data = new PhysicsDirectInternalData;
 	m_data->m_commandProcessor = physSdk;
 	m_data->m_ownsCommandProcessor = passSdkOwnership;
@@ -820,12 +814,12 @@ void PhysicsDirect::postProcessStatus(const struct SharedMemoryStatus& serverCmd
 		for (int i=0;i<numConstraints;i++)
 		{
 			int constraintUid = serverCmd.m_sdfLoadedArgs.m_userConstraintUniqueIds[i];
-			
-			m_data->m_tmpInfoRequestCommand.m_type = CMD_USER_CONSTRAINT;
-			m_data->m_tmpInfoRequestCommand.m_updateFlags = USER_CONSTRAINT_REQUEST_INFO;
-            m_data->m_tmpInfoRequestCommand.m_userConstraintArguments.m_userConstraintUniqueId = constraintUid;
-			
-			bool hasStatus = m_data->m_commandProcessor->processCommand(m_data->m_tmpInfoRequestCommand, m_data->m_tmpInfoStatus, &m_data->m_bulletStreamDataServerToClient[0], SHARED_MEMORY_MAX_STREAM_CHUNK_SIZE);
+			SharedMemoryCommand infoRequestCommand;
+			infoRequestCommand.m_type = CMD_USER_CONSTRAINT;
+			infoRequestCommand.m_updateFlags = USER_CONSTRAINT_REQUEST_INFO;
+            infoRequestCommand.m_userConstraintArguments.m_userConstraintUniqueId = constraintUid;
+			SharedMemoryStatus infoStatus;
+			bool hasStatus = m_data->m_commandProcessor->processCommand(infoRequestCommand, infoStatus, &m_data->m_bulletStreamDataServerToClient[0], SHARED_MEMORY_MAX_STREAM_CHUNK_SIZE);
 					
 
 			b3Clock clock;
@@ -834,13 +828,13 @@ void PhysicsDirect::postProcessStatus(const struct SharedMemoryStatus& serverCmd
 
 			while ((!hasStatus) && (clock.getTimeInSeconds()-startTime < timeOutInSeconds))
 			{
-				hasStatus = m_data->m_commandProcessor->receiveStatus(m_data->m_tmpInfoStatus, &m_data->m_bulletStreamDataServerToClient[0], SHARED_MEMORY_MAX_STREAM_CHUNK_SIZE);
+				hasStatus = m_data->m_commandProcessor->receiveStatus(infoStatus, &m_data->m_bulletStreamDataServerToClient[0], SHARED_MEMORY_MAX_STREAM_CHUNK_SIZE);
 			}
 
 			if (hasStatus)
 			{
-				int cid = m_data->m_tmpInfoStatus.m_userConstraintResultArgs.m_userConstraintUniqueId;
-				m_data->m_userConstraintInfoMap.insert(cid,m_data->m_tmpInfoStatus.m_userConstraintResultArgs);
+				int cid = infoStatus.m_userConstraintResultArgs.m_userConstraintUniqueId;
+				m_data->m_userConstraintInfoMap.insert(cid,infoStatus.m_userConstraintResultArgs);
 			}
 		}
 
@@ -848,11 +842,11 @@ void PhysicsDirect::postProcessStatus(const struct SharedMemoryStatus& serverCmd
 		for (int i = 0; i<numBodies; i++)
 		{
 			int bodyUniqueId = serverCmd.m_sdfLoadedArgs.m_bodyUniqueIds[i];
-			
-			m_data->m_tmpInfoRequestCommand.m_type = CMD_REQUEST_BODY_INFO;
-			m_data->m_tmpInfoRequestCommand.m_sdfRequestInfoArgs.m_bodyUniqueId = bodyUniqueId;
-			
-			bool hasStatus = m_data->m_commandProcessor->processCommand(m_data->m_tmpInfoRequestCommand, m_data->m_tmpInfoStatus, &m_data->m_bulletStreamDataServerToClient[0], SHARED_MEMORY_MAX_STREAM_CHUNK_SIZE);
+			SharedMemoryCommand infoRequestCommand;
+			infoRequestCommand.m_type = CMD_REQUEST_BODY_INFO;
+			infoRequestCommand.m_sdfRequestInfoArgs.m_bodyUniqueId = bodyUniqueId;
+			SharedMemoryStatus infoStatus;
+			bool hasStatus = m_data->m_commandProcessor->processCommand(infoRequestCommand, infoStatus, &m_data->m_bulletStreamDataServerToClient[0], SHARED_MEMORY_MAX_STREAM_CHUNK_SIZE);
 					
 
 			b3Clock clock;
@@ -861,12 +855,12 @@ void PhysicsDirect::postProcessStatus(const struct SharedMemoryStatus& serverCmd
 
 			while ((!hasStatus) && (clock.getTimeInSeconds()-startTime < timeOutInSeconds))
 			{
-				hasStatus = m_data->m_commandProcessor->receiveStatus(m_data->m_tmpInfoStatus, &m_data->m_bulletStreamDataServerToClient[0], SHARED_MEMORY_MAX_STREAM_CHUNK_SIZE);
+				hasStatus = m_data->m_commandProcessor->receiveStatus(infoStatus, &m_data->m_bulletStreamDataServerToClient[0], SHARED_MEMORY_MAX_STREAM_CHUNK_SIZE);
 			}
 
 			if (hasStatus)
 			{
-				processBodyJointInfo(bodyUniqueId, m_data->m_tmpInfoStatus);
+				processBodyJointInfo(bodyUniqueId, infoStatus);
 			}
 		}
 		break;
@@ -909,7 +903,7 @@ void PhysicsDirect::postProcessStatus(const struct SharedMemoryStatus& serverCmd
 	}
 	case CMD_CHANGE_USER_CONSTRAINT_FAILED:
 	{
-		//b3Warning("changeConstraint failed");
+		b3Warning("changeConstraint failed");
 		break;
 	}
 
