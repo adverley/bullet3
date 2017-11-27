@@ -185,6 +185,18 @@ B3_SHARED_API b3SharedMemoryCommandHandle b3LoadBunnyCommandInit(b3PhysicsClient
     return (b3SharedMemoryCommandHandle) command;
 }
 
+
+B3_SHARED_API b3SharedMemoryCommandHandle b3CreateSoftBodyCommandInit(b3PhysicsClientHandle physClient) {
+	PhysicsClient* cl = (PhysicsClient* ) physClient;
+	b3Assert(cl);
+	b3Assert(cl->canSubmitCommand());
+	struct SharedMemoryCommand* command = cl->getAvailableSharedMemoryCommand();
+	b3Assert(command);
+	command->m_type = CMD_CREATE_SOFT_BODY;
+	command->m_updateFlags =0;
+	return (b3SharedMemoryCommandHandle) command;
+}
+
 B3_SHARED_API int b3LoadBunnySetScale(b3SharedMemoryCommandHandle commandHandle, double scale)
 {
     struct SharedMemoryCommand* command = (struct SharedMemoryCommand*) commandHandle;

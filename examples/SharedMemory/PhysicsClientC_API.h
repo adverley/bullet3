@@ -497,7 +497,7 @@ B3_SHARED_API	b3SharedMemoryCommandHandle	b3LoadBunnyCommandInit(b3PhysicsClient
 B3_SHARED_API	int b3LoadBunnySetScale(b3SharedMemoryCommandHandle commandHandle, double scale);
 B3_SHARED_API	int b3LoadBunnySetMass(b3SharedMemoryCommandHandle commandHandle, double mass);
 B3_SHARED_API	int b3LoadBunnySetCollisionMargin(b3SharedMemoryCommandHandle commandHandle, double collisionMargin);
-
+B3_SHARED_API 	b3SharedMemoryCommandHandle b3CreateSoftBodyCommandInit(b3PhysicsClientHandle physClient);
 
 B3_SHARED_API	b3SharedMemoryCommandHandle	b3RequestVREventsCommandInit(b3PhysicsClientHandle physClient);
 B3_SHARED_API	void b3VREventsSetDeviceTypeFilter(b3SharedMemoryCommandHandle commandHandle, int deviceTypeFilter);
