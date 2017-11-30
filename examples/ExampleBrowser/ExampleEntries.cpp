@@ -74,6 +74,7 @@
 #include "../ExtendedTutorials/CompoundBoxes.h"
 #include "../ExtendedTutorials/SimpleJoint.h"
 #include "../ExtendedTutorials/SimpleCloth.h"
+#include "../ExtendedTutorials/SoftBodyFromObj.h"
 #include "../ExtendedTutorials/Chain.h"
 #include "../ExtendedTutorials/Bridge.h"
 #include "../ExtendedTutorials/RigidBodyFromObj.h"
@@ -326,6 +327,7 @@ static ExampleEntry gDefaultExamples[]=
 	ExampleEntry(1,"Compound Boxes", "Add multiple boxes to a single CompoundShape to form a simple rigid L-beam, that falls under gravity", ET_CompoundBoxesCreateFunc),
 	ExampleEntry(1,"Simple Joint", "Create a single distance constraint between two box rigid bodies", ET_SimpleJointCreateFunc),
 	ExampleEntry(1,"Simple Cloth", "Create a simple piece of cloth", ET_SimpleClothCreateFunc),
+	ExampleEntry(1,"SoftBody Obj", "Create a SoftBody from an Obj file", ET_SoftBodyFromObjCreateFunc),
 	ExampleEntry(1,"Simple Chain", "Create a simple chain using a pair of point2point/distance constraints. You may click and drag any box to see the chain respond.", ET_ChainCreateFunc),
 	ExampleEntry(1,"Simple Bridge", "Create a simple bridge using a pair of point2point/distance constraints. You may click and drag any plank to see the bridge respond.", ET_BridgeCreateFunc),
 	ExampleEntry(1,"Inclined Plane", "Create an inclined plane to show restitution and different types of friction. Use the sliders to vary restitution and friction and press space to reset the scene.", ET_InclinedPlaneCreateFunc),
