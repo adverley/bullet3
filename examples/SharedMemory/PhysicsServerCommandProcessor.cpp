@@ -4816,7 +4816,7 @@ Higher values are generally recommended if faulty rendering and/or incorrect col
 								    }
 								    printf("[INFO] Obj loaded: Extracted %d vertices, %d indices from obj file [%s]\n", vertices.size(), indices.size(), fileName);
 
-								    btSoftBody* psb = btSoftBodyHelpers::CreateFromTriMesh(softBodyWorldInfo, &vertices[0], &(indices[0]), indices.size()/3);
+								    btSoftBody* psb = btSoftBodyHelpers::CreateFromTriMesh(m_data->softBodyWorldInfo, &vertices[0], &(indices[0]), indices.size()/3);
 
 								    btVector3 scaling(0.1, 0.1, 0.1);
 
@@ -4853,6 +4853,7 @@ Higher values are generally recommended if faulty rendering and/or incorrect col
                     psb->m_cfg.kDP = 0.005f;
 
 										m_data->m_dynamicsWorld->addSoftBody(psb);
+										break;
 
 #endif
 								}
@@ -4865,6 +4866,9 @@ Higher values are generally recommended if faulty rendering and/or incorrect col
 					//serverStatusOut.m_loadBunnyResultArguments.m_objectUniqueId = -1;
 
 #ifndef SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
+										const int numX = 15;
+										const int numY = 15;
+										const int fixed = 0;
                     double scale = 0.1;
                     double mass = 0.1;
                     double collisionMargin = 0.02;
@@ -4944,7 +4948,7 @@ Higher values are generally recommended if faulty rendering and/or incorrect col
 							{
 								//btSoftBody*	psb=btSoftBodyHelpers::CreateFromTriMesh(m_data->m_softBodyWorldInfo,gVerticesBunny,&gIndicesBunny[0][0],BUNNY_NUM_TRIANGLES);
 								//btSoftBody*	psb=btSoftBodyHelpers::CreateFromTriMesh(m_data->m_softBodyWorldInfo,&vertices[0],&indices[0],numTris);
-                                btSoftBody* psb=btSoftBodyHelpers::CreatePatch(softBodyWorldInfo, btVector3(-s/2,s+1,0), btVector3(+s/2,s+1,0), btVector3(-s/2,s+1,+s), btVector3(+s/2,s+1,+s), numX,numY, fixed,true);
+                                btSoftBody* psb=btSoftBodyHelpers::CreatePatch(m_data->m_softBodyWorldInfo, btVector3(-s/2,s+1,0), btVector3(+s/2,s+1,0), btVector3(-s/2,s+1,+s), btVector3(+s/2,s+1,+s), numX,numY, fixed,true);
                     			btSoftBody::Material*	pm=psb->appendMaterial();
 								pm->m_kLST				=	1.0;
 								pm->m_flags				-=	btSoftBody::fMaterial::DebugDraw;
