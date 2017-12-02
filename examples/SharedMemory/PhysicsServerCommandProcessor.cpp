@@ -4816,7 +4816,7 @@ Higher values are generally recommended if faulty rendering and/or incorrect col
 								    }
 								    printf("[INFO] Obj loaded: Extracted %d vertices, %d indices from obj file [%s]\n", vertices.size(), indices.size(), fileName);
 
-								    btSoftBody* psb = btSoftBodyHelpers::CreateFromTriMesh(m_data->softBodyWorldInfo, &vertices[0], &(indices[0]), indices.size()/3);
+								    btSoftBody* psb = btSoftBodyHelpers::CreateFromTriMesh(m_data->m_softBodyWorldInfo, &vertices[0], &(indices[0]), indices.size()/3);
 
 								    btVector3 scaling(0.1, 0.1, 0.1);
 
