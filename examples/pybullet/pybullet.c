@@ -1212,10 +1212,13 @@ static PyObject* pybullet_loadCloth(PyObject* self, PyObject* args, PyObject* ke
 
 static PyObject* pybullet_loadSoftBodyFromObj(PyObject* self, PyObject* args, PyObject* keywds)
 {
+		int bodyUniqueId = -1;
+		b3PhysicsClientHandle sm = 0;
+
 		int physicsClientId = 0;
 		int flags = 0;
 
-		static char* kwlist[] = {"physicsClientId", NULL} //"filename","baseposition", "stiffness_parameter"
+		static char* kwlist[] = {"physicsClientId", NULL}; //"filename","baseposition", "stiffness_parameter"
 
 		if (!PyArg_ParseTupleAndKeywords(args, keywds, "|i", kwlist, &physicsClientId))
 		{
