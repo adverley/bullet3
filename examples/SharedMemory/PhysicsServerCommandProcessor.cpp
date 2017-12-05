@@ -4947,7 +4947,7 @@ Higher values are generally recommended if faulty rendering and/or incorrect col
 							if (numTris>0)
 							{
 								//btSoftBody*	psb=btSoftBodyHelpers::CreateFromTriMesh(m_data->m_softBodyWorldInfo,gVerticesBunny,&gIndicesBunny[0][0],BUNNY_NUM_TRIANGLES);
-								btSoftBody*	psb=btSoftBodyHelpers::CreateFromTriMesh(m_data->m_softBodyWorldInfo,&vertices[0],&indices[0],numTris);
+//								btSoftBody*	psb=btSoftBodyHelpers::CreateFromTriMesh(m_data->m_softBodyWorldInfo,&vertices[0],&indices[0],numTris);
                 //btSoftBody* psb=btSoftBodyHelpers::CreatePatch(m_data->m_softBodyWorldInfo, btVector3(-s/2,s+1,0), btVector3(+s/2,s+1,0), btVector3(-s/2,s+1,+s), btVector3(+s/2,s+1,+s), numX,numY, fixed,true);
 								//btSoftBody*	psb=btSoftBodyHelpers::CreateFromTriMesh(m_data->m_softBodyWorldInfo,&vertices[0],&indices[0],numTris);
                                 const btScalar s = 4; //size of cloth patch
