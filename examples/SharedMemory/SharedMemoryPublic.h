@@ -22,6 +22,7 @@ enum EnumSharedMemoryClientCommand
 	CMD_SAVE_BULLET,
 	CMD_LOAD_MJCF,
 	CMD_CREATE_SOFT_BODY,
+  CMD_LOAD_SOFT_BODY,
     CMD_LOAD_BUNNY,
 	CMD_SEND_BULLET_DATA_STREAM,
 	CMD_CREATE_BOX_COLLISION_SHAPE,
@@ -80,7 +81,7 @@ enum EnumSharedMemoryClientCommand
 	CMD_REQUEST_PHYSICS_SIMULATION_PARAMETERS,
     //don't go beyond this command!
     CMD_MAX_CLIENT_COMMANDS,
-    
+
 };
 
 enum EnumSharedMemoryServerStatus
@@ -188,7 +189,7 @@ enum JointInfoFlags
     JOINT_HAS_MOTORIZED_POWER=1,
 };
 
-enum 
+enum
 {
 	COLLISION_SHAPE_TYPE_BOX=1,
 	COLLISION_SHAPE_TYPE_CYLINDER_X,
@@ -320,13 +321,13 @@ struct b3OpenGLVisualizerCameraInfo
     int m_height;
 	float m_viewMatrix[16];
 	float m_projectionMatrix[16];
-	
+
 	float m_camUp[3];
 	float m_camForward[3];
 
 	float m_horizontal[3];
 	float m_vertical[3];
-	
+
 	float m_yaw;
 	float m_pitch;
 	float m_dist;
@@ -386,7 +387,7 @@ struct b3VRControllerEvent
 	int m_deviceType;
 	int m_numMoveEvents;
 	int m_numButtonEvents;
-	
+
 	float m_pos[4];//valid for VR_CONTROLLER_MOVE_EVENT and VR_CONTROLLER_BUTTON_EVENT
 	float m_orn[4];//valid for VR_CONTROLLER_MOVE_EVENT and VR_CONTROLLER_BUTTON_EVENT
 
@@ -399,7 +400,7 @@ struct b3VREventsData
 {
 	int m_numControllerEvents;
 	struct b3VRControllerEvent* m_controllerEvents;
-	
+
 };
 
 
@@ -449,7 +450,7 @@ struct b3ContactPointData
     double m_positionOnBInWS[3];//contact point location on object A, in world space coordinates
     double m_contactNormalOnBInWS[3];//the separating contact normal, pointing from object B towards object A
     double m_contactDistance;//negative number is penetration, positive is distance.
-    
+
     double m_normalForce;
 
 //todo: expose the friction forces as well
@@ -461,7 +462,7 @@ struct b3ContactPointData
 //    double m_angularFrictionForce;
 };
 
-enum 
+enum
 {
 	CONTACT_QUERY_MODE_REPORT_EXISTING_CONTACT_POINTS = 0,
 	CONTACT_QUERY_MODE_COMPUTE_CLOSEST_POINTS = 1,
@@ -638,7 +639,7 @@ enum eUrdfGeomTypes //sync with UrdfParser UrdfGeomTypes
 	GEOM_MESH,
 	GEOM_PLANE,
 	GEOM_CAPSULE, //non-standard URDF?
-	GEOM_UNKNOWN, 
+	GEOM_UNKNOWN,
 };
 
 enum eUrdfCollisionFlags

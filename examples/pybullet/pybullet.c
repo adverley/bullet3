@@ -1210,6 +1210,37 @@ static PyObject* pybullet_loadCloth(PyObject* self, PyObject* args, PyObject* ke
     return PyLong_FromLong(bodyUniqueId);
 }
 
+static PyObject* pybullet_loadSoftBodyFromObj(PyObject* self, PyObject* args, PyObject* keywds)
+{
+		int bodyUniqueId = -1;
+		b3PhysicsClientHandle sm = 0;
+
+		int physicsClientId = 0;
+		int flags = 0;
+
+		static char* kwlist[] = {"physicsClientId", NULL}; //"filename","baseposition", "stiffness_parameter"
+
+		if (!PyArg_ParseTupleAndKeywords(args, keywds, "|i", kwlist, &physicsClientId))
+		{
+				return NULL;
+		}
+
+		sm = getPhysicsClient(physicsClientId);
+		if (sm == 0)
+		{
+				PyErr_SetString(SpamError, "Not connected to physics server.");
+				return NULL;
+		}
+
+		b3SharedMemoryStatusHandle statusHandle;
+    int statusType;
+    b3SharedMemoryCommandHandle command = b3LoadSoftBodyFromObjCommandInit(sm);
+    b3SubmitClientCommandAndWaitStatus(sm , command);
+    statusType = b3GetStatusType(statusHandle);
+    bodyUniqueId = b3GetStatusBodyIndex(statusHandle);
+    return PyLong_FromLong(bodyUniqueId);
+}
+
 static PyObject* pybullet_loadTorus(PyObject* self, PyObject* args, PyObject* keywds)
 {
 	int physicsClientId = 0;
@@ -8149,6 +8180,7 @@ static PyMethodDef SpamMethods[] = {
 
 	{"loadBunny", (PyCFunction)pybullet_loadBunny, METH_VARARGS | METH_KEYWORDS, "Load soft body bunny."},
     {"loadCloth", (PyCFunction)pybullet_loadCloth, METH_VARARGS | METH_KEYWORDS, "Load soft body cloth."},
+		{"loadSoftBodyFromObj", (PyCFunction)pybullet_loadSoftBodyFromObj, METH_VARARGS | METH_KEYWORDS, "Load soft body from Object file."},
 
 	{NULL, NULL, 0, NULL} /* Sentinel */
 };
