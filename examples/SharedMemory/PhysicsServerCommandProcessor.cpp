@@ -4778,85 +4778,107 @@ Higher values are generally recommended if faulty rendering and/or incorrect col
 #endif
                 }
 
-								case CMD_LOAD_SOFT_BODY:
-								{
+			    case CMD_LOAD_SOFT_BODY:
+				{
+			        serverStatusOut.m_type = CMD_UNKNOWN_COMMAND_FLUSHED;
+					hasStatus = true;
+					//serverStatusOut.m_loadBunnyResultArguments.m_objectUniqueId = -1;
+
 #ifndef SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
-										m_data->m_softBodyWorldInfo.m_broadphase = m_data->m_broadphase;
-										m_data->m_softBodyWorldInfo.m_sparsesdf.Initialize();
+				    const int numX = 15;
+				    const int numY = 15;
+					const int fixed = 0;
+                    double scale = 0.01;
+                    double mass = 0.1;
+                    double collisionMargin = 0.02;
+                    if (clientCmd.m_updateFlags & LOAD_BUNNY_UPDATE_SCALE)
+                    {
+                        scale = clientCmd.m_loadBunnyArguments.m_scale;
+                    }
+                    if (clientCmd.m_updateFlags & LOAD_BUNNY_UPDATE_MASS)
+                    {
+                        mass = clientCmd.m_loadBunnyArguments.m_mass;
+                    }
+                    if (clientCmd.m_updateFlags & LOAD_BUNNY_UPDATE_COLLISION_MARGIN)
+                    {
+                        collisionMargin = clientCmd.m_loadBunnyArguments.m_collisionMargin;
+                    }
+                    m_data->m_softBodyWorldInfo.air_density		=	(btScalar)1.2;
+                    m_data->m_softBodyWorldInfo.water_density	=	0;
+                    m_data->m_softBodyWorldInfo.water_offset	=	0;
+                    m_data->m_softBodyWorldInfo.water_normal	=	btVector3(0,0,0);
+                    m_data->m_softBodyWorldInfo.m_gravity.setValue(0,0,-10);
+                    m_data->m_softBodyWorldInfo.m_broadphase = m_data->m_broadphase;
+                    m_data->m_softBodyWorldInfo.m_sparsesdf.Initialize();
 
 
-										// load our obj mesh
-								    const char* fileName = "teddy.obj";//sphere8.obj";//sponza_closed.obj";//sphere8.obj";
-								    char relativeFileName[1024];
-								    if (b3ResourcePath::findResourcePath(fileName, relativeFileName, 1024)) {
-								        char pathPrefix[1024];
-								        b3FileUtils::extractPath(relativeFileName, pathPrefix, 1024);
-								    }
-								    std::vector<tinyobj::shape_t> shapes;
-								    std::string err = tinyobj::LoadObj(shapes, relativeFileName, "");
+					{
+						char relativeFileName[1024];
+						char pathPrefix[1024];
+						pathPrefix[0] = 0;
+						if (b3ResourcePath::findResourcePath("teddy.obj", relativeFileName, 1024))
+						{
 
-								    btAlignedObjectArray<btScalar> vertices;
-								    btAlignedObjectArray<int> indices;
+							b3FileUtils::extractPath(relativeFileName, pathPrefix, 1024);
+						}
 
-								    //loop through all the shapes and add vertices and indices
-								    int offset = 0;
-								    for(int i=0;i<shapes.size();++i) {
-								        const tinyobj::shape_t& shape = shapes[i];
+						const std::string& error_message_prefix="";
+						std::string out_found_filename;
+						int out_type;
 
-								        //add vertices
-								        for(int j=0;j<shape.mesh.positions.size();++j) {
-								            vertices.push_back(shape.mesh.positions[j]);
-								        }
+						bool foundFile = findExistingMeshFile(pathPrefix, relativeFileName,error_message_prefix,&out_found_filename, &out_type);
 
-								        //add indices
-								        for(int j=0;j<shape.mesh.indices.size();++j) {
-								            indices.push_back(offset + shape.mesh.indices[j]);
-								        }
-								        offset += shape.mesh.positions.size();
-								    }
-								    printf("[INFO] Obj loaded: Extracted %d vertices, %d indices from obj file [%s]\n", vertices.size(), indices.size(), fileName);
+						std::vector<tinyobj::shape_t> shapes;
+						std::string err = tinyobj::LoadObj(shapes,out_found_filename.c_str());
+						if (shapes.size()>0)
+						{
+							const tinyobj::shape_t& shape = shapes[0];
 
-								    btSoftBody* psb = btSoftBodyHelpers::CreateFromTriMesh(m_data->m_softBodyWorldInfo, &vertices[0], &(indices[0]), indices.size()/3);
+							btAlignedObjectArray<btScalar> vertices;
+							btAlignedObjectArray<int> indices;
+							for (int i=0;i<shape.mesh.positions.size();i++)
+							{
+								vertices.push_back(shape.mesh.positions[i]);
+							}
+							for (int i=0;i<shape.mesh.indices.size();i++)
+							{
+								indices.push_back(shape.mesh.indices[i]);
+							}
+							int numTris = indices.size()/3;
+							if (numTris>0)
+							{
+								btSoftBody*	psb=btSoftBodyHelpers::CreateFromTriMesh(m_data->m_softBodyWorldInfo,&vertices[0],&indices[0],numTris);
+                    			btSoftBody::Material*	pm=psb->appendMaterial();
+								pm->m_kLST				=	1.0;
+								pm->m_flags				-=	btSoftBody::fMaterial::DebugDraw;
+								psb->generateBendingConstraints(2,pm);
+								psb->m_cfg.piterations	=	50;
+								psb->m_cfg.kDF			=	0.5;
+								psb->randomizeConstraints();
+								psb->rotate(btQuaternion(0.70711,0,0,0.70711));
+								psb->translate(btVector3(0,0,30.0));
+								psb->scale(btVector3(scale,scale,scale));
+								psb->setTotalMass(mass,true);
+								psb->getCollisionShape()->setMargin(collisionMargin);
 
-								    btVector3 scaling(0.1, 0.1, 0.1);
+								m_data->m_dynamicsWorld->addSoftBody(psb);
 
-								    btSoftBody::Material* pm=psb->appendMaterial();
-								    pm->m_kLST =   0.75;
-								    pm->m_flags -= btSoftBody::fMaterial::DebugDraw;
-								    psb->scale(scaling);
-								    psb->generateBendingConstraints(4,pm);
-								    psb->m_cfg.piterations = 2;
-								    psb->m_cfg.kDF = 0.75;
-								    psb->m_cfg.collisions |= btSoftBody::fCollision::VF_SS;
-								    psb->randomizeConstraints();
-
-								    btMatrix3x3    m;
-								    btVector3 x(0,10,0);
-								    btVector3 a(0,0,0);
-								    m.setEulerZYX(a.x(),a.y(),a.z());
-								    psb->transform(btTransform(m,x));
-								    psb->setTotalMass(1);
-								    psb->getCollisionShape()->setMargin(0.1f);
-								    //getSoftDynamicsWorld()->addSoftBody(psb);
-								    //m_guiHelper->autogenerateGraphicsObjects(m_dynamicsWorld);
-
-										m_data->m_softBodyWorldInfo.air_density = (btScalar) 1.2;
-										m_data->m_softBodyWorldInfo.water_density = 0;
-										m_data->m_softBodyWorldInfo.water_offset = 0;
-										m_data->m_softBodyWorldInfo.water_normal = btVector3(0, 0, 0);
-										btVector3 currentGravity = m_data->m_dynamicsWorld->getGravity();
-					                    btVector3 noGravity = btVector3(0,0,0);
-										m_data->m_softBodyWorldInfo.m_gravity.setValue(currentGravity.x(), currentGravity.y(), currentGravity.z());
-										psb->m_cfg.piterations = 5;
-                    psb->m_cfg.citerations = 5;
-                    psb->m_cfg.diterations = 5;
-                    psb->m_cfg.kDP = 0.005f;
-
-										m_data->m_dynamicsWorld->addSoftBody(psb);
-										break;
-
+#if 1
+								int bodyUniqueId = m_data->m_bodyHandles.allocHandle();
+								InternalBodyHandle* bodyHandle = m_data->m_bodyHandles.getHandle(bodyUniqueId);
+								bodyHandle->m_softBody = psb;
+								serverStatusOut.m_loadBunnyResultArguments.m_objectUniqueId = bodyUniqueId;
 #endif
-								}
+							}
+						}
+					}
+
+
+					serverStatusOut.m_type = CMD_CLIENT_COMMAND_COMPLETED;
+#endif
+                    break;
+	
+                }
 
 
                 case CMD_LOAD_BUNNY:
@@ -4892,6 +4914,7 @@ Higher values are generally recommended if faulty rendering and/or incorrect col
                     m_data->m_softBodyWorldInfo.m_broadphase = m_data->m_broadphase;
                     m_data->m_softBodyWorldInfo.m_sparsesdf.Initialize();
 
+
 					{
 						FILE* f = fopen("bunny.obj", "w");
 						fprintf(f, "o bunny\n");
@@ -4909,6 +4932,7 @@ Higher values are generally recommended if faulty rendering and/or incorrect col
 						{
 							fprintf(f, "f %d %d %d\n", gIndicesBunny[i][0]+1, gIndicesBunny[i][1]+1, gIndicesBunny[i][2]+1);
 						}
+                        
 						fclose(f);
 					}
 					{
@@ -4948,7 +4972,7 @@ Higher values are generally recommended if faulty rendering and/or incorrect col
 							{
 								//btSoftBody*	psb=btSoftBodyHelpers::CreateFromTriMesh(m_data->m_softBodyWorldInfo,gVerticesBunny,&gIndicesBunny[0][0],BUNNY_NUM_TRIANGLES);
 								btSoftBody*	psb=btSoftBodyHelpers::CreateFromTriMesh(m_data->m_softBodyWorldInfo,&vertices[0],&indices[0],numTris);
-                //btSoftBody* psb=btSoftBodyHelpers::CreatePatch(m_data->m_softBodyWorldInfo, btVector3(-s/2,s+1,0), btVector3(+s/2,s+1,0), btVector3(-s/2,s+1,+s), btVector3(+s/2,s+1,+s), numX,numY, fixed,true);
+                                //btSoftBody* psb=btSoftBodyHelpers::CreatePatch(m_data->m_softBodyWorldInfo, btVector3(-s/2,s+1,0), btVector3(+s/2,s+1,0), btVector3(-s/2,s+1,+s), btVector3(+s/2,s+1,+s), numX,numY, fixed,true);
                     			btSoftBody::Material*	pm=psb->appendMaterial();
 								pm->m_kLST				=	1.0;
 								pm->m_flags				-=	btSoftBody::fMaterial::DebugDraw;
@@ -4957,7 +4981,7 @@ Higher values are generally recommended if faulty rendering and/or incorrect col
 								psb->m_cfg.kDF			=	0.5;
 								psb->randomizeConstraints();
 								psb->rotate(btQuaternion(0.70711,0,0,0.70711));
-								psb->translate(btVector3(0,0,1.0));
+								psb->translate(btVector3(0,0,10.0));
 								psb->scale(btVector3(scale,scale,scale));
 								psb->setTotalMass(mass,true);
 								psb->getCollisionShape()->setMargin(collisionMargin);
