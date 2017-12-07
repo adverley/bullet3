@@ -128,6 +128,8 @@ SET(ExtendedTutorialsSources
 	../ExtendedTutorials/SimpleCloth.h
     ../ExtendedTutorials/SoftBodyFromObj.cpp
     ../ExtendedTutorials/SoftBodyFromObj.h
+    ../ExtendedTutorials/TeddyFromPybullet.cpp
+    ../ExtendedTutorials/TeddyFromPybullet.h
 	../ExtendedTutorials/SimpleJoint.cpp
 	../ExtendedTutorials/SimpleJoint.h
 	../ExtendedTutorials/NewtonsCradle.cpp
