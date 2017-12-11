@@ -140,6 +140,7 @@ SET(ExtendedTutorialsSources
 	../ExtendedTutorials/MultiPendulum.h
 )
 
+
 SET(BulletExampleBrowser_SRCS
 
 	../TinyRenderer/geometry.cpp
@@ -182,6 +183,8 @@ SET(BulletExampleBrowser_SRCS
 	../RobotSimulator/b3RobotSimulatorClientAPI.h
 	../BasicDemo/BasicExample.cpp
 	../BasicDemo/BasicExample.h
+    ../SoftDemo/SoftDemo.cpp
+    ../SoftDemo/SoftDemo.h
 	../InverseDynamics/InverseDynamicsExample.cpp
 	../InverseDynamics/InverseDynamicsExample.h
 	../InverseKinematics/InverseKinematicsExample.cpp
