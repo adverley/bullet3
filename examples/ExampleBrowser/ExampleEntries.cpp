@@ -51,6 +51,7 @@
 #include "../RoboticsLearning/R2D2GraspExample.h"
 #include "../RoboticsLearning/KukaGraspExample.h"
 #include "../RoboticsLearning/GripperGraspExample.h"
+#include "../RoboticsLearning/GripperSoftBodyGraspExample.h"
 #include "../InverseKinematics/InverseKinematicsExample.h"
 
 #ifdef B3_ENABLE_TINY_AUDIO
@@ -282,6 +283,7 @@ static ExampleEntry gDefaultExamples[]=
 	ExampleEntry(1,"One Motor Gripper Grasp","Grasp experiment with a gripper with one motor to test slider constraint for closed loop structure", GripperGraspExampleCreateFunc, eONE_MOTOR_GRASP),
 #ifndef  SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
 	ExampleEntry(1,"Grasp Soft Body","Grasp soft body experiment", GripperGraspExampleCreateFunc, eGRASP_SOFT_BODY),
+	ExampleEntry(1,"Grasp Cloth HELLO WORLD","Grasp cloth experiment by Andreas", GripperSoftBodyGraspExampleCreateFunc, SOFT_BODY_GRASPING),
 	ExampleEntry(1,"Softbody Multibody Coupling","Two way coupling between soft body and multibody experiment", GripperGraspExampleCreateFunc, eSOFTBODY_MULTIBODY_COUPLING),
 #endif //SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
 

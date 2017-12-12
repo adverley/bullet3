@@ -238,7 +238,9 @@ SET(BulletExampleBrowser_SRCS
 	../RenderingExamples/TinyVRGui.h
 	
 	../RoboticsLearning/GripperGraspExample.cpp
-	../RoboticsLearning/GripperGraspExample.h
+		../RoboticsLearning/GripperGraspExample.h
+		../RoboticsLearning/GripperSoftBodyGraspExample.cpp
+	../RoboticsLearning/GripperSoftBodyGraspExample.h
 	../RoboticsLearning/R2D2GraspExample.cpp
 	../RoboticsLearning/R2D2GraspExample.h
 	../RoboticsLearning/KukaGraspExample.cpp
