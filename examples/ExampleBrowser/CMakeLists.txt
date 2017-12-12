@@ -128,6 +128,8 @@ SET(ExtendedTutorialsSources
 	../ExtendedTutorials/SimpleCloth.h
     ../ExtendedTutorials/SoftBodyFromObj.cpp
     ../ExtendedTutorials/SoftBodyFromObj.h
+    ../ExtendedTutorials/TeddyFromPybullet.cpp
+    ../ExtendedTutorials/TeddyFromPybullet.h
 	../ExtendedTutorials/SimpleJoint.cpp
 	../ExtendedTutorials/SimpleJoint.h
 	../ExtendedTutorials/NewtonsCradle.cpp
@@ -137,6 +139,7 @@ SET(ExtendedTutorialsSources
 	../ExtendedTutorials/MultiPendulum.cpp
 	../ExtendedTutorials/MultiPendulum.h
 )
+
 
 SET(BulletExampleBrowser_SRCS
 
@@ -180,6 +183,8 @@ SET(BulletExampleBrowser_SRCS
 	../RobotSimulator/b3RobotSimulatorClientAPI.h
 	../BasicDemo/BasicExample.cpp
 	../BasicDemo/BasicExample.h
+    ../SoftDemo/SoftDemo.cpp
+    ../SoftDemo/SoftDemo.h
 	../InverseDynamics/InverseDynamicsExample.cpp
 	../InverseDynamics/InverseDynamicsExample.h
 	../InverseKinematics/InverseKinematicsExample.cpp
