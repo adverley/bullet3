@@ -5,7 +5,10 @@
 ///increase the SHARED_MEMORY_MAGIC_NUMBER whenever incompatible changes are made in the structures
 ///my convention is year/month/day/rev
 
-#define SHARED_MEMORY_MAGIC_NUMBER 201710180
+#define SHARED_MEMORY_MAGIC_NUMBER 201801170
+//#define SHARED_MEMORY_MAGIC_NUMBER 201801080
+//#define SHARED_MEMORY_MAGIC_NUMBER 201801010
+//#define SHARED_MEMORY_MAGIC_NUMBER 201710180
 //#define SHARED_MEMORY_MAGIC_NUMBER 201710050
 //#define SHARED_MEMORY_MAGIC_NUMBER 201708270
 //#define SHARED_MEMORY_MAGIC_NUMBER 201707140
@@ -21,9 +24,7 @@ enum EnumSharedMemoryClientCommand
 	CMD_LOAD_BULLET,
 	CMD_SAVE_BULLET,
 	CMD_LOAD_MJCF,
-	CMD_CREATE_SOFT_BODY,
-  CMD_LOAD_SOFT_BODY,
-    CMD_LOAD_BUNNY,
+    CMD_LOAD_SOFT_BODY,
 	CMD_SEND_BULLET_DATA_STREAM,
 	CMD_CREATE_BOX_COLLISION_SHAPE,
 	CMD_CREATE_RIGID_BODY,
@@ -79,6 +80,9 @@ enum EnumSharedMemoryClientCommand
 	CMD_SET_ADDITIONAL_SEARCH_PATH,
 	CMD_CUSTOM_COMMAND,
 	CMD_REQUEST_PHYSICS_SIMULATION_PARAMETERS,
+	CMD_SAVE_STATE,
+	CMD_RESTORE_STATE,
+	CMD_REQUEST_COLLISION_SHAPE_INFO,
     //don't go beyond this command!
     CMD_MAX_CLIENT_COMMANDS,
 
@@ -180,7 +184,15 @@ enum EnumSharedMemoryServerStatus
 		CMD_CUSTOM_COMMAND_COMPLETED,
 		CMD_CUSTOM_COMMAND_FAILED,
 		CMD_REQUEST_PHYSICS_SIMULATION_PARAMETERS_COMPLETED,
-        //don't go beyond 'CMD_MAX_SERVER_COMMANDS!
+		CMD_SAVE_STATE_FAILED,
+		CMD_SAVE_STATE_COMPLETED,
+		CMD_RESTORE_STATE_FAILED,
+		CMD_RESTORE_STATE_COMPLETED,
+		CMD_COLLISION_SHAPE_INFO_COMPLETED,
+		CMD_COLLISION_SHAPE_INFO_FAILED,
+		CMD_LOAD_SOFT_BODY_FAILED,
+		CMD_LOAD_SOFT_BODY_COMPLETED,
+		//don't go beyond 'CMD_MAX_SERVER_COMMANDS!
         CMD_MAX_SERVER_COMMANDS
 };
 
@@ -238,6 +250,7 @@ struct b3JointInfo
 		double m_parentFrame[7]; // position and orientation (quaternion)
 		double m_childFrame[7]; // ^^^
 		double m_jointAxis[3]; // joint axis in parent local frame
+		int m_parentIndex;
 };
 
 
@@ -268,8 +281,15 @@ struct b3BodyInfo
 struct b3DynamicsInfo
 {
 	double m_mass;
-	double m_localInertialPosition[3];
+	double m_localInertialDiagonal[3];
+	double m_localInertialFrame[7];
 	double m_lateralFrictionCoeff;
+
+	double m_rollingFrictionCoeff;
+	double m_spinningFrictionCoeff;
+	double m_restitution;
+	double m_contactStiffness;
+	double m_contactDamping;
 };
 
 // copied from btMultiBodyLink.h
@@ -522,6 +542,23 @@ struct b3VisualShapeInformation
 	struct b3VisualShapeData* m_visualShapeData;
 };
 
+
+struct b3CollisionShapeData
+{
+	int m_objectUniqueId;
+	int m_linkIndex;
+	int m_collisionGeometryType;//GEOM_BOX, GEOM_SPHERE etc
+	double m_dimensions[3];//meaning depends on m_visualGeometryType GEOM_BOX: extents, GEOM_SPHERE: radius, GEOM_CAPSULE+GEOM_CYLINDER:length, radius, GEOM_MESH: mesh scale 
+	double m_localCollisionFrame[7];//pos[3], orn[4]
+	char m_meshAssetFileName[VISUAL_SHAPE_MAX_PATH_LEN];
+};
+
+struct b3CollisionShapeInformation
+{
+	int m_numCollisionShapes;
+	struct b3CollisionShapeData* m_collisionShapeData;
+};
+
 enum eLinkStateFlags
 {
 	ACTUAL_STATE_COMPUTE_LINKVELOCITY=1,
@@ -576,6 +613,10 @@ enum EnumRenderer
     //ER_FIRE_RAYS=(1<<18),
 };
 
+enum EnumRendererAuxFlags
+{
+	ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX=1,
+};
 ///flags to pick the IK solver and other options
 enum EnumCalculateInverseKinematicsFlags
 {
@@ -619,6 +660,7 @@ enum eCONNECT_METHOD {
   eCONNECT_TCP = 5,
   eCONNECT_EXISTING_EXAMPLE_BROWSER=6,
   eCONNECT_GUI_SERVER=7,
+  eCONNECT_GUI_MAIN_THREAD=8,
 };
 
 enum eURDF_Flags
@@ -628,7 +670,9 @@ enum eURDF_Flags
 	URDF_USE_SELF_COLLISION_EXCLUDE_PARENT=16,
 	URDF_USE_SELF_COLLISION_EXCLUDE_ALL_PARENTS=32,
 	URDF_RESERVED=64,
-
+	URDF_USE_IMPLICIT_CYLINDER =128,
+	URDF_GLOBAL_VELOCITIES_MB =256,
+	MJCF_COLORS_FROM_FILE=512,
 };
 
 enum eUrdfGeomTypes //sync with UrdfParser UrdfGeomTypes
@@ -645,6 +689,7 @@ enum eUrdfGeomTypes //sync with UrdfParser UrdfGeomTypes
 enum eUrdfCollisionFlags
 {
 	GEOM_FORCE_CONCAVE_TRIMESH=1,
+	GEOM_CONCAVE_INTERNAL_EDGE=2,
 };
 
 enum eUrdfVisualFlags
@@ -690,6 +735,9 @@ struct b3PhysicsSimulationParameters
 	double m_restitutionVelocityThreshold;
 	double 	m_defaultNonContactERP;
 	double m_frictionERP;
+	int m_enableConeFriction;
+	int m_deterministicOverlappingPairs;
+	double m_allowedCcdPenetration;
 };
 
 

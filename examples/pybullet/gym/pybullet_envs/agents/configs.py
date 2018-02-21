@@ -120,6 +120,15 @@ def pybullet_racecar():
   return locals()
 
 
+def pybullet_humanoid():
+  locals().update(default())
+  randomizer = (minitaur_env_randomizer.MinitaurEnvRandomizer())
+  env = 'HumanoidBulletEnv-v0'
+  max_length = 1000
+  steps = 3e8  # 300M
+  return locals()
+
+
 def pybullet_minitaur():
   """Configuration specific to minitaur_gym_env.MinitaurBulletEnv class."""
   locals().update(default())

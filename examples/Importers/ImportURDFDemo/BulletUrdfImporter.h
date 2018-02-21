@@ -3,7 +3,7 @@
 
 #include "URDFImporterInterface.h"
 
-#include "LinkVisualShapesConverter.h"
+#include "UrdfRenderingInterface.h"
 
 struct BulletURDFTexture
 {
@@ -23,7 +23,7 @@ class BulletURDFImporter : public URDFImporterInterface
 
 public:
 
-	BulletURDFImporter(struct GUIHelperInterface* helper, LinkVisualShapesConverter* customConverter, double globalScaling=1);
+	BulletURDFImporter(struct GUIHelperInterface* helper, UrdfRenderingInterface* customConverter, double globalScaling=1, int flags=0);
 
 	virtual ~BulletURDFImporter();
 
@@ -71,6 +71,8 @@ public:
     virtual void convertLinkVisualShapes2(int linkIndex, int urdfIndex, const char* pathPrefix, const btTransform& inertialFrame, class btCollisionObject* colObj, int bodyUniqueId) const;
 
 	class btCollisionShape* convertURDFToCollisionShape(const struct UrdfCollision* collision, const char* urdfPathPrefix) const;
+
+	virtual int getUrdfFromCollisionShape(const btCollisionShape* collisionShape, UrdfCollision& collision) const;
 
     ///todo(erwincoumans) refactor this convertLinkCollisionShapes/memory allocation
     

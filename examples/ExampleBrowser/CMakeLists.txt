@@ -148,11 +148,10 @@ SET(BulletExampleBrowser_SRCS
 	../TinyRenderer/tgaimage.cpp
 	../TinyRenderer/our_gl.cpp
 	../TinyRenderer/TinyRenderer.cpp
-	../SharedMemory/TinyRendererVisualShapeConverter.cpp
-	../SharedMemory/TinyRendererVisualShapeConverter.h
+	../SharedMemory/plugins/tinyRendererPlugin/tinyRendererPlugin.cpp
+	../SharedMemory/plugins/tinyRendererPlugin/TinyRendererVisualShapeConverter.cpp
 	../SharedMemory/IKTrajectoryHelper.cpp
 	../SharedMemory/IKTrajectoryHelper.h
-	
 	../SharedMemory/PhysicsServer.cpp
 	../SharedMemory/PhysicsClientSharedMemory.cpp
 	../SharedMemory/PhysicsClientSharedMemory_C_API.cpp
@@ -181,6 +180,8 @@ SET(BulletExampleBrowser_SRCS
 	../SharedMemory/b3PluginManager.cpp
 	../RobotSimulator/b3RobotSimulatorClientAPI.cpp
 	../RobotSimulator/b3RobotSimulatorClientAPI.h
+	../RobotSimulator/b3RobotSimulatorClientAPI_NoGUI.cpp
+	../RobotSimulator/b3RobotSimulatorClientAPI_NoGUI.h
 	../BasicDemo/BasicExample.cpp
 	../BasicDemo/BasicExample.h
     ../SoftDemo/SoftDemo.cpp
@@ -268,6 +269,7 @@ SET(BulletExampleBrowser_SRCS
 	../Importers/ImportMeshUtility/b3ImportMeshUtility.cpp
 ../Importers/ImportMeshUtility/b3ImportMeshUtility.h
 	../../Extras/Serialize/BulletWorldImporter/btWorldImporter.cpp
+	../../Extras/Serialize/BulletWorldImporter/btMultiBodyWorldImporter.cpp
 	../../Extras/Serialize/BulletWorldImporter/btBulletWorldImporter.cpp
 	../../Extras/Serialize/BulletFileLoader/bChunk.cpp		
 	../../Extras/Serialize/BulletFileLoader/bFile.cpp

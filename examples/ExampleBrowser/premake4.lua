@@ -3,7 +3,11 @@ project "App_BulletExampleBrowser"
         language "C++"
 
         kind "ConsoleApp"
-
+        
+        if os.is("Linux") then
+	        buildoptions{"-fPIC"}
+	    end
+        
         hasCL = findOpenCL("clew")
 
         if (hasCL) then
@@ -110,8 +114,8 @@ project "App_BulletExampleBrowser"
 		"../SharedMemory/PhysicsServerCommandProcessor.cpp",
 		"../SharedMemory/PhysicsServerCommandProcessor.h",
 		"../SharedMemory/b3PluginManager.cpp",		
-		"../SharedMemory/TinyRendererVisualShapeConverter.cpp",
-		"../SharedMemory/TinyRendererVisualShapeConverter.h",
+		"../SharedMemory/plugins/tinyRendererPlugin/TinyRendererVisualShapeConverter.cpp",
+		"../SharedMemory/plugins/tinyRendererPlugin/tinyRendererPlugin.cpp",
 		"../SharedMemory/SharedMemoryCommands.h",
 		"../SharedMemory/SharedMemoryPublic.h",
 		"../MultiThreading/MultiThreadingExample.cpp",
@@ -122,6 +126,8 @@ project "App_BulletExampleBrowser"
 		"../InverseDynamics/InverseDynamicsExample.h",
 		"../RobotSimulator/b3RobotSimulatorClientAPI.cpp",
 		"../RobotSimulator/b3RobotSimulatorClientAPI.h",		
+		"../RobotSimulator/b3RobotSimulatorClientAPI_NoGUI.cpp",
+		"../RobotSimulator/b3RobotSimulatorClientAPI_NoGUI.h",		
 		"../BasicDemo/BasicExample.*",
 		"../Tutorial/*",
 		"../ExtendedTutorials/*",
@@ -207,6 +213,10 @@ project "BulletExampleBrowserLib"
                 "../../src",
                 "../ThirdPartyLibs",
                 }
+                
+        if os.is("Linux") then
+            buildoptions{"-fPIC"}
+        end
 
 	if _OPTIONS["lua"] then
 		includedirs{"../ThirdPartyLibs/lua-5.2.3/src"}

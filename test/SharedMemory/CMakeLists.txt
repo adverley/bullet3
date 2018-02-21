@@ -11,13 +11,13 @@ INCLUDE_DIRECTORIES(
 #ADD_DEFINITIONS(-DGTEST_HAS_PTHREAD=1)
 ADD_DEFINITIONS(-DPHYSICS_LOOP_BACK -DPHYSICS_SERVER_DIRECT -DENABLE_GTEST -D_VARIADIC_MAX=10)
 
+IF (USE_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD)
+	LINK_LIBRARIES(BulletSoftBody)
+ENDIF()
 
 LINK_LIBRARIES(
  BulletInverseDynamicsUtils BulletInverseDynamics BulletFileLoader BulletWorldImporter Bullet3Common BulletDynamics BulletCollision LinearMath gtest BussIK
 )
-IF (USE_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD)
-	LINK_LIBRARIES(BulletSoftBody)
-ENDIF()
 
 IF (NOT WIN32)
 	LINK_LIBRARIES(		pthread	)
@@ -66,8 +66,8 @@ ENDIF()
 												../../examples/Utils/ChromeTraceUtil.h
 						../../examples/Utils/RobotLoggingUtil.cpp
                         ../../examples/Utils/RobotLoggingUtil.h
-					    ../../examples/SharedMemory/TinyRendererVisualShapeConverter.cpp
-						../../examples/SharedMemory/TinyRendererVisualShapeConverter.h
+					    ../../examples/SharedMemory/plugins/tinyRendererPlugin/tinyRendererPlugin.cpp
+							../../examples/SharedMemory/plugins/tinyRendererPlugin/TinyRendererVisualShapeConverter.cpp
 						../../examples/OpenGLWindow/SimpleCamera.cpp
 						../../examples/OpenGLWindow/SimpleCamera.h
 						../../examples/TinyRenderer/geometry.cpp

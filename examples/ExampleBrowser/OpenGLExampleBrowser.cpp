@@ -1306,7 +1306,7 @@ void OpenGLExampleBrowser::update(float deltaTime)
                 BT_PROFILE("Render Scene");
                 sCurrentDemo->renderScene();
             }
-			//else
+			else
             {
 				B3_PROFILE("physicsDebugDraw");
 				glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
@@ -1329,7 +1329,7 @@ void OpenGLExampleBrowser::update(float deltaTime)
 				float camPos[3];
 				s_guiHelper->getRenderInterface()->getActiveCamera()->getCameraPosition(camPos);
 				s_guiHelper->getRenderInterface()->getActiveCamera()->getCameraTargetPosition(camTarget);
-				sprintf(msg,"camPos=%f,%f,%f, dist=%f, pitch=%f, yaw=%f,target=%f,%f,%f", camPos[0],camPos[1],camPos[2],camDist,pitch,yaw,camTarget[0],camTarget[1],camTarget[2]);
+				sprintf(msg,"camTargetPos=%2.2f,%2.2f,%2.2f, dist=%2.2f, pitch=%2.2f, yaw=%2.2f", camTarget[0],camTarget[1],camTarget[2],camDist,pitch,yaw);
 				gui2->setStatusBarMessage(msg, true);	
 			}
 			

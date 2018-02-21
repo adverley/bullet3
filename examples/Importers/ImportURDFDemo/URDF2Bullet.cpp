@@ -2,6 +2,9 @@
 #include "LinearMath/btTransform.h"
 #include "BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h"
 #include "BulletCollision/CollisionShapes/btCompoundShape.h"
+#include "BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h"
+
+
 #include "BulletDynamics/Dynamics/btRigidBody.h"
 #include "BulletDynamics/Featherstone/btMultiBodyLinkCollider.h"
 #include "BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h"
@@ -344,6 +347,10 @@ void ConvertURDF2BulletInternal(
                 bool isFixedBase = (mass==0);//todo: figure out when base is fixed
                 int totalNumJoints = cache.m_totalNumJoints1;
                 cache.m_bulletMultiBody = creation.allocateMultiBody(urdfLinkIndex, totalNumJoints,mass, localInertiaDiagonal, isFixedBase, canSleep);
+				if (flags & CUF_GLOBAL_VELOCITIES_MB)
+				{
+					cache.m_bulletMultiBody->useGlobalVelocities(true);
+				}
 				if (flags & CUF_USE_MJCF)
 				{
 					cache.m_bulletMultiBody->setBaseWorldTransform(linkTransformInWorldSpace);
@@ -498,6 +505,15 @@ void ConvertURDF2BulletInternal(
 
                 col->setCollisionShape(compoundShape);
 
+				if (compoundShape->getShapeType() == TRIANGLE_MESH_SHAPE_PROXYTYPE)
+				{
+					btBvhTriangleMeshShape* trimeshShape = (btBvhTriangleMeshShape*)compoundShape;
+					if (trimeshShape->getTriangleInfoMap())
+					{
+						col->setCollisionFlags(col->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+					}
+				}
+
                 btTransform tr;
                 tr.setIdentity();
                 tr = linkTransformInWorldSpace;
@@ -562,7 +578,9 @@ void ConvertURDF2BulletInternal(
             }
         } else
         {
-            //u2b.convertLinkVisualShapes2(urdfLinkIndex,urdfIndex,pathPrefix,localInertialFrame,compoundShape);
+		    int mbLinkIndex =cache.getMbIndexFromUrdfIndex(urdfLinkIndex);
+			//u2b.convertLinkVisualShapes2(mbLinkIndex, urdfLinkIndex, pathPrefix, localInertialFrame, col, u2b.getBodyUniqueId());
+            u2b.convertLinkVisualShapes2(-1,urdfLinkIndex,pathPrefix,localInertialFrame,linkRigidBody,u2b.getBodyUniqueId());
         }
     }
 

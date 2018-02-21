@@ -32,8 +32,8 @@ myfiles =
 			"../../examples/SharedMemory/Win32SharedMemory.h",
 			"../../examples/SharedMemory/PosixSharedMemory.cpp",
 			"../../examples/SharedMemory/PosixSharedMemory.h",
-			"../../examples/SharedMemory/TinyRendererVisualShapeConverter.cpp",
-			"../../examples/SharedMemory/TinyRendererVisualShapeConverter.h",
+			"../../examples/SharedMemory/plugins/tinyRendererPlugin/TinyRendererVisualShapeConverter.cpp",
+			"../../examples/SharedMemory/plugins/tinyRendererPlugin/tinyRendererPlugin.cpp",
 			"../../examples/TinyRenderer/geometry.cpp",
 			"../../examples/TinyRenderer/model.cpp",
 			"../../examples/TinyRenderer/tgaimage.cpp",
@@ -193,6 +193,8 @@ if not _OPTIONS["no-enet"] then
 			"RobotSimulatorMain.cpp",
 			"b3RobotSimulatorClientAPI.cpp",
 			"b3RobotSimulatorClientAPI.h",
+			"b3RobotSimulatorClientAPI_NoGUI.cpp",
+			"b3RobotSimulatorClientAPI_NoGUI.h",
 			"MinitaurSetup.cpp",
 			"MinitaurSetup.h",
 			myfiles
@@ -283,6 +285,8 @@ project ("App_VRGloveHandSimulator")
 			"VRGloveSimulatorMain.cpp",
 			"b3RobotSimulatorClientAPI.cpp",
 			"b3RobotSimulatorClientAPI.h",
+			"b3RobotSimulatorClientAPI_NoGUI.cpp",
+			"b3RobotSimulatorClientAPI_NoGUI.h",
 			myfiles
 		}
 

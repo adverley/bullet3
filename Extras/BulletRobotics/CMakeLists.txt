@@ -10,8 +10,8 @@ INCLUDE_DIRECTORIES(
 SET(BulletRobotics_SRCS
 		../../examples/SharedMemory/IKTrajectoryHelper.cpp
 		../../examples/SharedMemory/IKTrajectoryHelper.h
-		../../examples/SharedMemory/TinyRendererVisualShapeConverter.cpp
-		../../examples/SharedMemory/TinyRendererVisualShapeConverter.h
+		../../examples/SharedMemory/plugins/tinyRendererPlugin/tinyRendererPlugin.cpp
+		../../examples/SharedMemory/plugins/tinyRendererPlugin/TinyRendererVisualShapeConverter.cpp
 		../../examples/OpenGLWindow/SimpleCamera.cpp
 		../../examples/OpenGLWindow/SimpleCamera.h
 		../../examples/TinyRenderer/geometry.cpp
@@ -120,6 +120,10 @@ ELSE(WIN32)
 	IF(BUILD_CLSOCKET)	
 		ADD_DEFINITIONS(${OSDEF})
 	ENDIF(BUILD_CLSOCKET)
+		
+	IF(NOT APPLE)
+		LINK_LIBRARIES(  pthread ${DL} )
+	ENDIF(APPLE)
 ENDIF(WIN32)
 
 IF(BUILD_ENET)

@@ -69,6 +69,13 @@ struct SdfArgs
 struct FileArgs
 {
 	char m_fileName[MAX_URDF_FILENAME_LENGTH];
+	int m_stateId;
+};
+
+enum EnumLoadStateArgsUpdateFlags
+{
+	CMD_LOAD_STATE_HAS_STATEID=1,
+	CMD_LOAD_STATE_HAS_FILENAME=2,
 };
 
 enum EnumUrdfArgsUpdateFlags
@@ -151,7 +158,8 @@ enum EnumChangeDynamicsInfoFlags
 	CHANGE_DYNAMICS_INFO_SET_ANGULAR_DAMPING=128,
 	CHANGE_DYNAMICS_INFO_SET_CONTACT_STIFFNESS_AND_DAMPING=256,
 	CHANGE_DYNAMICS_INFO_SET_FRICTION_ANCHOR = 512,
-
+	CHANGE_DYNAMICS_INFO_SET_LOCAL_INERTIA_DIAGONAL = 1024,
+	CHANGE_DYNAMICS_INFO_SET_CCD_SWEPT_SPHERE_RADIUS = 2048,
 };
 
 struct ChangeDynamicsInfoArgs
@@ -168,7 +176,9 @@ struct ChangeDynamicsInfoArgs
 	double m_angularDamping;
 	double m_contactStiffness;
 	double m_contactDamping;
+	double m_localInertiaDiagonal[3];
 	int m_frictionAnchor;
+	double m_ccdSweptSphereRadius;
 };
 
 struct GetDynamicsInfoArgs
@@ -229,6 +239,7 @@ struct RequestPixelDataArgs
     float m_lightDiffuseCoeff;
     float m_lightSpecularCoeff;
     int m_hasShadow;
+	int m_flags;
 };
 
 enum EnumRequestPixelDataUpdateFlags
@@ -242,6 +253,8 @@ enum EnumRequestPixelDataUpdateFlags
     REQUEST_PIXEL_ARGS_SET_AMBIENT_COEFF=64,
     REQUEST_PIXEL_ARGS_SET_DIFFUSE_COEFF=128,
     REQUEST_PIXEL_ARGS_SET_SPECULAR_COEFF=256,
+	REQUEST_PIXEL_ARGS_HAS_FLAGS = 512,
+
 	//don't exceed (1<<15), because this enum is shared with EnumRenderer in SharedMemoryPublic.h
 	
 };
@@ -291,6 +304,12 @@ struct RequestVisualShapeDataArgs
 	int m_startingVisualShapeIndex;
 };
 
+struct RequestCollisionShapeDataArgs
+{
+	int m_bodyUniqueId;
+	int m_linkIndex;
+};
+
 enum EnumUpdateVisualShapeData
 {
 	CMD_UPDATE_VISUAL_SHAPE_TEXTURE=1,
@@ -326,7 +345,12 @@ struct SendVisualShapeDataArgs
     int m_numRemainingVisualShapes;
 };
 
-
+struct SendCollisionShapeDataArgs
+{
+	int m_bodyUniqueId;
+	int m_linkIndex;
+	int m_numCollisionShapes;
+};
 
 struct SendDebugLinesArgs
 {
@@ -392,6 +416,8 @@ enum EnumSimDesiredStateUpdateFlags
 };
 
 
+	
+
 enum EnumSimParamUpdateFlags
 {
 	SIM_PARAM_UPDATE_DELTA_TIME=1,
@@ -405,18 +431,21 @@ enum EnumSimParamUpdateFlags
 	SIM_PARAM_UPDATE_SPLIT_IMPULSE_PENETRATION_THRESHOLD = 256,
 	SIM_PARAM_UPDATE_COLLISION_FILTER_MODE=512,
 	SIM_PARAM_UPDATE_CONTACT_BREAKING_THRESHOLD = 1024,
-	SIM_PARAM_MAX_CMD_PER_1MS = 2048,
+	SIM_PARAM_ENABLE_CONE_FRICTION = 2048,
 	SIM_PARAM_ENABLE_FILE_CACHING = 4096,
 	SIM_PARAM_UPDATE_RESTITUTION_VELOCITY_THRESHOLD = 8192,
 	SIM_PARAM_UPDATE_DEFAULT_NON_CONTACT_ERP=16384,
 	SIM_PARAM_UPDATE_DEFAULT_FRICTION_ERP = 32768,
+	SIM_PARAM_UPDATE_DETERMINISTIC_OVERLAPPING_PAIRS = 65536,
+	SIM_PARAM_UPDATE_CCD_ALLOWED_PENETRATION = 131072,
 };
 
-enum EnumLoadBunnyUpdateFlags
+enum EnumLoadSoftBodyUpdateFlags
 {
-    LOAD_BUNNY_UPDATE_SCALE=1,
-    LOAD_BUNNY_UPDATE_MASS=2,
-    LOAD_BUNNY_UPDATE_COLLISION_MARGIN=4
+	LOAD_SOFT_BODY_FILE_NAME=1,
+    LOAD_SOFT_BODY_UPDATE_SCALE=2,
+    LOAD_SOFT_BODY_UPDATE_MASS=4,
+    LOAD_SOFT_BODY_UPDATE_COLLISION_MARGIN=8
 };
 
 enum EnumSimParamInternalSimFlags
@@ -428,15 +457,15 @@ enum EnumSimParamInternalSimFlags
 ///Controlling a robot involves sending the desired state to its joint motor controllers.
 ///The control mode determines the state variables used for motor control.
 
-struct LoadBunnyArgs
+struct LoadSoftBodyArgs
 {
+	char m_fileName[MAX_FILENAME_LENGTH];
     double m_scale;
     double m_mass;
     double m_collisionMargin;
 };
 
-
-struct b3LoadBunnyResultArgs
+struct b3LoadSoftBodyResultArgs
 {
 	int m_objectUniqueId;
 };
@@ -922,6 +951,12 @@ struct b3ChangeTextureArgs
 	int m_height;
 };
 
+struct b3StateSerializationArguments
+{
+	char m_fileName[MAX_URDF_FILENAME_LENGTH];
+	int m_stateId;
+};
+
 struct SharedMemoryCommand
 {
 	int m_type;
@@ -964,7 +999,7 @@ struct SharedMemoryCommand
 		struct CalculateInverseKinematicsArgs m_calculateInverseKinematicsArguments;
 		struct UserDebugDrawArgs m_userDebugDrawArgs;
 		struct RequestRaycastIntersections m_requestRaycastIntersections;
-        struct LoadBunnyArgs m_loadBunnyArguments;
+        struct LoadSoftBodyArgs m_loadSoftBodyArguments;
 		struct VRCameraState m_vrCameraStateArguments;
 		struct StateLoggingRequest m_stateLoggingArguments;
         struct ConfigureOpenGLVisualizerRequest m_configureOpenGLVisualizerArguments;
@@ -976,6 +1011,8 @@ struct SharedMemoryCommand
 		struct b3ChangeTextureArgs m_changeTextureArgs;
 		struct b3SearchPathfArgs m_searchPathArgs;
 		struct b3CustomCommand m_customCommandArgs;
+		struct b3StateSerializationArguments m_loadStateArguments;
+		struct RequestCollisionShapeDataArgs m_requestCollisionShapeDataArguments;		
     };
 };
 
@@ -1050,7 +1087,9 @@ struct SharedMemoryStatus
 		struct b3LoadTextureResultArgs m_loadTextureResultArguments;
 		struct b3CustomCommandResultArgs m_customCommandResultArgs;
 		struct b3PhysicsSimulationParameters m_simulationParameterResultArgs;
-		struct b3LoadBunnyResultArgs m_loadBunnyResultArguments;
+		struct b3StateSerializationArguments m_saveStateResultArgs;
+		struct b3LoadSoftBodyResultArgs m_loadSoftBodyResultArguments;
+		struct SendCollisionShapeDataArgs m_sendCollisionShapeArgs;
 	};
 };
 

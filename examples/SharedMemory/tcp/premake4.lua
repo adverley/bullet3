@@ -62,7 +62,7 @@ defines { "NO_SHARED_MEMORY" }
 includedirs {"..","../../../src", "../../ThirdPartyLibs","../../ThirdPartyLibs/clsocket/src"}
 
 links {
-	"clsocket","Bullet3Common","BulletInverseDynamicsUtils", "BulletInverseDynamics",	"BulletDynamics","BulletCollision", "LinearMath", "BussIK"
+	"clsocket","Bullet3Common","BulletInverseDynamicsUtils", "BulletInverseDynamics",	"BulletSoftBody", "BulletDynamics","BulletCollision", "LinearMath", "BussIK"
 }
 
 
@@ -73,6 +73,7 @@ links {
         end
         if os.is("Linux") then
                 defines {"_LINUX"}
+                links{"dl"}
         end
         if os.is("MacOSX") then
                 defines {"_DARWIN"}
@@ -90,9 +91,9 @@ myfiles =
 	"../PhysicsServerCommandProcessor.h",
 	"../b3PluginManager.cpp",
 	"../PhysicsDirect.cpp",
-        "../PhysicsClient.cpp",
-	"../TinyRendererVisualShapeConverter.cpp",
-	"../TinyRendererVisualShapeConverter.h",
+	"../PhysicsClient.cpp",
+  "../plugins/tinyRendererPlugin/tinyRendererPlugin.cpp",
+	"../plugins/tinyRendererPlugin/TinyRendererVisualShapeConverter.cpp",
 	"../../TinyRenderer/geometry.cpp",
 	"../../TinyRenderer/model.cpp",
 	"../../TinyRenderer/tgaimage.cpp",
