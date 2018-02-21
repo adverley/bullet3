@@ -51,6 +51,7 @@
 #include "../RoboticsLearning/R2D2GraspExample.h"
 #include "../RoboticsLearning/KukaGraspExample.h"
 #include "../RoboticsLearning/GripperGraspExample.h"
+#include "../RoboticsLearning/GripperSoftBodyGraspExample.h"
 #include "../InverseKinematics/InverseKinematicsExample.h"
 
 #ifdef B3_ENABLE_TINY_AUDIO
@@ -75,6 +76,7 @@
 #include "../ExtendedTutorials/SimpleJoint.h"
 #include "../ExtendedTutorials/SimpleCloth.h"
 #include "../ExtendedTutorials/SoftBodyFromObj.h"
+#include "../ExtendedTutorials/TeddyFromPybullet.h"
 #include "../ExtendedTutorials/Chain.h"
 #include "../ExtendedTutorials/Bridge.h"
 #include "../ExtendedTutorials/RigidBodyFromObj.h"
@@ -179,7 +181,7 @@ static ExampleEntry gDefaultExamples[]=
 
 
 
-#ifdef INCLUDE_CLOTH_DEMOS
+//#ifdef INCLUDE_CLOTH_DEMOS
 	ExampleEntry(0,"Soft Body"),
 	ExampleEntry(1,"Cloth","Simulate a patch of cloth.", SoftDemoCreateFunc,0),
 
@@ -217,7 +219,7 @@ static ExampleEntry gDefaultExamples[]=
 	ExampleEntry(1,"Tetra Cube","Simulate a volumetric soft body cube defined by tetrahedra.", SoftDemoCreateFunc,30),
 	ExampleEntry(1,"Tetra Bunny","Simulate a volumetric soft body Stanford bunny defined by tetrahedra.", SoftDemoCreateFunc,31),
 
-#endif //INCLUDE_CLOTH_DEMOS
+//#endif //INCLUDE_CLOTH_DEMOS
 
 	///we disable the benchmarks in debug mode, they are way too slow and benchmarking in debug mode is not recommended
 //#ifndef _DEBUG
@@ -282,6 +284,7 @@ static ExampleEntry gDefaultExamples[]=
 	ExampleEntry(1,"One Motor Gripper Grasp","Grasp experiment with a gripper with one motor to test slider constraint for closed loop structure", GripperGraspExampleCreateFunc, eONE_MOTOR_GRASP),
 #ifndef  SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
 	ExampleEntry(1,"Grasp Soft Body","Grasp soft body experiment", GripperGraspExampleCreateFunc, eGRASP_SOFT_BODY),
+	ExampleEntry(1,"Grasp Cloth HELLO WORLD","Grasp cloth experiment by Andreas", GripperSoftBodyGraspExampleCreateFunc, SOFT_BODY_GRASPING),
 	ExampleEntry(1,"Softbody Multibody Coupling","Two way coupling between soft body and multibody experiment", GripperGraspExampleCreateFunc, eSOFTBODY_MULTIBODY_COUPLING),
 #endif //SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
 
@@ -328,6 +331,7 @@ static ExampleEntry gDefaultExamples[]=
 	ExampleEntry(1,"Simple Joint", "Create a single distance constraint between two box rigid bodies", ET_SimpleJointCreateFunc),
 	ExampleEntry(1,"Simple Cloth", "Create a simple piece of cloth", ET_SimpleClothCreateFunc),
 	ExampleEntry(1,"SoftBody Obj", "Create a SoftBody from an Obj file", ET_SoftBodyFromObjCreateFunc),
+	ExampleEntry(1,"Teddy Pybullet", "Create a Teddy SoftBody using a similar mechanism as the Pybullet bindings", ET_TeddyFromPybulletCreateFunc),
 	ExampleEntry(1,"Simple Chain", "Create a simple chain using a pair of point2point/distance constraints. You may click and drag any box to see the chain respond.", ET_ChainCreateFunc),
 	ExampleEntry(1,"Simple Bridge", "Create a simple bridge using a pair of point2point/distance constraints. You may click and drag any plank to see the bridge respond.", ET_BridgeCreateFunc),
 	ExampleEntry(1,"Inclined Plane", "Create an inclined plane to show restitution and different types of friction. Use the sliders to vary restitution and friction and press space to reset the scene.", ET_InclinedPlaneCreateFunc),
