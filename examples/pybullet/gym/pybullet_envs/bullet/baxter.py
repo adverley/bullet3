@@ -51,9 +51,17 @@ class Baxter:
             self.urdfRootPath, "plane.urdf"), [0, 0, -0.3], useFixedBase=True)
 
         # Load in torus
+        torus_coord = [1.2, 0, .5]
         orn = p.getQuaternionFromEuler([0, 0, math.pi / 2.])
+
+        ypos = 0 + 0.3 * np.random.random()
+        zpos = .5 + 0.2 * np.random.random()
+        torus_coord = [1, ypos, zpos]
+        # ang = 3.1415925438 * random.random() --> TODO maybe randomize angle in the future as dom randomization
+        #orn = p.getQuaternionFromEuler([0, 0, ang])
+
         self.torusUid = p.loadURDF(os.path.join(
-            self.urdfRootPath, "torus/torus.urdf"), [1.2, 0, .5],
+            self.urdfRootPath, "torus/torus.urdf"), torus_coord,
             orn, useFixedBase=True)
 
         # Compute coordinates of block
@@ -66,9 +74,6 @@ class Baxter:
 
         self.blockUid = p.loadURDF(os.path.join(
             self.urdfRootPath, "block_rot.urdf"), block_coord, orn)
-
-        # self.endEffectorPos = [0.537, 0.0, 0.5]
-        # self.endEffectorAngle = 0
 
         self.motorNames = []
         self.motorIndices = [12, 13, 14, 15, 16,
