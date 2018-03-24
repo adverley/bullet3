@@ -45,23 +45,44 @@ print "\n\n\n"
 print joint_name2joint_index
 # p.loadSoftBody("wire_softbody.obj")
 
+# Open right arm gripper
+"""
+p.setJointMotorControl2(
+    baxterId, 27, controlMode=p.POSITION_CONTROL, targetPosition=1, force=10000)
+p.setJointMotorControl2(
+    baxterId, 29, controlMode=p.POSITION_CONTROL, targetPosition=1, force=10000)
+for i in range(10):
+    p.stepSimulation()
+"""
+
 # Load in environment (block, torus) and spawn the block in the gripper of the baxter
 block_coord = [0.85, 0.95, 0.425]  # Left hand gripper coordinates
 blockId = p.loadURDF("block_rot.urdf", block_coord)
 # p.loadSoftBody("wire_softbody.obj")
 torusId = p.loadURDF("torus/torus.urdf", [1.3, 0, .7],
                      p.getQuaternionFromEuler([0, 0, math.pi / 2.]))  # [1.8, 0, .7] for torus_only.obj
-orn = p.getQuaternionFromEuler([math.pi / 2., math.pi / 2., math.pi])
-block_coord = [0.87, 0.98, 0.825]
-p.resetBasePositionAndOrientation(blockId, block_coord, orn)
+#orn = p.getQuaternionFromEuler([math.pi / 2., math.pi / 2., math.pi])
+#block_coord = [0.87, 0.98, 0.825]
+#p.resetBasePositionAndOrientation(blockId, block_coord, orn)
 
 # Place block in the right hand gripper
-block_coord = [0.865, -1.059, 0.825]
+# block_coord = [0.865, -1.059, 0.825] #Vertical coordinates
+# orn = p.getQuaternionFromEuler([math.pi / 2., math.pi / 2., math.pi])
+# block_coord = [0.89, -1.07, 0.822]  # Horizontal coordinates with opening gripper
+# Horizontal coordinates without opening gripper
+block_coord = [0.875, -1.07, 0.822]
+orn = p.getQuaternionFromEuler(
+    [math.pi, math.pi, 3. * math.pi / 4.])
+p.resetBasePositionAndOrientation(blockId, block_coord, orn)
 
+time.sleep(5)
+
+"""
 coord1 = p.getLinkState(baxterId, 27)[0]
 coord2 = p.getLinkState(baxterId, 29)[0]
 block_coord = [(x[0] + x[1]) / 2. for x in zip(coord1, coord2)]
 p.resetBasePositionAndOrientation(blockId, block_coord, orn)
+"""
 
 # Get global position of joint in world
 print "Link state:", p.getLinkState(baxterId, 27)
@@ -69,12 +90,12 @@ print "Link state block:", p.getLinkState(blockId, 0)
 
 # Close the right hand gripper
 p.setJointMotorControl2(
-    baxterId, 27, controlMode=p.POSITION_CONTROL, targetPosition=-1, force=10000)
+    baxterId, 27, controlMode=p.POSITION_CONTROL, targetPosition=0, force=10000)
 p.setJointMotorControl2(
-    baxterId, 29, controlMode=p.POSITION_CONTROL, targetPosition=-1, force=10000)
+    baxterId, 29, controlMode=p.POSITION_CONTROL, targetPosition=0, force=10000)
 p.stepSimulation()
 
-#p.setGravity(0, 0, -9.8)
+# p.setGravity(0, 0, -9.8)
 
 # Test camera
 head_camera_index = 9
@@ -129,16 +150,19 @@ else:
 print "Contact point(s) torus and block2: ", p.getContactPoints(torusId, block2Id)
 
 # Baxter open gripper
-#set_kuka_gripper(kukaId, 1)
+# set_kuka_gripper(kukaId, 1)
 orn = p.getQuaternionFromEuler([0, -math.pi, 0])
-#move_baxter_gripper(baxterId, [-.6, 0, .5], orn)
-#move_baxter_gripper(baxterId, [-.5, -.025, 0], orn)
+# move_baxter_gripper(baxterId, [-.6, 0, .5], orn)
+# move_baxter_gripper(baxterId, [-.5, -.025, 0], orn)
 
 # Move the gripper to the block
-#set_kuka_gripper(baxterId, 0)
+# set_kuka_gripper(baxterId, 0)
 step = 0
 
 while 1:
+    p.stepSimulation()
+
+while 0:
     p.stepSimulation()
     step -= 0.05
     p.setJointMotorControl2(
@@ -159,9 +183,11 @@ while 1:
         0.3 < block2_pos[2] and torus_pos[2] + 0.3 > block2_pos[1]
 
     if x_bool and y_bool and z_bool:
-        print "Block within the hole. block_pos:", block2_pos, "torus_pos:", torus_pos
+        # print "Block within the hole. block_pos:", block2_pos, "torus_pos:", torus_pos
+        pass
     else:
-        print "Block not within the hole. block_pos:", block2_pos, "torus_pos:", torus_pos
+        # print "Block not within the hole. block_pos:", block2_pos, "torus_pos:", torus_pos
+        pass
 
     # Update cam image
     """
@@ -178,7 +204,7 @@ while 0:
     t += 1
 
     # Kuka open gripper
-    #set_kuka_gripper(baxterId, .5)
+    # set_kuka_gripper(baxterId, .5)
     orn = p.getQuaternionFromEuler([0, -math.pi, 0])
     move_baxter_gripper(baxterId, [1, 1, 1], orn)
 
