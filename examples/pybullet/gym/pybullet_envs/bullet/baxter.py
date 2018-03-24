@@ -26,7 +26,9 @@ class Baxter:
         self.baxterEndEffectorIndex = 19  # or 25
         self.baxterGripperIndex = 20  # or 26
         self.baxterHeadCameraIndex = 9
-        self.torusRad = 0.1  # TODO This will have to be changed based on torus URDF scaling factor
+        # TODO This will have to be changed based on torus URDF scaling factor
+        self.torusRad = 0.4
+        self.margin = 0.1
         # lower limits for null space
         self.ll = [-.967, -2, -2.96, 0.19, -2.96, -2.09, -3.05]
         # upper limits for null space
@@ -51,12 +53,12 @@ class Baxter:
             self.urdfRootPath, "plane.urdf"), [0, 0, -0.3], useFixedBase=True)
 
         # Load in torus
-        torus_coord = [1.2, 0, .5]
+        #torus_coord = [1.1, 0, .5]
         orn = p.getQuaternionFromEuler([0, 0, math.pi / 2.])
 
-        ypos = 0 + 0.3 * np.random.random()
-        zpos = .5 + 0.2 * np.random.random()
-        torus_coord = [1, ypos, zpos]
+        ypos = -.1 + 0.05 * np.random.random()
+        zpos = .5 + 0.05 * np.random.random()
+        torus_coord = [1.2, ypos, zpos]
         # ang = 3.1415925438 * random.random() --> TODO maybe randomize angle in the future as dom randomization
         #orn = p.getQuaternionFromEuler([0, 0, ang])
 
@@ -69,11 +71,13 @@ class Baxter:
         coord2 = p.getLinkState(self.baxterUid, 29)[0]
         block_coord = [(x[0] + x[1]) / 2. for x in zip(coord1, coord2)]
 
-        orn = p.getQuaternionFromEuler([math.pi / 2., math.pi / 2., math.pi])
-        # block_coord = [0.87, 0.98, 0.825]  # [0.865, -1.059, 0.825]
+        block_coord = [0.875, -1.07, 0.822]  # Horizontal coordinates
+        orn = p.getQuaternionFromEuler([math.pi, math.pi, 3. * math.pi / 4.])
 
         self.blockUid = p.loadURDF(os.path.join(
-            self.urdfRootPath, "block_rot.urdf"), block_coord, orn)
+            self.urdfRootPath, "block_rot.urdf"), block_coord)
+
+        p.resetBasePositionAndOrientation(self.blockUid, block_coord, orn)
 
         self.motorNames = []
         self.motorIndices = [12, 13, 14, 15, 16,
