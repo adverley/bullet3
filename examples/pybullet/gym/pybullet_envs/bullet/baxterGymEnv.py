@@ -61,8 +61,7 @@ class BaxterGymEnv(gym.Env):
         self._seed()
         self.reset()
         observationDim = len(self.getExtendedObservation())
-        print("observationDim")
-        print(observationDim)
+        print "observationDim:", observationDim
 
         observation_high = np.array(
             [np.finfo(np.float32).max] * observationDim)
@@ -140,8 +139,6 @@ class BaxterGymEnv(gym.Env):
     def getExtendedObservation(self):
         """Return the observation as an image.
         """
-        return np.random.rand(240, 240, 3)
-        ##################################
         img_arr = p.getCameraImage(width=self._width,
                                    height=self._height,
                                    viewMatrix=self._view_matrix,
