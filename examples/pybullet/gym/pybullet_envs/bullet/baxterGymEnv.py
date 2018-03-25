@@ -75,7 +75,7 @@ class BaxterGymEnv(gym.Env):
             action_high = np.array([self._action_bound] * action_dim)
             self.action_space = spaces.Box(-action_high, action_high)
         self.observation_space = spaces.Box(
-            low=0, high=255, shape=(self._height, self._width, 4))
+            low=0, high=255, shape=(self._height, self._width, 3))
         self.viewer = None
 
     def _reset(self):
