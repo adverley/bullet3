@@ -9,23 +9,24 @@ os.sys.path.insert(0, parentdir)
 import gym
 from pybullet_envs.bullet.baxterGymEnv import BaxterGymEnv
 
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Flatten, Permute
+from keras.models import Sequential, Model
+from keras.layers import Dense, Activation, Flatten, Permute, Input, Concatenate
 from keras.layers.convolutional import Convolution2D, Conv2D, MaxPooling2D
 from keras.optimizers import Adam
 
-from rl.agents.dqn import DQNAgent
+from rl.agents import DDPGAgent
 from rl.policy import LinearAnnealedPolicy, BoltzmannQPolicy, EpsGreedyQPolicy
 from rl.memory import SequentialMemory
 from rl.core import Processor
 from rl.callbacks import FileLogger, ModelIntervalCheckpoint
+from rl.random import OrnsteinUhlenbeckProcess
 
 from PIL import Image
 
 import datetime
 import numpy as np
 
-INPUT_SHAPE = (84, 84)
+INPUT_SHAPE = (240, 240)
 
 
 class BaxterProcessor(Processor):
@@ -58,11 +59,10 @@ def main():
     print "State size:", state_size
     episodes = 1000
     batch_size = 32
-    WINDOW_LENGTH = 1
+    WINDOW_LENGTH = 4
     ENV_NAME = "BaxterGymEnv"
 
-    nb_actions = env.action_space.shape[1]
-    print "Action space:", nb_actions
+    print "Action space:", env.action_space.shape
     print "Observation space:", env.observation_space.shape
     # (height, width, channel)
     # input_shape = (1,) + env.observation_space.shape
@@ -72,7 +72,7 @@ def main():
 
     # Next, we build a very simple model.
     actor = Sequential()
-    actor.add(Flatten(input_shape=(WINDOW_LENGTH,) + env.observation_space.shape))
+    actor.add(Flatten(input_shape=(WINDOW_LENGTH,) + INPUT_SHAPE))
     actor.add(Dense(400))
     actor.add(Activation('relu'))
     actor.add(Dense(300))
@@ -83,7 +83,7 @@ def main():
 
     action_input = Input(shape=(nb_actions,), name='action_input')
     observation_input = Input(
-        shape=(WINDOW_LENGTH,) + env.observation_space.shape, name='observation_input')
+        shape=(WINDOW_LENGTH,) + INPUT_SHAPE, name='observation_input')
     flattened_observation = Flatten()(observation_input)
     x = Dense(400)(flattened_observation)
     x = Activation('relu')(x)
@@ -108,7 +108,7 @@ def main():
     # Okay, now it's time to learn something! We visualize the training here for show, but this
     # slows down training quite a lot. You can always safely abort the training prematurely using
     # Ctrl + C.
-    agent.fit(env, nb_steps=1000000, visualize=False, verbose=1)
+    agent.fit(env, nb_steps=1000000, visualize=False, verbose=2)
 
     # After training is done, we save the final weights.
     agent.save_weights('ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
