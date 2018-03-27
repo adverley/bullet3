@@ -32,7 +32,7 @@ INPUT_SHAPE = (240, 240)
 class BaxterProcessor(Processor):
     def process_observation(self, observation):
         assert observation.ndim == 3  # (height, width, channel)
-        img = Image.fromarray(observation)
+        img = Image.fromarray(observation.astype('uint8'))
         img = img.resize(INPUT_SHAPE).convert(
             'L')  # resize and convert to grayscale
         processed_observation = np.array(img)
