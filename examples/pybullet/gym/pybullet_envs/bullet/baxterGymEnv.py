@@ -16,6 +16,8 @@ from . import baxter
 import random
 import pybullet_data
 from pkg_resources import parse_version
+import logging
+import sys
 
 largeValObservation = 100
 
@@ -35,6 +37,7 @@ class BaxterGymEnv(gym.Env):
                  isEnableSelfCollision=True,
                  renders=False,
                  isDiscrete=False,
+                 _logLevel=logging.INFO,
                  maxSteps=8,
                  cameraRandom=0):
         self._timeStep = 1. / 240.
@@ -49,7 +52,8 @@ class BaxterGymEnv(gym.Env):
         self._width = 240
         self._height = 240
         self._isDiscrete = isDiscrete
-        self._terminated = 0
+        self._logLevel = _logLevel
+        self.terminated = 0
         self._p = p
         if self._renders:
             cid = p.connect(p.SHARED_MEMORY)
@@ -61,7 +65,13 @@ class BaxterGymEnv(gym.Env):
         self._seed()
         self.reset()
         observationDim = len(self.getExtendedObservation())
-        print "observationDim:", observationDim
+
+        # create logger
+        logging.basicConfig()
+        self.logger = logging.getLogger()
+        self.logger.setLevel(self._logLevel)
+
+        self.logger.debug("observationDim: %s" % str(observationDim))
 
         observation_high = np.array(
             [np.finfo(np.float32).max] * observationDim)
@@ -200,7 +210,8 @@ class BaxterGymEnv(gym.Env):
         if self._renders:
             time.sleep(self._timeStep)
 
-        print "self._envStepCounter", self._envStepCounter
+        self.logger.debug("self._envStepCounter: %s" %
+                          str(self._envStepCounter))
 
         done = self._termination()
         reward = self._reward()
@@ -253,12 +264,13 @@ class BaxterGymEnv(gym.Env):
 
         torus_pos = np.array(
             p.getBasePositionAndOrientation(self._baxter.torusUid)[0]) + [0, 0, self._baxter.torusRad]
-        print "Reward torus position:", torus_pos
+        self.logger.debug("Reward torus position: %s" % str(torus_pos))
         block_pos = np.array(
             p.getBasePositionAndOrientation(self._baxter.blockUid)[0])
 
         # Caculate distance between the center of the torus and the block
         distance = np.linalg.norm(np.array(torus_pos) - np.array(block_pos))
+        self.logger.debug("Distance: %s" % str(distance))
 
         reward = -1000
 
@@ -275,14 +287,16 @@ class BaxterGymEnv(gym.Env):
         # Add negative reward for collision with torus, since otherwise it will go straight for the center of the torus
 
         if y_bool and z_bool and distance < self._baxter.margin:
-            print "Block within the hole. block_pos:", block_pos, "torus_pos:", torus_pos
-            print "self._envStepCounter", self._envStepCounter
+            self.logger.debug(
+                "Block within the hole. block_pos: %s torus_pos: %s" % str(block_pos), str(torus_pos))
+            self.logger.debug("self._envStepCounter: %s" %
+                              str(self._envStepCounter))
             reward = reward + 1000
         else:
             # print "Block not within the hole. block_pos:", block2_pos, "torus_pos:", torus_pos
             pass
 
-        print "Reward:", reward, "\n"
+        self.logger.debug("Reward: %s \n" % str(reward))
         return reward
 
     if parse_version(gym.__version__) >= parse_version('0.9.6'):
