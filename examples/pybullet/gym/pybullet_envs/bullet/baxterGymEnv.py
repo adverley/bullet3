@@ -174,6 +174,8 @@ class BaxterGymEnv(gym.Env):
         # action = [int(round(x)) for x in action]
 
         if (self._isDiscrete):
+            action = [int(round(x)) for x in action]
+
             dv = 0.06
             d_s0 = [-dv, 0, dv][action[0]]
             d_s1 = [-dv, 0, dv][action[1]]
