@@ -77,8 +77,10 @@ class BaxterGymEnv(gym.Env):
             [np.finfo(np.float32).max] * observationDim)
         if (self._isDiscrete):
             # self.action_space = spaces.Discrete(7)
+            # self.action_space = spaces.Box(
+            #    low=0, high=2, shape=(1, 7), dtype=np.uint8)
             self.action_space = spaces.Box(
-                low=0, high=2, shape=(1, 7), dtype=np.uint8)
+                low=0, high=2, shape=(7,), dtype=np.uint8)
         else:
             action_dim = 7
             self._action_bound = 1
