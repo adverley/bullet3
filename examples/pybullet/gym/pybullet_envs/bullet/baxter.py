@@ -88,7 +88,7 @@ class Baxter:
             jointInfo = p.getJointInfo(self.baxterUid, i)
             qIndex = jointInfo[3]
             if qIndex > -1:
-                print "motorname", jointInfo[1]
+                # print "motorname", jointInfo[1]
                 self.motorNames.append(str(jointInfo[1]))
 
     def getActionDimension(self):
@@ -111,8 +111,6 @@ class Baxter:
         return observation
 
     def applyAction(self, motorCommands):
-        print "Number of joints: ", self.numJoints
-
         for action in range(len(motorCommands)):
             motor = self.motorIndices[action]
             p.setJointMotorControl2(self.baxterUid, motor, controlMode=p.POSITION_CONTROL,
