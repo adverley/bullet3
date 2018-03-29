@@ -28,6 +28,10 @@ import numpy as np
 
 INPUT_SHAPE = (240, 240)
 
+# save experiment vars
+timestr = time.strftime("%Y%m%d-%H%M%S")
+filepath_experiment = "/experiments/ddpg_{}/".format(timestr)
+
 
 class BaxterProcessor(Processor):
     def process_observation(self, observation):
@@ -102,13 +106,34 @@ def main():
                       processor=BaxterProcessor())
     agent.compile([Adam(lr=1e-4), Adam(lr=1e-3)], metrics=['mae'])
 
+    # Initialize callbacks
+    callbacks = []
+    log_filename = filepath_experiment + 'ddpg_{}_log.json'.format(ENV_NAME)
+    callbacks += [FileLogger(log_filename, interval=1)]
+
+    # log all train data with custom callback
+    #callbacks += [DataLogger(filepath_experiment, interval=100)]
+
+    checkpoint_filename = os.path.join(
+        filepath_experiment, 'ddpg_{}_weights_checkpoint.h5f'.format(ENV_NAME))
+    callbacks += [ModelIntervalCheckpoint(checkpoint_filename,
+                                          interval=10000, verbose=1)]
+
+    # make model checkpoints
+    checkpoint_filename = os.path.join(
+        filepath_experiment, 'ddpg_{}_weights_checkpoint.h5f'.format(ENV_NAME))
+    callbacks += [ModelIntervalCheckpoint(checkpoint_filename,
+                                          interval=10000, verbose=1)]
+
     # Okay, now it's time to learn something! We visualize the training here for show, but this
     # slows down training quite a lot. You can always safely abort the training prematurely using
     # Ctrl + C.
-    agent.fit(env, nb_steps=1000000, visualize=False, verbose=2)
+    agent.fit(env, nb_steps=1000000, visualize=False, callbacks=callbacks verbose=2)
 
     # After training is done, we save the final weights.
-    agent.save_weights('ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
+    weights_filename = os.path.join(
+        filepath_experiment, 'ddpg_{}_weights.h5f'.format(ENV_NAME))
+    agent.save_weights(weights_filename, overwrite=True)
 
     # Finally, evaluate our algorithm for 5 episodes.
     agent.test(env, nb_episodes=5, visualize=True, nb_max_episode_steps=200)
