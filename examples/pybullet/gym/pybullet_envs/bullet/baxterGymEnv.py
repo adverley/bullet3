@@ -36,9 +36,9 @@ class BaxterGymEnv(gym.Env):
                  actionRepeat=1,
                  isEnableSelfCollision=True,
                  renders=False,
-                 isDiscrete=False,
+                 isDiscrete=True,
                  _logLevel=logging.INFO,
-                 maxSteps=8,
+                 maxSteps=50,
                  cameraRandom=0):
         self._timeStep = 1. / 240.
         self._urdfRoot = urdfRoot
@@ -86,6 +86,7 @@ class BaxterGymEnv(gym.Env):
             self._action_bound = 1
             action_high = np.array([self._action_bound] * action_dim)
             self.action_space = spaces.Box(-action_high, action_high)
+
         self.observation_space = spaces.Box(
             low=0, high=255, shape=(self._height, self._width, 3))
         self.viewer = None
@@ -175,6 +176,7 @@ class BaxterGymEnv(gym.Env):
 
         if (self._isDiscrete):
             action = [int(round(x)) for x in action]
+            self.logger.debug("Action: %s" % str(action))
 
             dv = 0.06
             d_s0 = [-dv, 0, dv][action[0]]
@@ -185,8 +187,8 @@ class BaxterGymEnv(gym.Env):
             d_w1 = [-dv, 0, dv][action[5]]
             d_w2 = [-dv, 0, dv][action[6]]
 
-            # realAction = [dx, dy, -0.002, da, f] # dz=-0.002 to guide the search downward
             realAction = [d_s0, d_s1, d_e0, d_e1, d_w0, d_w1, d_w2]
+            # realAction = [dx, dy, -0.002, da, f] # dz=-0.002 to guide the search downward
         else:
             dv = 1
             d_s0 = action[0] * dv
@@ -199,7 +201,7 @@ class BaxterGymEnv(gym.Env):
 
             realAction = [d_s0, d_s1, d_e0, d_e1, d_w0, d_w1, d_w2]
 
-        return self.step2(realAction)
+    return self.step2(realAction)
 
     def step2(self, action):
         for i in range(self._actionRepeat):
