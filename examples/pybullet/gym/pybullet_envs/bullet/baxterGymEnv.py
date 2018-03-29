@@ -201,7 +201,7 @@ class BaxterGymEnv(gym.Env):
 
             realAction = [d_s0, d_s1, d_e0, d_e1, d_w0, d_w1, d_w2]
 
-    return self.step2(realAction)
+        return self.step2(realAction)
 
     def step2(self, action):
         for i in range(self._actionRepeat):
