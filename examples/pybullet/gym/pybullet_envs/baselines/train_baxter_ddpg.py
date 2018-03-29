@@ -47,9 +47,6 @@ class BaxterProcessor(Processor):
         processed_batch = batch.astype('float32') / 255.
         return processed_batch
 
-    def process_reward(self, reward):
-        return np.clip(reward, -1., 1.)
-
 
 def main():
     env = BaxterGymEnv(renders=False, isDiscrete=True)
