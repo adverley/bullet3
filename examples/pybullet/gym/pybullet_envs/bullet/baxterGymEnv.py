@@ -38,7 +38,7 @@ class BaxterGymEnv(gym.Env):
                  renders=False,
                  isDiscrete=True,
                  _logLevel=logging.INFO,
-                 maxSteps=50,
+                 maxSteps=80,
                  cameraRandom=0):
         self._timeStep = 1. / 240.
         self._urdfRoot = urdfRoot
@@ -98,6 +98,7 @@ class BaxterGymEnv(gym.Env):
         p.setPhysicsEngineParameter(numSolverIterations=150)
         p.setTimeStep(self._timeStep)
 
+        # Load in Baxter together with all the other objects
         self._baxter = baxter.Baxter(
             urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
 
@@ -127,17 +128,9 @@ class BaxterGymEnv(gym.Env):
         self._attempted_grasp = False
         self._env_step = 0
         self._terminated = 0
-
-        p.resetSimulation()
-        p.setPhysicsEngineParameter(numSolverIterations=150)
-        p.setTimeStep(self._timeStep)
-
+        self._envStepCounter = 0
         # p.setGravity(0, 0, -10)
 
-        # Load in Baxter together with all the other objects
-        self._baxter = baxter.Baxter(
-            urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
-        self._envStepCounter = 0
         p.stepSimulation()
         self._observation = self.getExtendedObservation()
         return np.array(self._observation)
@@ -178,7 +171,7 @@ class BaxterGymEnv(gym.Env):
             action = [int(round(x)) for x in action]
             self.logger.debug("Action: %s" % str(action))
 
-            dv = 0.06
+            dv = 0.2
             d_s0 = [-dv, 0, dv][action[0]]
             d_s1 = [-dv, 0, dv][action[1]]
             d_e0 = [-dv, 0, dv][action[2]]
