@@ -25,12 +25,14 @@ from PIL import Image
 
 import datetime
 import numpy as np
+import time
 
 INPUT_SHAPE = (240, 240)
 
 # save experiment vars
 timestr = time.strftime("%Y%m%d-%H%M%S")
-filepath_experiment = "/experiments/ddpg_{}/".format(timestr)
+#filepath_experiment = "/experiments/ddpg_{}/".format(timestr)
+filepath_experiment = "experiments/"
 
 
 class BaxterProcessor(Processor):
@@ -128,7 +130,8 @@ def main():
     # Okay, now it's time to learn something! We visualize the training here for show, but this
     # slows down training quite a lot. You can always safely abort the training prematurely using
     # Ctrl + C.
-    agent.fit(env, nb_steps=1000000, visualize=False, callbacks=callbacks verbose=2)
+    agent.fit(env, nb_steps=1000000, visualize=False,
+              callbacks=callbacks, verbose=2)
 
     # After training is done, we save the final weights.
     weights_filename = os.path.join(
