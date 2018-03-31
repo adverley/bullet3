@@ -116,11 +116,6 @@ def main():
     # log all train data with custom callback
     #callbacks += [DataLogger(filepath_experiment, interval=100)]
 
-    checkpoint_filename = os.path.join(
-        filepath_experiment, 'ddpg_{}_weights_checkpoint.h5f'.format(ENV_NAME))
-    callbacks += [ModelIntervalCheckpoint(checkpoint_filename,
-                                          interval=10000, verbose=1)]
-
     # make model checkpoints
     checkpoint_filename = os.path.join(
         filepath_experiment, 'ddpg_{}_weights_checkpoint.h5f'.format(ENV_NAME))
