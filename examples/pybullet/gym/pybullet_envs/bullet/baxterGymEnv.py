@@ -37,8 +37,9 @@ class BaxterGymEnv(gym.Env):
                  isEnableSelfCollision=True,
                  renders=False,
                  isDiscrete=True,
+                 useCamera=True,
                  _logLevel=logging.INFO,
-                 maxSteps=80,
+                 maxSteps=100,
                  cameraRandom=0):
         self._timeStep = 1. / 240.
         self._urdfRoot = urdfRoot
@@ -52,6 +53,7 @@ class BaxterGymEnv(gym.Env):
         self._width = 240
         self._height = 240
         self._isDiscrete = isDiscrete
+        self._useCamera = useCamera
         self._logLevel = _logLevel
         self.terminated = 0
         self._p = p
@@ -87,8 +89,13 @@ class BaxterGymEnv(gym.Env):
             action_high = np.array([self._action_bound] * action_dim)
             self.action_space = spaces.Box(-action_high, action_high)
 
-        self.observation_space = spaces.Box(
-            low=0, high=255, shape=(self._height, self._width, 3))
+        if (self._useCamera):
+            self.observation_space = spaces.Box(
+                low=0, high=255, shape=(self._height, self._width, 3))
+        else:
+            self.observation_space = spaces.Box(-observation_high,
+                                                observation_high)
+
         self.viewer = None
 
     def _reset(self):
@@ -145,14 +152,23 @@ class BaxterGymEnv(gym.Env):
     def getExtendedObservation(self):
         """Return the observation as an image.
         """
-        img_arr = p.getCameraImage(width=self._width,
-                                   height=self._height,
-                                   viewMatrix=self._view_matrix,
-                                   projectionMatrix=self._proj_matrix)
-        rgb = img_arr[2]
-        np_img_arr = np.reshape(rgb, (self._height, self._width, 4))
-        self._observation = np_img_arr
-        return np_img_arr[:, :, :3]
+        if (self._useCamera):
+            img_arr = p.getCameraImage(width=self._width,
+                                       height=self._height,
+                                       viewMatrix=self._view_matrix,
+                                       projectionMatrix=self._proj_matrix)
+            rgb = img_arr[2]
+            np_img_arr = np.reshape(rgb, (self._height, self._width, 4))
+            self._observation = np_img_arr
+            return np_img_arr[:, :, :3]
+
+        else:
+            jointPos = []
+            for i in self._baxter.motorIndices:
+                jointInfo = p.getJointInfo(self._baxter.baxterUid, i)
+                # Index 0 for joint position, index 1 for joint velocity
+                jointPos.append(jointInfo[0])
+            return jointPos
 
     def _step(self, action):
         """Environment step.
@@ -271,7 +287,7 @@ class BaxterGymEnv(gym.Env):
         distance = np.linalg.norm(np.array(torus_pos) - np.array(block_pos))
         self.logger.debug("Distance: %s" % str(distance))
 
-        reward = -1000
+        #reward = -1000
 
         # TODO torusRad will have to be changed based on torus URDF scaling factor
         y_bool = (
@@ -279,7 +295,7 @@ class BaxterGymEnv(gym.Env):
         z_bool = (
             torus_pos[2] - self._baxter.margin) < block_pos[2] and (block_pos[2] + self._baxter.margin) > block_pos[2]
 
-        reward = -distance
+        reward = -distance  # + 4
 
         # Maybe add negative reward for dropping the stick to show that abrupt movements are bad
 
