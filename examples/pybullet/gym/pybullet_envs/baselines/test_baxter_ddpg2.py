@@ -37,7 +37,7 @@ baxterProcessor = WhiteningNormalizerProcessor()
 
 def main():
     # Train network with joint position inputs
-    env = BaxterGymEnv(renders=False, isDiscrete=True, useCamera=False)
+    env = BaxterGymEnv(renders=True, isDiscrete=True, useCamera=False)
     state_size = env.observation_space.shape
     action_size = env.action_space.shape
     print "Action size:", action_size
@@ -58,9 +58,11 @@ def main():
     # Next, we build a very simple model.
     actor = Sequential()
     actor.add(Flatten(input_shape=(WINDOW_LENGTH,) + env.observation_space.shape))
-    actor.add(Dense(400))
+    actor.add(Dense(1024))
     actor.add(Activation('relu'))
-    actor.add(Dense(300))
+    actor.add(Dense(512))
+    actor.add(Activation('relu'))
+    actor.add(Dense(256))
     actor.add(Activation('relu'))
     actor.add(Dense(nb_actions))
     actor.add(Activation('tanh'))
@@ -70,10 +72,12 @@ def main():
     observation_input = Input(
         shape=(WINDOW_LENGTH,) + env.observation_space.shape, name='observation_input')
     flattened_observation = Flatten()(observation_input)
-    x = Dense(400)(flattened_observation)
+    x = Dense(1024)(flattened_observation)
     x = Activation('relu')(x)
     x = Concatenate()([x, action_input])
-    x = Dense(300)(x)
+    x = Dense(512)(x)
+    x = Activation('relu')(x)
+    x = Dense(256)(x)
     x = Activation('relu')(x)
     x = Dense(1)(x)
     x = Activation('linear')(x)
