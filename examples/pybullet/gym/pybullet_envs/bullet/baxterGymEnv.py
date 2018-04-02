@@ -37,6 +37,7 @@ class BaxterGymEnv(gym.Env):
                  isEnableSelfCollision=True,
                  renders=False,
                  isDiscrete=True,
+                 dv=0.06,
                  useCamera=True,
                  _logLevel=logging.INFO,
                  maxSteps=100,
@@ -49,6 +50,7 @@ class BaxterGymEnv(gym.Env):
         self._envStepCounter = 0
         self._renders = renders
         self._maxSteps = maxSteps
+        self._dv = dv
         self._cameraRandom = cameraRandom
         self._width = 240
         self._height = 240
@@ -187,26 +189,25 @@ class BaxterGymEnv(gym.Env):
             action = [int(round(x)) for x in action]
             self.logger.debug("Action: %s" % str(action))
 
-            dv = 0.2
-            d_s0 = [-dv, 0, dv][action[0]]
-            d_s1 = [-dv, 0, dv][action[1]]
-            d_e0 = [-dv, 0, dv][action[2]]
-            d_e1 = [-dv, 0, dv][action[3]]
-            d_w0 = [-dv, 0, dv][action[4]]
-            d_w1 = [-dv, 0, dv][action[5]]
-            d_w2 = [-dv, 0, dv][action[6]]
+            d_s0 = [-self._dv, 0, self._dv][action[0]]
+            d_s1 = [-self._dv, 0, self._dv][action[1]]
+            d_e0 = [-self._dv, 0, self._dv][action[2]]
+            d_e1 = [-self._dv, 0, self._dv][action[3]]
+            d_w0 = [-self._dv, 0, self._dv][action[4]]
+            d_w1 = [-self._dv, 0, self._dv][action[5]]
+            d_w2 = [-self._dv, 0, self._dv][action[6]]
 
             realAction = [d_s0, d_s1, d_e0, d_e1, d_w0, d_w1, d_w2]
             # realAction = [dx, dy, -0.002, da, f] # dz=-0.002 to guide the search downward
         else:
-            dv = 1
-            d_s0 = action[0] * dv
-            d_s1 = action[1] * dv
-            d_e0 = action[2] * dv
-            d_e1 = action[3] * dv
-            d_w0 = action[4] * dv
-            d_w1 = action[5] * dv
-            d_w2 = action[6] * dv
+            self._dv = 1
+            d_s0 = action[0] * self._dv
+            d_s1 = action[1] * self._dv
+            d_e0 = action[2] * self._dv
+            d_e1 = action[3] * self._dv
+            d_w0 = action[4] * self._dv
+            d_w1 = action[5] * self._dv
+            d_w2 = action[6] * self._dv
 
             realAction = [d_s0, d_s1, d_e0, d_e1, d_w0, d_w1, d_w2]
 
