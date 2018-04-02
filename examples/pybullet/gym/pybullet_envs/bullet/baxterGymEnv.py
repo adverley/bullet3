@@ -222,6 +222,8 @@ class BaxterGymEnv(gym.Env):
             self._envStepCounter += 1
 
         self._observation = self.getExtendedObservation()
+        self.logger.debug("observation: %s" % str(self._observation))
+
         if self._renders:
             time.sleep(self._timeStep)
 
