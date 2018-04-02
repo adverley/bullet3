@@ -165,7 +165,7 @@ class BaxterGymEnv(gym.Env):
         else:
             jointPos = []
             for i in self._baxter.motorIndices:
-                jointInfo = p.getJointInfo(self._baxter.baxterUid, i)
+                jointInfo = p.getJointState(self._baxter.baxterUid, i)
                 # Index 0 for joint position, index 1 for joint velocity
                 jointPos.append(jointInfo[0])
             return jointPos
