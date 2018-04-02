@@ -20,14 +20,11 @@ from rl.memory import SequentialMemory
 from rl.core import Processor
 from rl.callbacks import FileLogger, ModelIntervalCheckpoint
 from rl.random import OrnsteinUhlenbeckProcess
-
-from PIL import Image
+from rl.processors import WhiteningNormalizerProcessor
 
 import datetime
 import numpy as np
 import time
-
-INPUT_SHAPE = (240, 240)
 
 # save experiment vars
 timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -35,34 +32,19 @@ timestr = time.strftime("%Y%m%d-%H%M%S")
 filepath_experiment = "experiments/"
 
 
-class BaxterProcessor(Processor):
-    def process_observation(self, observation):
-        assert observation.ndim == 3  # (height, width, channel)
-        img = Image.fromarray(observation.astype('uint8'))
-        img = img.resize(INPUT_SHAPE).convert(
-            'L')  # resize and convert to grayscale
-        processed_observation = np.array(img)
-        assert processed_observation.shape == INPUT_SHAPE
-        # saves storage in experience memory
-        return processed_observation.astype('uint8')
-
-    def process_state_batch(self, batch):
-        # We could perform this processing step in `process_observation`. In this case, however,
-        # we would need to store a `float32` array instead, which is 4x more memory intensive than
-        # an `uint8` array. This matters if we store 1M observations.
-        processed_batch = batch.astype('float32') / 255.
-        return processed_batch
+baxterProcessor = WhiteningNormalizerProcessor()
 
 
 def main():
-    env = BaxterGymEnv(renders=False, isDiscrete=True)
+    # Train network with joint position inputs
+    env = BaxterGymEnv(renders=False, isDiscrete=True, useCamera=False)
     state_size = env.observation_space.shape
     action_size = env.action_space.shape
     print "Action size:", action_size
     print "State size:", state_size
     episodes = 1000
     batch_size = 32
-    WINDOW_LENGTH = 4
+    WINDOW_LENGTH = 1
     ENV_NAME = "BaxterGymEnv"
 
     print "Action space:", env.action_space.shape
@@ -75,7 +57,7 @@ def main():
 
     # Next, we build a very simple model.
     actor = Sequential()
-    actor.add(Flatten(input_shape=(WINDOW_LENGTH,) + INPUT_SHAPE))
+    actor.add(Flatten(input_shape=(WINDOW_LENGTH,) + env.observation_space.shape))
     actor.add(Dense(400))
     actor.add(Activation('relu'))
     actor.add(Dense(300))
@@ -86,7 +68,7 @@ def main():
 
     action_input = Input(shape=(nb_actions,), name='action_input')
     observation_input = Input(
-        shape=(WINDOW_LENGTH,) + INPUT_SHAPE, name='observation_input')
+        shape=(WINDOW_LENGTH,) + env.observation_space.shape, name='observation_input')
     flattened_observation = Flatten()(observation_input)
     x = Dense(400)(flattened_observation)
     x = Activation('relu')(x)
@@ -105,7 +87,7 @@ def main():
     agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_action_input=action_input,
                       memory=memory, nb_steps_warmup_critic=1000, nb_steps_warmup_actor=1000,
                       random_process=random_process, gamma=.99, target_model_update=1e-3,
-                      processor=BaxterProcessor())
+                      processor=baxterProcessor)
     agent.compile([Adam(lr=1e-4), Adam(lr=1e-3)], metrics=['mae'])
 
     # Initialize callbacks
