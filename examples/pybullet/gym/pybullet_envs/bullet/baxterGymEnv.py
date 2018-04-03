@@ -242,8 +242,8 @@ class BaxterGymEnv(gym.Env):
         self.logger.debug("self._envStepCounter: %s" %
                           str(self._envStepCounter))
 
-        done = self._termination()
         reward = self._reward()
+        done = self._termination()
         # print("len=%r" % len(self._observation))
 
         return np.array(self._observation), reward, done, {}
@@ -301,7 +301,13 @@ class BaxterGymEnv(gym.Env):
         distance = np.linalg.norm(np.array(torus_pos) - np.array(block_pos))
         self.logger.debug("Distance: %s" % str(distance))
 
-        #reward = -1000
+        # Check whether the object was released
+        cp_list = p.getContactPoints(
+            self._baxter.baxterUid, self._baxter.blockUid)
+        if not cp_list:
+            reward = -2 * self._maxSteps
+            self.logger.debug("Reward: %s \n" % str(reward))
+            return reward
 
         # TODO torusRad will have to be changed based on torus URDF scaling factor
         y_bool = (
@@ -310,8 +316,6 @@ class BaxterGymEnv(gym.Env):
             torus_pos[2] - self._baxter.margin) < block_pos[2] and (block_pos[2] + self._baxter.margin) > block_pos[2]
 
         reward = -distance  # + 4
-
-        # Maybe add negative reward for dropping the stick to show that abrupt movements are bad
 
         # Add negative reward for collision with torus, since otherwise it will go straight for the center of the torus
 
