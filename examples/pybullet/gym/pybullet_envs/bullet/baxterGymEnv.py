@@ -39,6 +39,7 @@ class BaxterGymEnv(gym.Env):
                  isDiscrete=True,
                  dv=0.06,
                  useCamera=True,
+                 useHack=True,
                  _logLevel=logging.INFO,
                  maxSteps=100,
                  cameraRandom=0):
@@ -56,6 +57,7 @@ class BaxterGymEnv(gym.Env):
         self._height = 240
         self._isDiscrete = isDiscrete
         self._useCamera = useCamera
+        self._useHack = useHack
         self._logLevel = _logLevel
         self.terminated = 0
         self._p = p
@@ -83,6 +85,7 @@ class BaxterGymEnv(gym.Env):
             # self.action_space = spaces.Discrete(7)
             # self.action_space = spaces.Box(
             #    low=0, high=2, shape=(1, 7), dtype=np.uint8)
+
             self.action_space = spaces.Box(
                 low=0, high=2, shape=(7,), dtype=np.uint8)
         else:
@@ -170,7 +173,15 @@ class BaxterGymEnv(gym.Env):
                 jointInfo = p.getJointState(self._baxter.baxterUid, i)
                 # Index 0 for joint position, index 1 for joint velocity
                 jointPos.append(jointInfo[0])
-            return jointPos
+
+            self._observation = jointPos
+
+            if (self._useHack):
+                torus_pos = np.array(p.getBasePositionAndOrientation(
+                    self._baxter.torusUid)[0]) + [0, 0, self._baxter.torusRad]
+                self._observation += list(torus_pos)
+
+            return self._observation
 
     def _step(self, action):
         """Environment step.
