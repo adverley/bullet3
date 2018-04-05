@@ -163,7 +163,8 @@ class BaxterGymEnv(gym.Env):
             img_arr = p.getCameraImage(width=self._width,
                                        height=self._height,
                                        viewMatrix=self._view_matrix,
-                                       projectionMatrix=self._proj_matrix)
+                                       projectionMatrix=self._proj_matrix,
+                                       renderer=p.ER_BULLET_HARDWARE_OPENGL)
             rgb = img_arr[2]
             np_img_arr = np.reshape(rgb, (self._height, self._width, 4))
             self._observation = np_img_arr
