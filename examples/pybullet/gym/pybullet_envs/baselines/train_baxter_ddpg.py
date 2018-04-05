@@ -55,15 +55,14 @@ class BaxterProcessor(Processor):
 
 
 def main():
-    env = BaxterGymEnv(renders=False, isDiscrete=True)
-    state_size = env.observation_space.shape
-    action_size = env.action_space.shape
-    print "Action size:", action_size
-    print "State size:", state_size
-    episodes = 1000
-    batch_size = 32
-    WINDOW_LENGTH = 4
+    # Train network with joint position inputs
+    env = BaxterGymEnv(renders=True, isDiscrete=True,
+                       useCamera=True, maxSteps=200)
     ENV_NAME = "BaxterGymEnv"
+
+    WINDOW_LENGTH = 1
+    INPUT_SHAPE = (240, 240)
+    input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
 
     print "Action space:", env.action_space.shape
     print "Observation space:", env.observation_space.shape
@@ -75,25 +74,34 @@ def main():
 
     # Next, we build a very simple model.
     actor = Sequential()
-    actor.add(Flatten(input_shape=(WINDOW_LENGTH,) + INPUT_SHAPE))
-    actor.add(Dense(400))
+    actor.add(Permute((1, 3, 2), input_shape=input_shape))
+    actor.add(Convolution2D(32, 8, 8, subsample=(4, 4)))
     actor.add(Activation('relu'))
-    actor.add(Dense(300))
+    actor.add(Convolution2D(64, 4, 4, subsample=(2, 2)))
+    actor.add(Activation('relu'))
+    actor.add(Convolution2D(64, 3, 3, subsample=(1, 1)))
+    actor.add(Activation('relu'))
+    actor.add(Flatten())
+    actor.add(Dense(512))
     actor.add(Activation('relu'))
     actor.add(Dense(nb_actions))
-    actor.add(Activation('tanh'))
-    print(actor.summary())
+    actor.add(Activation('linear'))
+    print(model.summary())
 
     action_input = Input(shape=(nb_actions,), name='action_input')
     observation_input = Input(
         shape=(WINDOW_LENGTH,) + INPUT_SHAPE, name='observation_input')
-    flattened_observation = Flatten()(observation_input)
-    x = Dense(400)(flattened_observation)
+
+    x = Conv2D(64, 7, 2, activation='relu')(observation_input)
+    x = Conv2D(32, 5, 1, activation='relu')(x)
+    x = Conv2D(32, 5, 1, activation='softmax')(x)
+    flattened_observation = Flatten()(x)
+    x = Dense(64)(flattened_observation)
     x = Activation('relu')(x)
     x = Concatenate()([x, action_input])
-    x = Dense(300)(x)
+    x = Dense(40)(x)
     x = Activation('relu')(x)
-    x = Dense(1)(x)
+    x = Dense(40)(x)
     x = Activation('linear')(x)
     critic = Model(inputs=[action_input, observation_input], outputs=x)
     print(critic.summary())
