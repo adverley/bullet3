@@ -60,6 +60,7 @@ class BaxterGymEnv(gym.Env):
         self._useHack = useHack
         self._logLevel = _logLevel
         self.terminated = 0
+        self.action = [0, 0, 0, 0, 0, 0, 0]
         self._p = p
         if self._renders:
             cid = p.connect(p.SHARED_MEMORY)
@@ -209,6 +210,7 @@ class BaxterGymEnv(gym.Env):
             d_w2 = [-self._dv, 0, self._dv][action[6]]
 
             realAction = [d_s0, d_s1, d_e0, d_e1, d_w0, d_w1, d_w2]
+            self.action = [x + y for x, y in zip(realAction, self.action)]
             # realAction = [dx, dy, -0.002, da, f] # dz=-0.002 to guide the search downward
         else:
             self._dv = 1
@@ -220,9 +222,9 @@ class BaxterGymEnv(gym.Env):
             d_w1 = action[5] * self._dv
             d_w2 = action[6] * self._dv
 
-            realAction = [d_s0, d_s1, d_e0, d_e1, d_w0, d_w1, d_w2]
+            self.action = [d_s0, d_s1, d_e0, d_e1, d_w0, d_w1, d_w2]
 
-        return self.step2(realAction)
+        return self.step2(self.action)
 
     def step2(self, action):
         for i in range(self._actionRepeat):
