@@ -305,6 +305,7 @@ class BaxterGymEnv(gym.Env):
         distance = np.linalg.norm(np.array(torus_pos) - np.array(block_pos))
         self.logger.debug("Distance: %s" % str(distance))
 
+        """
         # Check whether the object was released
         cp_list = p.getContactPoints(
             self._baxter.baxterUid, self._baxter.blockUid)
@@ -312,6 +313,7 @@ class BaxterGymEnv(gym.Env):
             reward = -2 * self._maxSteps
             self.logger.debug("Reward: %s \n" % str(reward))
             return reward
+        """
 
         # TODO torusRad will have to be changed based on torus URDF scaling factor
         y_bool = (
@@ -321,7 +323,11 @@ class BaxterGymEnv(gym.Env):
 
         reward = -distance  # + 4
 
-        # Add negative reward for collision with torus, since otherwise it will go straight for the center of the torus
+        # Add negative reward for collision with torus (maybe with margin)
+        cp_list = p.getContactPoints(
+            self._baxter.baxterUid, self._baxter.torusUid)
+        if any(cp_list):
+            reward += -5
 
         if y_bool and z_bool and distance < self._baxter.margin:
             self.logger.debug(
