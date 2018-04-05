@@ -59,7 +59,7 @@ class BaxterGymEnv(gym.Env):
         self._useCamera = useCamera
         self._useHack = useHack
         self._logLevel = _logLevel
-        self.terminated = 0
+        self._terminated = 0
         self.action = [0, 0, 0, 0, 0, 0, 0]
         self._p = p
         if self._renders:
@@ -142,6 +142,7 @@ class BaxterGymEnv(gym.Env):
         self._env_step = 0
         self._terminated = 0
         self._envStepCounter = 0
+        self.action = [0, 0, 0, 0, 0, 0, 0]
         # p.setGravity(0, 0, -10)
 
         p.stepSimulation()
