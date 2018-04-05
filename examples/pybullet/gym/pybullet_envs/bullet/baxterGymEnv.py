@@ -37,7 +37,7 @@ class BaxterGymEnv(gym.Env):
                  isEnableSelfCollision=True,
                  renders=False,
                  isDiscrete=True,
-                 dv=0.06,
+                 dv=0.01,
                  useCamera=True,
                  useHack=True,
                  _logLevel=logging.INFO,
