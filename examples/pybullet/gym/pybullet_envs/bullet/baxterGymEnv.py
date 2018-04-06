@@ -331,7 +331,8 @@ class BaxterGymEnv(gym.Env):
 
         if y_bool and z_bool and distance < self._baxter.margin:
             self.logger.debug(
-                "Block within the hole. block_pos: %s torus_pos: %s" % str(block_pos), str(torus_pos))
+                "Block within the hole. block_pos: {0} torus_pos: {1}".format(
+                    str(block_pos), str(torus_pos)))
             self.logger.debug("self._envStepCounter: %s" %
                               str(self._envStepCounter))
             reward = reward + 1000
