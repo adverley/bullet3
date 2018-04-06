@@ -56,7 +56,7 @@ class BaxterProcessor(Processor):
 
 def main():
     # Train network with joint position inputs
-    env = BaxterGymEnv(renders=True, isDiscrete=True,
+    env = BaxterGymEnv(renders=False, isDiscrete=True,
                        useCamera=True, maxSteps=200)
     ENV_NAME = "BaxterGymEnv"
 
@@ -87,14 +87,14 @@ def main():
     actor.add(Activation('relu'))
     actor.add(Dense(nb_actions))
     actor.add(Activation('linear'))
-    print(model.summary())
+    print(actor.summary())
 
     action_input = Input(shape=(nb_actions,), name='action_input')
     observation_input = Input(
         shape=(WINDOW_LENGTH,) + INPUT_SHAPE, name='observation_input')
 
     x = Convolution2D(32, (8, 8), subsample=(
-        4, 4), activation='relu')(observation_input)
+        4, 4), activation='relu', data_format='channels_first')(observation_input)
     x = Convolution2D(64, (4, 4), subsample=(2, 2), activation='relu')(x)
     x = Convolution2D(64, (3, 3), subsample=(1, 1), activation='softmax')(x)
     flattened_observation = Flatten()(x)
