@@ -37,7 +37,8 @@ baxterProcessor = WhiteningNormalizerProcessor()
 
 def main():
     # Train network with joint position inputs
-    env = BaxterGymEnv(renders=False, isDiscrete=True, useCamera=False)
+    env = BaxterGymEnv(renders=False, isDiscrete=True,
+                       useCamera=False, maxSteps=400)
     state_size = env.observation_space.shape
     action_size = env.action_space.shape
     print "Action size:", action_size
