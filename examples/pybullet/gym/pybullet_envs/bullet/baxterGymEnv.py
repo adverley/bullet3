@@ -200,7 +200,8 @@ class BaxterGymEnv(gym.Env):
         # action = [int(round(x)) for x in action]
 
         if (self._isDiscrete):
-            action = [int(round(x)) for x in np.clip(action, -1, 1)]
+            action = [int(round(np.nan_to_num(x)))
+                      for x in np.clip(action, -1, 1)]
             self.logger.debug("Action: %s" % str(action))
 
             d_s0 = [-self._dv, 0, self._dv][action[0]]
