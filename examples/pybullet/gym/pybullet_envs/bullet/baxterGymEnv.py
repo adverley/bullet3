@@ -305,7 +305,6 @@ class BaxterGymEnv(gym.Env):
         distance = np.linalg.norm(np.array(torus_pos) - np.array(block_pos))
         self.logger.debug("Distance: %s" % str(distance))
 
-        """
         # Check whether the object was released
         cp_list = p.getContactPoints(
             self._baxter.baxterUid, self._baxter.blockUid)
@@ -313,7 +312,6 @@ class BaxterGymEnv(gym.Env):
             reward = -2 * self._maxSteps
             self.logger.debug("Reward: %s \n" % str(reward))
             return reward
-        """
 
         # TODO torusRad will have to be changed based on torus URDF scaling factor
         y_bool = (
