@@ -57,7 +57,7 @@ class BaxterProcessor(Processor):
 def main():
     # Train network with joint position inputs
     env = BaxterGymEnv(renders=False, isDiscrete=True,
-                       useCamera=True, maxSteps=200)
+                       useCamera=True, maxSteps=400)
     ENV_NAME = "BaxterGymEnv"
 
     WINDOW_LENGTH = 1
@@ -103,7 +103,7 @@ def main():
     x = Concatenate()([x, action_input])
     x = Dense(40)(x)
     x = Activation('relu')(x)
-    x = Dense(40)(x)
+    x = Dense(1)(x)
     x = Activation('linear')(x)
     critic = Model(inputs=[action_input, observation_input], outputs=x)
     print(critic.summary())
