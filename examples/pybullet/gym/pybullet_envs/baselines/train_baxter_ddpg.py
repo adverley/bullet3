@@ -31,7 +31,7 @@ INPUT_SHAPE = (240, 240)
 
 # save experiment vars
 timestr = time.strftime("%Y%m%d-%H%M%S")
-#filepath_experiment = "/experiments/ddpg_{}/".format(timestr)
+# filepath_experiment = "/experiments/ddpg_{}/".format(timestr)
 filepath_experiment = "experiments/"
 
 
@@ -74,13 +74,13 @@ def main():
 
     # Next, we build a very simple model.
     actor = Sequential()
-    #actor.add(Permute((1, 3, 2), input_shape=input_shape))
-    actor.add(Convolution2D(32, (8, 8), subsample=(4, 4),
-                            input_shape=input_shape, data_format='channels_first'))
+    # actor.add(Permute((1, 3, 2), input_shape=input_shape))
+    actor.add(Conv2D(32, (8, 8), strides=(4, 4),
+                     data_format="channels_first", input_shape=input_shape))
     actor.add(Activation('relu'))
-    actor.add(Convolution2D(64, (4, 4), subsample=(2, 2)))
+    actor.add(Conv2D(64, (4, 4), strides=(2, 2)))
     actor.add(Activation('relu'))
-    actor.add(Convolution2D(64, (3, 3), subsample=(1, 1)))
+    actor.add(Conv2D(64, (3, 3), strides=(1, 1)))
     actor.add(Activation('relu'))
     actor.add(Flatten())
     actor.add(Dense(512))
@@ -93,10 +93,10 @@ def main():
     observation_input = Input(
         shape=(WINDOW_LENGTH,) + INPUT_SHAPE, name='observation_input')
 
-    x = Convolution2D(32, (8, 8), subsample=(
-        4, 4), activation='relu', data_format='channels_first')(observation_input)
-    x = Convolution2D(64, (4, 4), subsample=(2, 2), activation='relu')(x)
-    x = Convolution2D(64, (3, 3), subsample=(1, 1), activation='softmax')(x)
+    x = Conv2D(32, (8, 8), strides=(4, 4), activation="relu",
+               data_format="channels_first")(observation_input)
+    x = Conv2D(64, (4, 4), strides=(2, 2), activation="relu")(x)
+    x = Conv2D(64, (3, 3), strides=(1, 1), activation="softmax")(x)
     flattened_observation = Flatten()(x)
     x = Dense(64)(flattened_observation)
     x = Activation('relu')(x)
@@ -124,7 +124,7 @@ def main():
     callbacks += [FileLogger(log_filename, interval=1)]
 
     # log all train data with custom callback
-    #callbacks += [DataLogger(filepath_experiment, interval=100)]
+    # callbacks += [DataLogger(filepath_experiment, interval=100)]
 
     # make model checkpoints
     checkpoint_filename = os.path.join(
