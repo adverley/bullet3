@@ -42,6 +42,10 @@ class BaxterProcessor(Processor):
         img = img.resize(INPUT_SHAPE).convert(
             'L')  # resize and convert to grayscale
         processed_observation = np.array(img)
+
+        # normalize greyscale image
+        processed_observation *= 255.0 / processed_observation.max()
+
         assert processed_observation.shape == INPUT_SHAPE
         # saves storage in experience memory
         return processed_observation.astype('uint8')
