@@ -31,12 +31,12 @@ class DataLogger(Callback):
         """ Print training values at beginning of training """
         self.train_start = timeit.default_timer()
         self.metrics_names = self.model.metrics_names
-        print('Training for {} steps ...'.format(self.params['nb_steps']))
+        #print('Training for {} steps ...'.format(self.params['nb_steps']))
 
     def on_train_end(self, logs):
         """ Print training time at end of training """
         duration = timeit.default_timer() - self.train_start
-        print('done, took {:.3f} seconds'.format(duration))
+        #print('done, took {:.3f} seconds'.format(duration))
 
         """ Save model at the end of training """
         self.save_data()
@@ -95,7 +95,7 @@ class DataLogger(Callback):
             'obs_max': np.max(self.observations[episode]),
             'metrics': metrics_text,
         }
-        print(template.format(**variables))
+        # print(template.format(**variables))
 
         for key, value in variables.iteritems():
             if key not in self.data:

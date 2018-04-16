@@ -102,7 +102,8 @@ def main():
     callbacks += [FileLogger(log_filename, interval=1)]
 
     # log all train data with custom callback
-    callbacks += [DataLogger(filepath_experiment, interval=100)]
+    data_filename = filepath_experiment + 'ddpg_{}_data.json'.format(ENV_NAME)
+    callbacks += [DataLogger(data_filename)]
 
     # make model checkpoints
     checkpoint_filename = os.path.join(
