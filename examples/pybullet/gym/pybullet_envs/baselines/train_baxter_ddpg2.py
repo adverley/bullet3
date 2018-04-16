@@ -8,6 +8,7 @@ os.sys.path.insert(0, parentdir)
 
 import gym
 from pybullet_envs.bullet.baxterGymEnv import BaxterGymEnv
+from pybullet_envs.bullet.callbacks import DataLogger
 
 from keras.models import Sequential, Model
 from keras.layers import Dense, Activation, Flatten, Permute, Input, Concatenate
