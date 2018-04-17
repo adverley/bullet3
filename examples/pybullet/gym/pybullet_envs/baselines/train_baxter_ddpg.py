@@ -8,6 +8,7 @@ os.sys.path.insert(0, parentdir)
 
 import gym
 from pybullet_envs.bullet.baxterGymEnv import BaxterGymEnv
+from pybullet_envs.bullet.callbacks import DataLogger
 
 from keras.models import Sequential, Model
 from keras.layers import Dense, Activation, Flatten, Permute, Input, Concatenate
@@ -91,7 +92,7 @@ def main():
     actor.add(Dense(512))
     actor.add(Activation('relu'))
     actor.add(Dense(nb_actions))
-    actor.add(Activation('linear'))
+    actor.add(Activation('tanh'))
     print(actor.summary())
 
     action_input = Input(shape=(nb_actions,), name='action_input')
@@ -129,7 +130,7 @@ def main():
     callbacks += [FileLogger(log_filename, interval=1)]
 
     # log all train data with custom callback
-    # callbacks += [DataLogger(filepath_experiment, interval=100)]
+    callbacks += [DataLogger(filepath_experiment)]
 
     # make model checkpoints
     checkpoint_filename = os.path.join(
