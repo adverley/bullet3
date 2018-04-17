@@ -60,7 +60,7 @@ class BaxterGymEnv(gym.Env):
         self._useHack = useHack
         self._logLevel = _logLevel
         self._terminated = 0
-        self._drop_pen = -self._maxStep
+        self._drop_pen = -self._maxSteps
         self._collision_pen = -1
         self.action = [0, 0, 0, 0, 0, 0, 0]
         self._p = p
