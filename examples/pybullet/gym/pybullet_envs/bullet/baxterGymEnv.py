@@ -310,7 +310,7 @@ class BaxterGymEnv(gym.Env):
         cp_list = p.getContactPoints(
             self._baxter.baxterUid, self._baxter.blockUid)
         if not cp_list:
-            reward = -2 * self._maxSteps
+            reward = -self._maxSteps
             self.logger.debug("Reward: %s \n" % str(reward))
             return reward
 
@@ -326,7 +326,7 @@ class BaxterGymEnv(gym.Env):
         cp_list = p.getContactPoints(
             self._baxter.baxterUid, self._baxter.torusUid)
         if any(cp_list):
-            reward += -5
+            reward += -1
 
         if y_bool and z_bool and distance < self._baxter.margin:
             self.logger.debug(
