@@ -60,6 +60,8 @@ class BaxterGymEnv(gym.Env):
         self._useHack = useHack
         self._logLevel = _logLevel
         self._terminated = 0
+        self._drop_pen = -self._maxStep
+        self._collision_pen = -1
         self.action = [0, 0, 0, 0, 0, 0, 0]
         self._p = p
         if self._renders:
@@ -310,7 +312,7 @@ class BaxterGymEnv(gym.Env):
         cp_list = p.getContactPoints(
             self._baxter.baxterUid, self._baxter.blockUid)
         if not cp_list:
-            reward = -self._maxSteps
+            reward = self._drop_pen
             self.logger.debug("Reward: %s \n" % str(reward))
             return reward
 
@@ -326,7 +328,7 @@ class BaxterGymEnv(gym.Env):
         cp_list = p.getContactPoints(
             self._baxter.baxterUid, self._baxter.torusUid)
         if any(cp_list):
-            reward += -1
+            reward += self._collision_pen
 
         if y_bool and z_bool and distance < self._baxter.margin:
             self.logger.debug(
