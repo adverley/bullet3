@@ -44,7 +44,7 @@ class Baxter:
 
     def reset(self):
         self.baxterUid = p.loadURDF(os.path.join(
-            self.urdfRootPath, "baxter_common/baxter.urdf"), [0, 0, 0.5], useFixedBase=True)
+            self.urdfRootPath, "baxter_common/baxter.urdf"), [0, 0, 0.62], useFixedBase=True)
         # p.resetBasePositionAndOrientation(
         #    self.baxterUid, [0, 0, 0.5], [0.000000, 0.000000, 0.000000, 1.000000])
         self.numJoints = p.getNumJoints(self.baxterUid)  # 42
@@ -53,14 +53,14 @@ class Baxter:
             self.urdfRootPath, "plane.urdf"), [0, 0, -0.3], useFixedBase=True)
 
         # Load in torus
-        #torus_coord = [1.1, 0, .5]
+        # torus_coord = [1.1, 0, .5]
         orn = p.getQuaternionFromEuler([0, 0, math.pi / 2.])
 
         ypos = -.1 + 0.05 * np.random.random()
         zpos = .5 + 0.05 * np.random.random()
         torus_coord = [1.2, ypos, zpos]
         # ang = 3.1415925438 * random.random() --> TODO maybe randomize angle in the future as dom randomization
-        #orn = p.getQuaternionFromEuler([0, 0, ang])
+        # orn = p.getQuaternionFromEuler([0, 0, ang])
 
         self.torusUid = p.loadURDF(os.path.join(
             self.urdfRootPath, "torus/torus.urdf"), torus_coord,
@@ -71,7 +71,7 @@ class Baxter:
         coord2 = p.getLinkState(self.baxterUid, 29)[0]
         block_coord = [(x[0] + x[1]) / 2. for x in zip(coord1, coord2)]
 
-        block_coord = [0.875, -1.07, 0.822]  # Horizontal coordinates
+        block_coord = [0.875, -1.07, 0.942]  # Horizontal coordinates
         orn = p.getQuaternionFromEuler([math.pi, math.pi, 3. * math.pi / 4.])
 
         self.blockUid = p.loadURDF(os.path.join(
