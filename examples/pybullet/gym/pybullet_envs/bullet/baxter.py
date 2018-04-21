@@ -28,18 +28,7 @@ class Baxter:
         self.baxterHeadCameraIndex = 9
         # TODO This will have to be changed based on torus URDF scaling factor
         self.torusRad = 0.4
-        self.margin = 0.1
-        # lower limits for null space
-        self.ll = [-.967, -2, -2.96, 0.19, -2.96, -2.09, -3.05]
-        # upper limits for null space
-        self.ul = [.967, 2, 2.96, 2.29, 2.96, 2.09, 3.05]
-        # joint ranges for null space
-        self.jr = [5.8, 4, 5.8, 4, 5.8, 4, 6]
-        # restposes for null space
-        self.rp = [0, 0, 0, 0.5 * math.pi, 0, -math.pi * 0.5 * 0.66, 0]
-        # joint damping coefficents
-        self.jd = [0.00001, 0.00001, 0.00001, 0.00001, 0.00001, 0.00001,
-                   0.00001, 0.00001, 0.00001, 0.00001, 0.00001, 0.00001, 0.00001, 0.00001]
+        self.margin = 0.11
         self.reset()
 
     def reset(self):
@@ -67,12 +56,13 @@ class Baxter:
             orn, useFixedBase=True)
 
         # Compute coordinates of block
-        coord1 = p.getLinkState(self.baxterUid, 27)[0]
-        coord2 = p.getLinkState(self.baxterUid, 29)[0]
+        coord1 = p.getLinkState(self.baxterUid, 28)[0]
+        coord2 = p.getLinkState(self.baxterUid, 30)[0]
         block_coord = [(x[0] + x[1]) / 2. for x in zip(coord1, coord2)]
+        orn = p.getLinkState(self.baxterUid, 23)[1]  # Get orn from link 23
 
-        block_coord = [0.875, -1.07, 0.942]  # Horizontal coordinates
-        orn = p.getQuaternionFromEuler([math.pi, math.pi, 3. * math.pi / 4.])
+        # block_coord = [0.875, -1.07, 0.942]  # Horizontal coordinates
+        #orn = p.getQuaternionFromEuler([math.pi, math.pi, 3. * math.pi / 4.])
 
         self.blockUid = p.loadURDF(os.path.join(
             self.urdfRootPath, "block_rot.urdf"), block_coord)
@@ -120,6 +110,22 @@ class Baxter:
             joint_name2joint_index[joint_name] = joint_idx
             print("motorinfo:", joint_info[3], joint_info[1], joint_info[0])
         print(joint_name2joint_index)
+
+    def randomizeGripperPos(self):
+        # Randomize the right arm start position
+        for joint in self.motorIndices:
+            p.resetJointState(self.baxterUid, joint,
+                              (-2 * np.random.rand() + 1))
+
+        coord1 = p.getLinkState(self.baxterUid, 28)[0]
+        coord2 = p.getLinkState(self.baxterUid, 30)[0]
+        block_coord = [(0.5 * x[0] + 0.5 * x[1])
+                       for x in zip(coord1, coord2)]
+
+        # Joint 30 (orthagonal), joint 25 (orthagonal)
+        orn = p.getLinkState(self.baxterUid, 23)[1]
+
+        p.resetBasePositionAndOrientation(self.blockUid, block_coord, orn)
 
     def applyAction(self, motorCommands):
         for action in range(len(motorCommands)):
