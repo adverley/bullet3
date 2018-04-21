@@ -57,7 +57,7 @@ class Baxter:
         orn = p.getQuaternionFromEuler([0, 0, math.pi / 2.])
 
         ypos = -.1 + 0.05 * np.random.random()
-        zpos = .5 + 0.05 * np.random.random()
+        zpos = .6 + 0.05 * np.random.random()
         torus_coord = [1.2, ypos, zpos]
         # ang = 3.1415925438 * random.random() --> TODO maybe randomize angle in the future as dom randomization
         # orn = p.getQuaternionFromEuler([0, 0, ang])
@@ -109,6 +109,17 @@ class Baxter:
         observation.extend(list(euler))
 
         return observation
+
+    def printJointInfo(self):
+        joint_name2joint_index = {}
+        for joint_nr in range(p.getNumJoints(self.baxterUid)):
+            joint_info = p.getJointInfo(self.baxterUid, joint_nr)
+            # print joint_info[0], joint_info[1]
+            joint_idx = joint_info[0]
+            joint_name = joint_info[1]
+            joint_name2joint_index[joint_name] = joint_idx
+            print("motorinfo:", joint_info[3], joint_info[1], joint_info[0])
+        print(joint_name2joint_index)
 
     def applyAction(self, motorCommands):
         for action in range(len(motorCommands)):
