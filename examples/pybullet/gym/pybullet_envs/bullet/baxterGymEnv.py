@@ -81,6 +81,7 @@ class BaxterGymEnv(gym.Env):
         self.logger.setLevel(self._logLevel)
 
         self.logger.debug("observationDim: %s" % str(observationDim))
+        self.logger.debug("self.action: %s" % str(self.action))
 
         observation_high = np.array(
             [np.finfo(np.float32).max] * observationDim)
@@ -117,6 +118,10 @@ class BaxterGymEnv(gym.Env):
         self._baxter = baxter.Baxter(
             urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
 
+        # Set action according to randomized gripper position
+        self._baxter.randomizeGripperPos()
+        self.setAction()
+
         # Set the camera settings.
         head_camera_index = 9
         t_v = [.95, 0, -.1]  # Translation of the camera position
@@ -144,7 +149,7 @@ class BaxterGymEnv(gym.Env):
         self._env_step = 0
         self._terminated = 0
         self._envStepCounter = 0
-        self.action = [0, 0, 0, 0, 0, 0, 0]
+        self.setAction()
         # p.setGravity(0, 0, -10)
 
         p.stepSimulation()
@@ -157,6 +162,11 @@ class BaxterGymEnv(gym.Env):
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
+
+    def setAction(self):
+        for i in range(len(self._baxter.motorIndices)):
+            self.action[i] = p.getJointState(
+                self._baxter.baxterUid, self._baxter.motorIndices[i])[0]
 
     def getExtendedObservation(self):
         """Return the observation as an image.
