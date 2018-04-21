@@ -91,7 +91,7 @@ class BaxterGymEnv(gym.Env):
             #    low=0, high=2, shape=(1, 7), dtype=np.uint8)
 
             self.action_space = spaces.Box(
-                low=0, high=2, shape=(7,), dtype=np.uint8)
+                low=0, high=2, shape=(7,))
         else:
             action_dim = 7
             self._action_bound = 1
@@ -279,7 +279,7 @@ class BaxterGymEnv(gym.Env):
         self._released = not cp_list  # True if no contact points
         # self._released = 0
         if self._released:
-            print "Object was released!!!!"
+            print("Object was released!!!!")
 
         torus_pos = np.array(
             p.getBasePositionAndOrientation(self._baxter.torusUid)[0]) + [0, 0, self._baxter.torusRad]

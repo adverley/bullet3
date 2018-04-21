@@ -42,15 +42,15 @@ def main():
                        useCamera=False, maxSteps=400)
     state_size = env.observation_space.shape
     action_size = env.action_space.shape
-    print "Action size:", action_size
-    print "State size:", state_size
+    print("Action size:", action_size)
+    print("State size:", state_size)
     episodes = 1000
     batch_size = 32
     WINDOW_LENGTH = 1
     ENV_NAME = "BaxterGymEnv"
 
-    print "Action space:", env.action_space.shape
-    print "Observation space:", env.observation_space.shape
+    print("Action space:", env.action_space.shape)
+    print("Observation space:", env.observation_space.shape)
     # (height, width, channel)
     # input_shape = (1,) + env.observation_space.shape
 

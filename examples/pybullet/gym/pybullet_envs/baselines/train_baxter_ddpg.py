@@ -70,8 +70,8 @@ def main():
     INPUT_SHAPE = (240, 240)
     input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
 
-    print "Action space:", env.action_space.shape
-    print "Observation space:", env.observation_space.shape
+    print("Action space:", env.action_space.shape)
+    print("Observation space:", env.observation_space.shape)
     # (height, width, channel)
     # input_shape = (1,) + env.observation_space.shape
 
