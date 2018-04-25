@@ -40,6 +40,7 @@ class BaxterGymEnv(gym.Env):
                  dv=0.01,
                  useCamera=True,
                  useHack=True,
+                 useBlock=True,
                  _logLevel=logging.INFO,
                  maxSteps=100,
                  cameraRandom=0):
@@ -58,10 +59,12 @@ class BaxterGymEnv(gym.Env):
         self._isDiscrete = isDiscrete
         self._useCamera = useCamera
         self._useHack = useHack
+        self._useBlock = useBlock
         self._logLevel = _logLevel
         self._terminated = 0
+        self._released = 0
         self._drop_pen = -self._maxSteps
-        self._collision_pen = -1
+        self._collision_pen = -0.1
         self.action = [0, 0, 0, 0, 0, 0, 0]
         self._p = p
         if self._renders:
@@ -116,7 +119,7 @@ class BaxterGymEnv(gym.Env):
 
         # Load in Baxter together with all the other objects
         self._baxter = baxter.Baxter(
-            urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
+            urdfRootPath=self._urdfRoot, timeStep=self._timeStep, useBlock=self._useBlock)
 
         # Set action according to randomized gripper position
         self._baxter.randomizeGripperPos()
@@ -273,18 +276,24 @@ class BaxterGymEnv(gym.Env):
         maxSteps steps or the object is no longer in the gripper.
         """
 
-        # Check whether the object was released
-        cp_list = p.getContactPoints(
-            self._baxter.baxterUid, self._baxter.blockUid)
-        self._released = not cp_list  # True if no contact points
-        # self._released = 0
-        if self._released:
-            print("Object was released!!!!")
+        if self._useBlock:
+            # Check whether the object was released
+            cp_list = p.getContactPoints(
+                self._baxter.baxterUid, self._baxter.blockUid)
+            self._released = not cp_list  # True if no contact points
+            # self._released = 0
+            if self._released:
+                print("Object was released!!!!")
 
         torus_pos = np.array(
             p.getBasePositionAndOrientation(self._baxter.torusUid)[0]) + [0, 0, self._baxter.torusRad]
-        block_pos = np.array(
-            p.getBasePositionAndOrientation(self._baxter.blockUid)[0])
+
+        if self._useBlock:
+            block_pos = np.array(
+                p.getBasePositionAndOrientation(self._baxter.blockUid)[0])
+        else:
+            block_pos = np.array(
+                p.getLinkState(self._baxter.baxterUid, 26)[0])  # 26 or avg between 28 and 30
 
         # Caculate distance between the center of the torus and the block
         distance = np.linalg.norm(np.array(torus_pos) - np.array(block_pos))
@@ -311,20 +320,26 @@ class BaxterGymEnv(gym.Env):
         torus_pos = np.array(
             p.getBasePositionAndOrientation(self._baxter.torusUid)[0]) + [0, 0, self._baxter.torusRad]
         self.logger.debug("Reward torus position: %s" % str(torus_pos))
-        block_pos = np.array(
-            p.getBasePositionAndOrientation(self._baxter.blockUid)[0])
+
+        if self._useBlock:
+            block_pos = np.array(
+                p.getBasePositionAndOrientation(self._baxter.blockUid)[0])
+        else:
+            block_pos = np.array(
+                p.getLinkState(self._baxter.baxterUid, 26)[0])  # 26 or avg between 28 and 30
 
         # Caculate distance between the center of the torus and the block
         distance = np.linalg.norm(np.array(torus_pos) - np.array(block_pos))
         self.logger.debug("Distance: %s" % str(distance))
 
-        # Check whether the object was released
-        cp_list = p.getContactPoints(
-            self._baxter.baxterUid, self._baxter.blockUid)
-        if not cp_list:
-            reward = self._drop_pen
-            self.logger.debug("Reward: %s \n" % str(reward))
-            return reward
+        if self._useBlock:
+            # Check whether the object was released
+            cp_list = p.getContactPoints(
+                self._baxter.baxterUid, self._baxter.blockUid)
+            if not cp_list:
+                reward = self._drop_pen
+                self.logger.debug("Reward: %s \n" % str(reward))
+                return reward
 
         # TODO torusRad will have to be changed based on torus URDF scaling factor
         y_bool = (
