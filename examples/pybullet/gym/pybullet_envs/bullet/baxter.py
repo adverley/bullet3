@@ -15,7 +15,7 @@ import pybullet_data
 class Baxter:
     "This class will only use the right arm of the Baxter robot"
 
-    def __init__(self, urdfRootPath=pybullet_data.getDataPath(), timeStep=0.01):
+    def __init__(self, urdfRootPath=pybullet_data.getDataPath(), timeStep=0.01, useBlock=True):
         self.urdfRootPath = pybullet_data.getDataPath()
         self.timeStep = timeStep
         self.maxVelocity = .35
@@ -26,6 +26,7 @@ class Baxter:
         self.baxterEndEffectorIndex = 19  # or 25
         self.baxterGripperIndex = 20  # or 26
         self.baxterHeadCameraIndex = 9
+        self.useBlock = useBlock
         # TODO This will have to be changed based on torus URDF scaling factor
         self.torusRad = 0.4
         self.margin = 0.11
@@ -55,19 +56,20 @@ class Baxter:
             self.urdfRootPath, "torus/torus.urdf"), torus_coord,
             orn, useFixedBase=True)
 
-        # Compute coordinates of block
-        coord1 = p.getLinkState(self.baxterUid, 28)[0]
-        coord2 = p.getLinkState(self.baxterUid, 30)[0]
-        block_coord = [(x[0] + x[1]) / 2. for x in zip(coord1, coord2)]
-        orn = p.getLinkState(self.baxterUid, 23)[1]  # Get orn from link 23
+        if self.useBlock:
+            # Compute coordinates of block
+            coord1 = p.getLinkState(self.baxterUid, 28)[0]
+            coord2 = p.getLinkState(self.baxterUid, 30)[0]
+            block_coord = [(x[0] + x[1]) / 2. for x in zip(coord1, coord2)]
+            orn = p.getLinkState(self.baxterUid, 23)[1]  # Get orn from link 23
 
-        # block_coord = [0.875, -1.07, 0.942]  # Horizontal coordinates
-        #orn = p.getQuaternionFromEuler([math.pi, math.pi, 3. * math.pi / 4.])
+            # block_coord = [0.875, -1.07, 0.942]  # Horizontal coordinates
+            #orn = p.getQuaternionFromEuler([math.pi, math.pi, 3. * math.pi / 4.])
 
-        self.blockUid = p.loadURDF(os.path.join(
-            self.urdfRootPath, "block_rot.urdf"), block_coord)
+            self.blockUid = p.loadURDF(os.path.join(
+                self.urdfRootPath, "block_rot.urdf"), block_coord)
 
-        p.resetBasePositionAndOrientation(self.blockUid, block_coord, orn)
+            p.resetBasePositionAndOrientation(self.blockUid, block_coord, orn)
 
         self.motorNames = []
         self.motorIndices = [12, 13, 14, 15, 16,
@@ -117,15 +119,16 @@ class Baxter:
             p.resetJointState(self.baxterUid, joint,
                               (-2 * np.random.rand() + 1))
 
-        coord1 = p.getLinkState(self.baxterUid, 28)[0]
-        coord2 = p.getLinkState(self.baxterUid, 30)[0]
-        block_coord = [(0.5 * x[0] + 0.5 * x[1])
-                       for x in zip(coord1, coord2)]
+        if self.useBlock:
+            coord1 = p.getLinkState(self.baxterUid, 28)[0]
+            coord2 = p.getLinkState(self.baxterUid, 30)[0]
+            block_coord = [(0.5 * x[0] + 0.5 * x[1])
+                           for x in zip(coord1, coord2)]
 
-        # Joint 30 (orthagonal), joint 25 (orthagonal)
-        orn = p.getLinkState(self.baxterUid, 23)[1]
+            # Joint 30 (orthagonal), joint 25 (orthagonal)
+            orn = p.getLinkState(self.baxterUid, 23)[1]
 
-        p.resetBasePositionAndOrientation(self.blockUid, block_coord, orn)
+            p.resetBasePositionAndOrientation(self.blockUid, block_coord, orn)
 
     def applyAction(self, motorCommands):
         for action in range(len(motorCommands)):
