@@ -616,7 +616,9 @@ enum EnumRenderer
 enum EnumRendererAuxFlags
 {
 	ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX=1,
+	ER_USE_PROJECTIVE_TEXTURE=2,
 };
+
 ///flags to pick the IK solver and other options
 enum EnumCalculateInverseKinematicsFlags
 {
@@ -643,6 +645,11 @@ enum b3ConfigureDebugVisualizerEnum
 	COV_ENABLE_MOUSE_PICKING,
 	COV_ENABLE_Y_AXIS_UP,
 	COV_ENABLE_TINY_RENDERER,
+	COV_ENABLE_RGB_BUFFER_PREVIEW,
+	COV_ENABLE_DEPTH_BUFFER_PREVIEW,
+	COV_ENABLE_SEGMENTATION_MARK_PREVIEW,
+	COV_ENABLE_PLANAR_REFLECTION,
+	
 };
 
 enum b3AddUserDebugItemEnum

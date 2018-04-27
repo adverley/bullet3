@@ -30,6 +30,12 @@
 
 	newoption
 	{
+		trigger = "enable_system_glx",
+		description = "Try to link against system glx instead of using glad_glx (default)"
+	}
+
+	newoption
+	{
 		trigger = "enable_system_opengl",
 		description = "Try to link and use the system OpenGL headers version instead of dynamically loading OpenGL (dlopen is default)"
 	}
@@ -176,6 +182,14 @@ end
 		trigger = "audio",
 		description = "Enable audio"
 	}
+	newoption
+	{
+		trigger = "enable_multithreading",
+		description = "enable CPU multithreading for bullet2 libs"
+	}
+	if _OPTIONS["enable_multithreading"] then
+		defines {"BT_THREADSAFE=1"}
+	end
 	if _OPTIONS["double"] then
 		defines {"BT_USE_DOUBLE_PRECISION"}
 	end

@@ -135,6 +135,7 @@ enum MultiThreadedGUIHelperCommunicationEnums
 	eGUIHelperChangeGraphicsInstanceTextureId,
 	eGUIHelperGetShapeIndexFromInstance,
 	eGUIHelperChangeTexture,
+	eGUIHelperRemoveTexture,
 };
 
 
@@ -859,6 +860,17 @@ public:
 		//m_childGuiHelper->createPhysicsDebugDrawer(rbWorld);
 	}
 
+	int m_removeTextureUid;
+
+	virtual void removeTexture(int textureUid)
+	{
+		m_removeTextureUid = textureUid;
+		m_cs->lock();
+		m_cs->setSharedParam(1, eGUIHelperRemoveTexture);
+
+		workerThreadWait();
+	}
+
 	virtual int	registerTexture(const unsigned char* texels, int width, int height)
 	{
 		m_texels = texels;
@@ -1106,6 +1118,16 @@ public:
 	    
 		m_cs->setSharedParam(1,eGUIHelperDisplayCameraImageData);
 		workerThreadWait();
+	}
+	
+	virtual void setProjectiveTextureMatrices(const float viewMatrix[16], const float projectionMatrix[16])
+	{
+		m_childGuiHelper->getAppInterface()->m_renderer->setProjectiveTextureMatrices(viewMatrix, projectionMatrix);
+	}
+	
+	virtual void setProjectiveTexture(bool useProjectiveTexture)
+	{
+		m_childGuiHelper->getAppInterface()->m_renderer->setProjectiveTexture(useProjectiveTexture);
 	}
 
 	btDiscreteDynamicsWorld* m_dynamicsWorld;
@@ -1878,6 +1900,13 @@ void	PhysicsServerExample::updateGraphics()
 		m_multiThreadedHelper->mainThreadRelease();
 		break;
 	}
+	case eGUIHelperRemoveTexture:
+	{
+		B3_PROFILE("eGUIHelperRemoveTexture");
+		m_multiThreadedHelper->m_childGuiHelper->removeTexture(m_multiThreadedHelper->m_removeTextureUid);
+		m_multiThreadedHelper->mainThreadRelease();
+		break;
+	}
 	case eGUIHelperRegisterGraphicsShape:
 	{
 		B3_PROFILE("eGUIHelperRegisterGraphicsShape");
@@ -2151,7 +2180,12 @@ void	PhysicsServerExample::updateGraphics()
 	}
     case eGUIHelperCopyCameraImageData:
         {
-		B3_PROFILE("eGUIHelperCopyCameraImageData");
+			B3_PROFILE("eGUIHelperCopyCameraImageData");
+
+			if (m_multiThreadedHelper->m_startPixelIndex == 0)
+			{
+				m_physicsServer.syncPhysicsToGraphics();
+			}
 
              m_multiThreadedHelper->m_childGuiHelper->copyCameraImageData(m_multiThreadedHelper->m_viewMatrix,
 				 m_multiThreadedHelper->m_projectionMatrix,

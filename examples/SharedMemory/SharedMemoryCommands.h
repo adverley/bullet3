@@ -23,7 +23,7 @@
 	typedef unsigned long long int smUint64_t;
 #endif
 
-#define SHARED_MEMORY_MAX_STREAM_CHUNK_SIZE (512*1024)
+#define SHARED_MEMORY_MAX_STREAM_CHUNK_SIZE (8*1024*1024)
 
 #define SHARED_MEMORY_SERVER_TEST_C
 #define MAX_DEGREE_OF_FREEDOM 128
@@ -240,6 +240,8 @@ struct RequestPixelDataArgs
     float m_lightSpecularCoeff;
     int m_hasShadow;
 	int m_flags;
+	float m_projectiveTextureViewMatrix[16];
+	float m_projectiveTextureProjectionMatrix[16];
 };
 
 enum EnumRequestPixelDataUpdateFlags
@@ -254,6 +256,7 @@ enum EnumRequestPixelDataUpdateFlags
     REQUEST_PIXEL_ARGS_SET_DIFFUSE_COEFF=128,
     REQUEST_PIXEL_ARGS_SET_SPECULAR_COEFF=256,
 	REQUEST_PIXEL_ARGS_HAS_FLAGS = 512,
+	REQUEST_PIXEL_ARGS_HAS_PROJECTIVE_TEXTURE_MATRICES=1024,
 
 	//don't exceed (1<<15), because this enum is shared with EnumRenderer in SharedMemoryPublic.h
 	
