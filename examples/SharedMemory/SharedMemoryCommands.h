@@ -385,10 +385,11 @@ struct SendDesiredStateArgs
 {
 	int m_bodyUniqueId;
 	int m_controlMode;
-
+	
 	//PD parameters in case m_controlMode == CONTROL_MODE_POSITION_VELOCITY_PD
 	double m_Kp[MAX_DEGREE_OF_FREEDOM];//indexed by degree of freedom, 6 for base, and then the dofs for each link
 	double m_Kd[MAX_DEGREE_OF_FREEDOM];//indexed by degree of freedom, 6 for base, and then the dofs for each link
+	double m_rhsClamp[MAX_DEGREE_OF_FREEDOM];
 
     int m_hasDesiredStateFlags[MAX_DEGREE_OF_FREEDOM];
     
@@ -416,6 +417,7 @@ enum EnumSimDesiredStateUpdateFlags
 	SIM_DESIRED_STATE_HAS_KD=4,
 	SIM_DESIRED_STATE_HAS_KP=8,
 	SIM_DESIRED_STATE_HAS_MAX_FORCE=16,
+	SIM_DESIRED_STATE_HAS_RHS_CLAMP=32
 };
 
 
@@ -459,6 +461,27 @@ enum EnumSimParamInternalSimFlags
 
 ///Controlling a robot involves sending the desired state to its joint motor controllers.
 ///The control mode determines the state variables used for motor control.
+
+enum EnumWireFlags
+{
+	LOAD_SOFT_WIRE_BOXES = 1,
+	LOAD_SOFT_WIRE_INITIAL_POSITION = 2,
+	LOAD_SOFT_WIRE_INITIAL_ORIENTATION = 4,
+	LOAD_SOFT_WIRE_SCALE = 8
+};
+
+struct LoadSoftWireArgs
+{
+	int m_num_boxes;
+	double m_scale;
+	double m_initialPosition[3];
+	double m_initialOrientation[4];
+};
+
+struct b3LoadSoftWireResultArgs
+{
+	int m_objectUniqueId;
+};
 
 struct LoadSoftBodyArgs
 {
@@ -1003,6 +1026,7 @@ struct SharedMemoryCommand
 		struct UserDebugDrawArgs m_userDebugDrawArgs;
 		struct RequestRaycastIntersections m_requestRaycastIntersections;
         struct LoadSoftBodyArgs m_loadSoftBodyArguments;
+		struct LoadSoftWireArgs m_loadSoftWireArguments;
 		struct VRCameraState m_vrCameraStateArguments;
 		struct StateLoggingRequest m_stateLoggingArguments;
         struct ConfigureOpenGLVisualizerRequest m_configureOpenGLVisualizerArguments;
@@ -1092,6 +1116,7 @@ struct SharedMemoryStatus
 		struct b3PhysicsSimulationParameters m_simulationParameterResultArgs;
 		struct b3StateSerializationArguments m_saveStateResultArgs;
 		struct b3LoadSoftBodyResultArgs m_loadSoftBodyResultArguments;
+		struct b3LoadSoftWireResultArgs m_loadSoftWireResultArguments;
 		struct SendCollisionShapeDataArgs m_sendCollisionShapeArgs;
 	};
 };
