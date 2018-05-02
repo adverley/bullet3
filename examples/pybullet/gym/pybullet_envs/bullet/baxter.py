@@ -64,12 +64,20 @@ class Baxter:
             orn = p.getLinkState(self.baxterUid, 23)[1]  # Get orn from link 23
 
             # block_coord = [0.875, -1.07, 0.942]  # Horizontal coordinates
-            #orn = p.getQuaternionFromEuler([math.pi, math.pi, 3. * math.pi / 4.])
+            # orn = p.getQuaternionFromEuler([math.pi, math.pi, 3. * math.pi / 4.])
 
             self.blockUid = p.loadURDF(os.path.join(
                 self.urdfRootPath, "block_rot.urdf"), block_coord)
 
             p.resetBasePositionAndOrientation(self.blockUid, block_coord, orn)
+            self.cid_base = p.createConstraint(self.baxterUid, self.baxterEndEffectorIndex, self.blockUid, -1, jointType=p.JOINT_FIXED,
+                                               jointAxis=[1, 0, 0], parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0], parentFrameOrientation=p.getQuaternionFromEuler([0, math.pi / 2., 0]))
+            """
+            self.cid_rfinger = p.createConstraint(self.baxterUid, self.baxterEndEffectorIndex, self.blockUid, -1,
+                                                  jointType=p.JOINT_POINT2POINT, jointAxis=[0, -1, 0], parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0])
+            self.cid_lfinger = p.createConstraint(self.baxterUid, self.baxterEndEffectorIndex, self.blockUid, -1,
+                                                  jointType=p.JOINT_POINT2POINT, jointAxis=[0, -1, 0], parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0])
+            """
 
         self.motorNames = []
         self.motorIndices = [12, 13, 14, 15, 16,
@@ -120,6 +128,8 @@ class Baxter:
                               (-2 * np.random.rand() + 1))
 
         if self.useBlock:
+            p.removeConstraint(self.cid_base)
+
             coord1 = p.getLinkState(self.baxterUid, 28)[0]
             coord2 = p.getLinkState(self.baxterUid, 30)[0]
             block_coord = [(0.5 * x[0] + 0.5 * x[1])
@@ -129,6 +139,9 @@ class Baxter:
             orn = p.getLinkState(self.baxterUid, 23)[1]
 
             p.resetBasePositionAndOrientation(self.blockUid, block_coord, orn)
+
+            self.cid_base = p.createConstraint(self.baxterUid, self.baxterEndEffectorIndex, self.blockUid, -1, jointType=p.JOINT_FIXED,
+                                               jointAxis=[0, 1, 0], parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0], parentFrameOrientation=p.getQuaternionFromEuler([0, math.pi / 2., 0]))
 
     def applyAction(self, motorCommands):
         for action in range(len(motorCommands)):

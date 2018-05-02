@@ -64,8 +64,6 @@ class BaxterGymEnv(gym.Env):
         self._useBlock = useBlock
         self._logLevel = _logLevel
         self._terminated = 0
-        self._released = 0
-        self._drop_pen = -self._maxSteps
         self._collision_pen = -0.1
         self.action = [0, 0, 0, 0, 0, 0, 0]
         self._p = p
@@ -278,15 +276,6 @@ class BaxterGymEnv(gym.Env):
         maxSteps steps or the object is no longer in the gripper.
         """
 
-        if self._useBlock:
-            # Check whether the object was released
-            cp_list = p.getContactPoints(
-                self._baxter.baxterUid, self._baxter.blockUid)
-            self._released = not cp_list  # True if no contact points
-            # self._released = 0
-            if self._released:
-                print("Object was released!!!!")
-
         torus_pos = np.array(
             p.getBasePositionAndOrientation(self._baxter.torusUid)[0])
 
@@ -307,9 +296,10 @@ class BaxterGymEnv(gym.Env):
             torus_pos[2] - self._baxter.torusRad) < block_pos[2] and (block_pos[2] + self._baxter.torusRad) > block_pos[2]
 
         if y_bool and z_bool and x_bool:
+            print("Task completed!")
             self._terminated = 1
 
-        if(self._terminated or self._envStepCounter >= self._maxSteps or self._released):
+        if(self._terminated or self._envStepCounter >= self._maxSteps):
             self._observation = self.getExtendedObservation()
             return True
         else:
@@ -333,15 +323,6 @@ class BaxterGymEnv(gym.Env):
         # Caculate distance between the center of the torus and the block
         distance = np.linalg.norm(np.array(torus_pos) - np.array(block_pos))
         self.logger.debug("Distance: %s" % str(distance))
-
-        if self._useBlock:
-            # Check whether the object was released
-            cp_list = p.getContactPoints(
-                self._baxter.baxterUid, self._baxter.blockUid)
-            if not cp_list:
-                reward = self._drop_pen
-                self.logger.debug("Reward: %s \n" % str(reward))
-                return reward
 
         x_bool = (torus_pos[0] + self._baxter.margin) < block_pos[0]
         y_bool = (
