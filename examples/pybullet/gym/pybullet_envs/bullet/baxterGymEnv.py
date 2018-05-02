@@ -43,8 +43,10 @@ class BaxterGymEnv(gym.Env):
                  useBlock=True,
                  _logLevel=logging.INFO,
                  maxSteps=100,
+                 timeStep=(1. / 240.),
                  cameraRandom=0):
-        self._timeStep = 1. / 240.
+        #self._timeStep = 1. / 240.
+        self._timeStep = timeStep
         self._urdfRoot = urdfRoot
         self._actionRepeat = actionRepeat
         self._isEnableSelfCollision = isEnableSelfCollision
@@ -286,7 +288,7 @@ class BaxterGymEnv(gym.Env):
                 print("Object was released!!!!")
 
         torus_pos = np.array(
-            p.getBasePositionAndOrientation(self._baxter.torusUid)[0]) + [0, 0, self._baxter.torusRad]
+            p.getBasePositionAndOrientation(self._baxter.torusUid)[0])
 
         if self._useBlock:
             block_pos = np.array(
@@ -298,13 +300,13 @@ class BaxterGymEnv(gym.Env):
         # Caculate distance between the center of the torus and the block
         distance = np.linalg.norm(np.array(torus_pos) - np.array(block_pos))
 
-        # TODO torusRad will have to be changed based on torus URDF scaling factor
+        x_bool = (torus_pos[0] + self._baxter.margin) < block_pos[0]
         y_bool = (
-            torus_pos[1] - self._baxter.margin) < block_pos[1] and (torus_pos[1] + self._baxter.margin) > block_pos[1]
+            torus_pos[1] - self._baxter.torusRad) < block_pos[1] and (torus_pos[1] + self._baxter.torusRad) > block_pos[1]
         z_bool = (
-            torus_pos[2] - self._baxter.margin) < block_pos[2] and (block_pos[2] + self._baxter.margin) > block_pos[2]
+            torus_pos[2] - self._baxter.torusRad) < block_pos[2] and (block_pos[2] + self._baxter.torusRad) > block_pos[2]
 
-        if y_bool and z_bool and distance < self._baxter.margin:
+        if y_bool and z_bool and x_bool:
             self._terminated = 1
 
         if(self._terminated or self._envStepCounter >= self._maxSteps or self._released):
@@ -318,7 +320,7 @@ class BaxterGymEnv(gym.Env):
         """
 
         torus_pos = np.array(
-            p.getBasePositionAndOrientation(self._baxter.torusUid)[0]) + [0, 0, self._baxter.torusRad]
+            p.getBasePositionAndOrientation(self._baxter.torusUid)[0])
         self.logger.debug("Reward torus position: %s" % str(torus_pos))
 
         if self._useBlock:
@@ -341,21 +343,20 @@ class BaxterGymEnv(gym.Env):
                 self.logger.debug("Reward: %s \n" % str(reward))
                 return reward
 
-        # TODO torusRad will have to be changed based on torus URDF scaling factor
+        x_bool = (torus_pos[0] + self._baxter.margin) < block_pos[0]
         y_bool = (
-            torus_pos[1] - self._baxter.margin) < block_pos[1] and (torus_pos[1] + self._baxter.margin) > block_pos[1]
+            torus_pos[1] - self._baxter.torusRad) < block_pos[1] and (torus_pos[1] + self._baxter.torusRad) > block_pos[1]
         z_bool = (
-            torus_pos[2] - self._baxter.margin) < block_pos[2] and (block_pos[2] + self._baxter.margin) > block_pos[2]
+            torus_pos[2] - self._baxter.torusRad) < block_pos[2] and (block_pos[2] + self._baxter.torusRad) > block_pos[2]
 
-        reward = -distance  # + 4
+        reward = -distance
 
-        # Add negative reward for collision with torus (maybe with margin)
         cp_list = p.getContactPoints(
             self._baxter.baxterUid, self._baxter.torusUid)
         if any(cp_list):
             reward += self._collision_pen
 
-        if y_bool and z_bool and distance < self._baxter.margin:
+        if y_bool and z_bool and x_bool:
             self.logger.debug(
                 "Block within the hole. block_pos: {0} torus_pos: {1}".format(
                     str(block_pos), str(torus_pos)))

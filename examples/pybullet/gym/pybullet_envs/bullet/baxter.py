@@ -23,13 +23,13 @@ class Baxter:
         self.useSimulation = 1
         self.useNullSpace = 21
         self.useOrientation = 1
-        self.baxterEndEffectorIndex = 19  # or 25
+        self.baxterEndEffectorIndex = 26  # or 25
         self.baxterGripperIndex = 20  # or 26
         self.baxterHeadCameraIndex = 9
         self.useBlock = useBlock
-        # TODO This will have to be changed based on torus URDF scaling factor
-        self.torusRad = 0.4
-        self.margin = 0.11
+        self.torusScale = 1.
+        self.torusRad = 0.23 * self.torusScale
+        self.margin = 0.06
         self.reset()
 
     def reset(self):
@@ -47,14 +47,14 @@ class Baxter:
         orn = p.getQuaternionFromEuler([0, 0, math.pi / 2.])
 
         ypos = -.1 + 0.05 * np.random.random()
-        zpos = .6 + 0.05 * np.random.random()
-        torus_coord = [1.2, ypos, zpos]
+        zpos = 1. + 0.05 * np.random.random()
+        torus_coord = [1.1, ypos, zpos]
         # ang = 3.1415925438 * random.random() --> TODO maybe randomize angle in the future as dom randomization
         # orn = p.getQuaternionFromEuler([0, 0, ang])
 
         self.torusUid = p.loadURDF(os.path.join(
             self.urdfRootPath, "torus/torus.urdf"), torus_coord,
-            orn, useFixedBase=True)
+            orn, useFixedBase=True, globalScaling=self.torusScale)
 
         if self.useBlock:
             # Compute coordinates of block

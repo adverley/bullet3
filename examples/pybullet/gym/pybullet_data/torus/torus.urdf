@@ -16,7 +16,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-				<mesh filename="torus_only.obj" scale=".3 .3 .3"/>
+				<mesh filename="torus_only.obj" scale=".01 .01 .01"/>
       </geometry>
        <material name="white">
         <color rgba="0 .5 0 1"/>
@@ -25,7 +25,7 @@
     <collision concave="yes">
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-	 	<mesh filename="torus_only.obj" scale=".3 .3 .3"/>
+	 	<mesh filename="torus_only.obj" scale=".01 .01 .01"/>
       </geometry>
     </collision>
   </link>
