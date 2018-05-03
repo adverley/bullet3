@@ -320,6 +320,13 @@ class BaxterGymEnv(gym.Env):
             block_pos = np.array(
                 p.getLinkState(self._baxter.baxterUid, 26)[0])  # 26 or avg between 28 and 30
 
+        if self._useBlock:
+            # Check whether the object was released
+            cp_list = p.getContactPoints(
+                self._baxter.baxterUid, self._baxter.blockUid)
+            if not cp_list:
+                print("Object was released!!!!")
+
         # Caculate distance between the center of the torus and the block
         distance = np.linalg.norm(np.array(torus_pos) - np.array(block_pos))
         self.logger.debug("Distance: %s" % str(distance))
