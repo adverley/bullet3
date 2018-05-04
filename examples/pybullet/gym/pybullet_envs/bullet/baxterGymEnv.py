@@ -19,6 +19,9 @@ from pkg_resources import parse_version
 import logging
 import sys
 
+from numpy.linalg import norm
+from numpy import vdot
+
 largeValObservation = 100
 
 RENDER_HEIGHT = 720
@@ -320,16 +323,31 @@ class BaxterGymEnv(gym.Env):
             block_pos = np.array(
                 p.getLinkState(self._baxter.baxterUid, 26)[0])  # 26 or avg between 28 and 30
 
-        if self._useBlock:
-            # Check whether the object was released
-            cp_list = p.getContactPoints(
-                self._baxter.baxterUid, self._baxter.blockUid)
-            if not cp_list:
-                print("Object was released!!!!")
+        # Move towards the line through the center of the torus
+        orn = np.array(p.getEulerFromQuaternion(
+            p.getBasePositionAndOrientation(self._baxter.torusUid)[1]))
 
-        # Caculate distance between the center of the torus and the block
-        distance = np.linalg.norm(np.array(torus_pos) - np.array(block_pos))
-        self.logger.debug("Distance: %s" % str(distance))
+        # Euler_angle = [yaw, pitch, roll]
+        dir_vector = np.array([math.cos(orn[0]) * math.cos(orn[1]),
+                               math.sin(orn[0]) * math.cos(orn[1]),
+                               math.sin(orn[1])])
+
+        #x0 = p.getJointState(baxterId, 26)[0]
+        x0 = torus_pos
+        x1 = block_pos
+        distance = norm((x0 - x1) - vdot((x0 - x1), dir_vector) * dir_vector)
+
+        reward = -distance
+
+        if(distance < self._baxter.torusRad):
+            #distance = norm(torus_pos - block_pos)
+            distance = math.sqrt((torus_pos[0] - block_pos[0])**2 +
+                                 (torus_pos[1] - block_pos[1])**2)
+            reward = 4 - distance
+            # Maybe penalize this when moving away from the line
+            # if(norm((x0 - x1) - vdot((x0 - x1), dir_vector) * dir_vector) > 0.5):
+            #    reward += -4
+        print("reward", reward)
 
         x_bool = (torus_pos[0] + self._baxter.margin) < block_pos[0]
         y_bool = (
@@ -337,7 +355,7 @@ class BaxterGymEnv(gym.Env):
         z_bool = (
             torus_pos[2] - self._baxter.torusRad) < block_pos[2] and (block_pos[2] + self._baxter.torusRad) > block_pos[2]
 
-        reward = -distance
+        #reward = -distance
 
         cp_list = p.getContactPoints(
             self._baxter.baxterUid, self._baxter.torusUid)
