@@ -34,7 +34,7 @@ class Baxter:
 
     def reset(self):
         self.baxterUid = p.loadURDF(os.path.join(
-            self.urdfRootPath, "baxter_common/baxter.urdf"), [0, 0, 0.62], useFixedBase=True)
+            self.urdfRootPath, "baxter_common/baxter.urdf"), [0, 0, 0.62], useFixedBase=True, flags=p.URDF_USE_SELF_COLLISION_EXCLUDE_PARENT)
         # p.resetBasePositionAndOrientation(
         #    self.baxterUid, [0, 0, 0.5], [0.000000, 0.000000, 0.000000, 1.000000])
         self.numJoints = p.getNumJoints(self.baxterUid)  # 42
