@@ -7,6 +7,7 @@ parentdir = os.path.dirname(os.path.dirname(currentdir))
 os.sys.path.insert(0, parentdir)
 
 import gym
+import argparse
 from pybullet_envs.bullet.baxterGymEnv import BaxterGymEnv
 from pybullet_envs.bullet.callbacks import DataLogger
 
@@ -36,7 +37,7 @@ filepath_experiment = "experiments/"
 baxterProcessor = WhiteningNormalizerProcessor()
 
 
-def main():
+def main(args):
     # Train network with joint position inputs
     env = BaxterGymEnv(renders=False, isDiscrete=True,
                        useCamera=False, maxSteps=400)
@@ -48,6 +49,9 @@ def main():
     batch_size = 32
     WINDOW_LENGTH = 1
     ENV_NAME = "BaxterGymEnv"
+    EXP_NAME = args.exp_name
+    #CONFIG_NAME = args.config_name
+    #NR_GPUS = args.nr_gpu
 
     print("Action space:", env.action_space.shape)
     print("Observation space:", env.observation_space.shape)
@@ -98,16 +102,16 @@ def main():
 
     # Initialize callbacks
     callbacks = []
-    log_filename = filepath_experiment + 'ddpg_{}_log.json'.format(ENV_NAME)
+    log_filename = filepath_experiment + 'ddpg_{}_{}_log.json'.format(ENV_NAME, EXP_NAME)
     callbacks += [FileLogger(log_filename, interval=1)]
 
     # log all train data with custom callback
-    data_filename = filepath_experiment + 'ddpg_{}_data.json'.format(ENV_NAME)
+    data_filename = filepath_experiment + 'ddpg_{}_{}_data.json'.format(ENV_NAME, EXP_NAME)
     callbacks += [DataLogger(data_filename)]
 
     # make model checkpoints
     checkpoint_filename = os.path.join(
-        filepath_experiment, 'ddpg_{}_weights_checkpoint.h5f'.format(ENV_NAME))
+        filepath_experiment, 'ddpg_{}_{}_weights_checkpoint.h5f'.format(ENV_NAME, EXP_NAME))
     callbacks += [ModelIntervalCheckpoint(checkpoint_filename,
                                           interval=10000, verbose=1)]
 
@@ -119,7 +123,7 @@ def main():
 
     # After training is done, we save the final weights.
     weights_filename = os.path.join(
-        filepath_experiment, 'ddpg_{}_weights.h5f'.format(ENV_NAME))
+        filepath_experiment, 'ddpg_{}_{}_weights.h5f'.format(ENV_NAME, EXP_NAME))
     agent.save_weights(weights_filename, overwrite=True)
 
     # Finally, evaluate our algorithm for 5 episodes.
@@ -127,4 +131,12 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='Baxter training env')
+    parser.add_argument('--config_name', type=str, default=None,
+                        help='Enter config name')
+    parser.add_argument('--nr_gpu', type=int, default=None,
+                        help='Enter nr of gpus')
+    parser.add_argument('--exp_name', type=str, default=None, required=True,
+                        help='Enter experiment name')
+    args = parser.parse_args()
+    main(args)
