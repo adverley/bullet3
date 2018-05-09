@@ -37,7 +37,6 @@ class BaxterGymEnv(gym.Env):
     def __init__(self,
                  urdfRoot=pybullet_data.getDataPath(),
                  actionRepeat=1,
-                 isEnableSelfCollision=True,
                  renders=False,
                  isDiscrete=True,
                  dv=0.01,
@@ -52,7 +51,6 @@ class BaxterGymEnv(gym.Env):
         self._timeStep = timeStep
         self._urdfRoot = urdfRoot
         self._actionRepeat = actionRepeat
-        self._isEnableSelfCollision = isEnableSelfCollision
         self._observation = []
         self._envStepCounter = 0
         self._renders = renders
@@ -335,7 +333,14 @@ class BaxterGymEnv(gym.Env):
         #x0 = p.getJointState(baxterId, 26)[0]
         x0 = torus_pos
         x1 = block_pos
-        distance = norm((x0 - x1) - vdot((x0 - x1), dir_vector) * dir_vector)
+
+        #distance = norm((x0 - x1) - vdot((x0 - x1), dir_vector) * dir_vector)
+        #reward = -distance
+
+        if self._useBlock:
+            distance = p.getClosestPoints(self._baxter.blockUid, self._baxter.torusLineUid, 100, -1, -1)[0][8]
+        else:
+            distance = p.getClosestPoints(self._baxter.baxterUid, self._baxter.torusLineUid, 100, 26, -1)[0][8]
 
         reward = -distance
 
@@ -343,10 +348,8 @@ class BaxterGymEnv(gym.Env):
             #distance = norm(torus_pos - block_pos)
             distance = math.sqrt((torus_pos[0] - block_pos[0])**2 +
                                  (torus_pos[1] - block_pos[1])**2)
-            reward = 4 - distance
-            # Maybe penalize this when moving away from the line
-            # if(norm((x0 - x1) - vdot((x0 - x1), dir_vector) * dir_vector) > 0.5):
-            #    reward += -4
+            reward += 4 - distance
+
         print("reward", reward)
 
         x_bool = (torus_pos[0] + self._baxter.margin) < block_pos[0]

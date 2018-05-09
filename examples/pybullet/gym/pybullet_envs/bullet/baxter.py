@@ -43,7 +43,6 @@ class Baxter:
             self.urdfRootPath, "plane.urdf"), [0, 0, -0.3], useFixedBase=True)
 
         # Load in torus
-        # torus_coord = [1.1, 0, .5]
         orn = p.getQuaternionFromEuler([0, 0, math.pi / 2.])
 
         ypos = -.1 + 0.05 * np.random.random()
@@ -78,6 +77,16 @@ class Baxter:
             self.cid_lfinger = p.createConstraint(self.baxterUid, self.baxterEndEffectorIndex, self.blockUid, -1,
                                                   jointType=p.JOINT_POINT2POINT, jointAxis=[0, -1, 0], parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0])
             """
+
+        # Create line for reward function
+        orn = np.array(p.getEulerFromQuaternion(p.getBasePositionAndOrientation(self.torusUid)[1]))
+        orn[2] = orn[2] + math.pi / 2.  # Rotate within plane perpendicular to torus
+        line_coord = torus_coord
+        # This needs to be made more general if torus orn changes so multiply by dir vector from reward function
+        #dir = vdot(dir_vector, np.array([0, 0, -0.2]))
+        #line_coord += dir
+        line_coord[0] -= 0.2
+        self.torusLineUid = p.loadURDF(os.path.join(self.urdfRootPath, "block_line.urdf"), torus_coord, p.getQuaternionFromEuler(orn), useFixedBase=True)
 
         self.motorNames = []
         self.motorIndices = [12, 13, 14, 15, 16,
