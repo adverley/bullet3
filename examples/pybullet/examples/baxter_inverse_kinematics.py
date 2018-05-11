@@ -55,6 +55,19 @@ def calculateEndEffectorPos(baxterId, action, baxterEndEffectorIndex=26):
 
     return endEffectorPos
 
+def randomizeGripperPos(baxterId, baxterEndEffectorIndex=26):
+    motorIndices = [1, 2, 3, 4, 5, 6, 7]
+    motors = [12, 13, 14, 15, 16, 18, 19]
+
+    jointPoses = [-2 * np.random.rand() + 1 for i in range(len(motorIndices))]
+    endEffectorPos = calculateEndEffectorPos(baxterId, jointPoses)
+
+    while endEffectorPos[2] < 0.88:
+        jointPoses = [-2 * np.random.rand() + 1 for i in range(len(motorIndices))]
+        endEffectorPos = calculateEndEffectorPos(baxterId, jointPoses)
+
+    for i in range(len(motors)):
+        p.resetJointState(baxterId, motors[i], jointPoses[i])
 
 def printJointInfo(Uid):
     joint_name2joint_index = {}
@@ -77,6 +90,9 @@ def main():
                           [0, 0, 0.5], useFixedBase=True)
     numJoints = p.getNumJoints(baxterId)
     baxterEndEffectorIndex = 26
+
+    motorIndices = [1, 2, 3, 4, 5, 6, 7]
+    motors = [12, 13, 14, 15, 16, 18, 19]
 
     printJointInfo(baxterId)
 
@@ -103,10 +119,15 @@ def main():
     print("New endeffectorPos:", calculateEndEffectorPos(baxterId, jointPoses))
 
     print("Start simulation")
+    timer = 0
     while 1:
         pos = pos + np.array([0, 0.005, 0.005])
         move_baxter_gripper(baxterId, pos)
+        timer += 1
         #calculateEndEffectorPos(baxterId, jointPoses)
+        if timer == 100:
+            randomizeGripperPos(baxterId)
+            
         p.stepSimulation()
 
 if __name__ == '__main__':
