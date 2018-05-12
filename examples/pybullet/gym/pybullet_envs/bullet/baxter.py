@@ -30,13 +30,13 @@ class Baxter:
         self.torusScale = 1.
         self.torusRad = 0.23 * self.torusScale
         self.margin = 0.06
+        self.llSpace = [0.32, -0.83, 0.062]
+        self.ulSpace = [1.23, 0.20, 1.94]
         self.reset()
 
     def reset(self):
         self.baxterUid = p.loadURDF(os.path.join(
             self.urdfRootPath, "baxter_common/baxter.urdf"), [0, 0, 0.62], useFixedBase=True, flags=p.URDF_USE_SELF_COLLISION_EXCLUDE_PARENT)
-        # p.resetBasePositionAndOrientation(
-        #    self.baxterUid, [0, 0, 0.5], [0.000000, 0.000000, 0.000000, 1.000000])
         self.numJoints = p.getNumJoints(self.baxterUid)  # 42
 
         p.loadURDF(os.path.join(
@@ -61,9 +61,7 @@ class Baxter:
             coord2 = p.getLinkState(self.baxterUid, 30)[0]
             block_coord = [(x[0] + x[1]) / 2. for x in zip(coord1, coord2)]
             orn = p.getLinkState(self.baxterUid, 23)[1]  # Get orn from link 23
-
-            # block_coord = [0.875, -1.07, 0.942]  # Horizontal coordinates
-            # orn = p.getQuaternionFromEuler([math.pi, math.pi, 3. * math.pi / 4.])
+            # Joint 30 (orthagonal), joint 25 (orthagonal)
 
             self.blockUid = p.loadURDF(os.path.join(
                 self.urdfRootPath, "block_rot.urdf"), block_coord)
@@ -89,9 +87,7 @@ class Baxter:
         self.torusLineUid = p.loadURDF(os.path.join(self.urdfRootPath, "block_line.urdf"), torus_coord, p.getQuaternionFromEuler(orn), useFixedBase=True)
 
         self.motorNames = []
-        self.motorIndices = [12, 13, 14, 15, 16,
-                             18, 19]  # Right arm joints (27,29) right_gripper left and right finger joints
-        # Finger joints are removed since they should not be opened
+        self.motorIndices = [12, 13, 14, 15, 16, 18, 19]
 
         for i in self.motorIndices:
             jointInfo = p.getJointInfo(self.baxterUid, i)
@@ -132,31 +128,88 @@ class Baxter:
 
     def randomizeGripperPos(self):
         # Randomize the right arm start position
-        for joint in self.motorIndices:
-            p.resetJointState(self.baxterUid, joint,
-                              (-2 * np.random.rand() + 1))
 
-        if self.useBlock:
-            p.removeConstraint(self.cid_base)
+        gripperPos = np.array([np.random.uniform(self.llSpace[i], self.ulSpace[i]) for i in range(len(self.llSpace))])
+        jointPoses = self.calculateInverseKinematics(gripperPos)
 
-            coord1 = p.getLinkState(self.baxterUid, 28)[0]
-            coord2 = p.getLinkState(self.baxterUid, 30)[0]
-            block_coord = [(0.5 * x[0] + 0.5 * x[1])
-                           for x in zip(coord1, coord2)]
+        for i in range(len(self.motorIndices)):
+            p.resetJointState(self.baxterUid, self.motorIndices[i], jointPoses[i])
 
-            # Joint 30 (orthagonal), joint 25 (orthagonal)
-            orn = p.getLinkState(self.baxterUid, 23)[1]
+        #TODO check collision with torus, if true, recalculate gripperPos
 
-            p.resetBasePositionAndOrientation(self.blockUid, block_coord, orn)
+    def calculateInverseKinematics(self, pos, orn=None, ll=None, ul=None, jr=None, rp=None):
+        # Use inverse kinematics on the right arm of the baxter robot
 
-            self.cid_base = p.createConstraint(self.baxterUid, self.baxterEndEffectorIndex, self.blockUid, -1, jointType=p.JOINT_FIXED,
-                                               jointAxis=[0, 1, 0], parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0], parentFrameOrientation=p.getQuaternionFromEuler([0, math.pi / 2., 0]))
+        if (ll is None) or (ul is None) or (jr is None) or (rp is None):
+            if orn is None:
+                jointPoses = p.calculateInverseKinematics(
+                    self.baxterUid, self.baxterEndEffectorIndex, pos)
+            else:
+                jointPoses = p.calculateInverseKinematics(
+                    self.baxterUid, self.baxterEndEffectorIndex, pos, orn)
+        else:
+            if orn is None:
+                jointPoses = p.calculateInverseKinematics(
+                                self.kukaUid,
+                                self.baxterEndEffectorIndex,
+                                pos,
+                                lowerLimits=self.ll,
+                                upperLimits=self.ul,
+                                jointRanges=self.jr,
+                                restPoses=self.rp
+                                )
+            else:
+                jointPoses = p.calculateInverseKinematics(
+                                self.kukaUid,
+                                self.baxterEndEffectorIndex,
+                                pos,
+                                orn,
+                                lowerLimits=self.ll,
+                                upperLimits=self.ul,
+                                jointRanges=self.jr,
+                                restPoses=self.rp
+                                )
+
+        # process action for applyAction
+        joints = [1, 2, 3, 4, 5, 6, 7]
+        action = [jointPoses[i] for i in joints]
+        return action
+
+    def calculateEndEffectorPos(self, action):
+        old_pos = []
+
+        for i in range(len(self.motorIndices)):
+            joint_state = p.getJointState(
+                            self.baxterUid,
+                            self.motorIndices[i]
+                        )
+            old_pos.append(joint_state[0])
+
+        for i in range(len(self.motorIndices)):
+            p.resetJointState(
+                            self.baxterUid,
+                            self.motorIndices[i],
+                            action[i])
+
+        endEffectorPos = p.getLinkState(self.baxterUid, self.baxterEndEffectorIndex)[0]
+
+        for i in range(len(self.motorIndices)):
+            p.resetJointState(
+                            self.baxterUid,
+                            self.motorIndices[i],
+                            old_pos[i])
+
+        return endEffectorPos
 
     def applyAction(self, motorCommands):
-        for action in range(len(motorCommands)):
-            motor = self.motorIndices[action]
-            p.setJointMotorControl2(self.baxterUid, motor, controlMode=p.POSITION_CONTROL,
-                                    targetPosition=motorCommands[action], force=self.maxForce)
+        assert len(motorCommands) == len(self.motorIndices)
+
+        p.setJointMotorControlArray(
+            self.baxterUid,
+            self.motorIndices,
+            controlMode=p.POSITION_CONTROL,
+            targetPositions=motorCommands
+        )
 
         # Close right arm gripper
         p.setJointMotorControl2(
