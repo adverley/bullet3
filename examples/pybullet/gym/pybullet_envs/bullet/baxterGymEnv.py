@@ -43,6 +43,7 @@ class BaxterGymEnv(gym.Env):
                  useCamera=True,
                  useHack=True,
                  useBlock=True,
+                 useRandomPos=True,
                  _logLevel=logging.INFO,
                  maxSteps=100,
                  timeStep=(1. / 240.),
@@ -63,9 +64,10 @@ class BaxterGymEnv(gym.Env):
         self._useCamera = useCamera
         self._useHack = useHack
         self._useBlock = useBlock
+        self._useRandomPos = useRandomPos
         self._logLevel = _logLevel
         self._terminated = 0
-        self._collision_pen = -0.1
+        self._collision_pen = 0.
         self.action = [0, 0, 0, 0, 0, 0, 0]
         self._p = p
         if self._renders:
@@ -123,8 +125,9 @@ class BaxterGymEnv(gym.Env):
             urdfRootPath=self._urdfRoot, timeStep=self._timeStep, useBlock=self._useBlock)
 
         # Set action according to randomized gripper position
-        self._baxter.randomizeGripperPos()
-        self.setAction()
+        if self._useRandomPos:
+            self._baxter.randomizeGripperPos()
+            self.setAction()
 
         # Set the camera settings.
         head_camera_index = 9
@@ -325,18 +328,6 @@ class BaxterGymEnv(gym.Env):
         orn = np.array(p.getEulerFromQuaternion(
             p.getBasePositionAndOrientation(self._baxter.torusUid)[1]))
 
-        # Euler_angle = [yaw, pitch, roll]
-        dir_vector = np.array([math.cos(orn[0]) * math.cos(orn[1]),
-                               math.sin(orn[0]) * math.cos(orn[1]),
-                               math.sin(orn[1])])
-
-        #x0 = p.getJointState(baxterId, 26)[0]
-        x0 = torus_pos
-        x1 = block_pos
-
-        #distance = norm((x0 - x1) - vdot((x0 - x1), dir_vector) * dir_vector)
-        #reward = -distance
-
         if self._useBlock:
             distance = p.getClosestPoints(self._baxter.blockUid, self._baxter.torusLineUid, 100, -1, -1)[0][8]
         else:
@@ -350,15 +341,11 @@ class BaxterGymEnv(gym.Env):
                                  (torus_pos[1] - block_pos[1])**2)
             reward += 4 - distance
 
-        print("reward", reward)
-
         x_bool = (torus_pos[0] + self._baxter.margin) < block_pos[0]
         y_bool = (
             torus_pos[1] - self._baxter.torusRad) < block_pos[1] and (torus_pos[1] + self._baxter.torusRad) > block_pos[1]
         z_bool = (
             torus_pos[2] - self._baxter.torusRad) < block_pos[2] and (block_pos[2] + self._baxter.torusRad) > block_pos[2]
-
-        #reward = -distance
 
         cp_list = p.getContactPoints(
             self._baxter.baxterUid, self._baxter.torusUid)
@@ -371,10 +358,8 @@ class BaxterGymEnv(gym.Env):
                     str(block_pos), str(torus_pos)))
             self.logger.debug("self._envStepCounter: %s" %
                               str(self._envStepCounter))
-            reward = reward + 1000
-        else:
-            # print "Block not within the hole. block_pos:", block2_pos, "torus_pos:", torus_pos
-            pass
+            reward = reward + 10000
+            print("Task completed!")
 
         self.logger.debug("Reward: %s \n" % str(reward))
         return reward
