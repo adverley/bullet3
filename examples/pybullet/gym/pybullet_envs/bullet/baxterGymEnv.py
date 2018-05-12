@@ -13,6 +13,7 @@ import numpy as np
 import time
 import pybullet as p
 from . import baxter
+from . import utils
 import random
 import pybullet_data
 from pkg_resources import parse_version
@@ -44,6 +45,7 @@ class BaxterGymEnv(gym.Env):
                  useHack=True,
                  useBlock=True,
                  useRandomPos=True,
+                 _algorithm='DDPG',
                  _logLevel=logging.INFO,
                  maxSteps=100,
                  timeStep=(1. / 240.),
@@ -65,6 +67,7 @@ class BaxterGymEnv(gym.Env):
         self._useHack = useHack
         self._useBlock = useBlock
         self._useRandomPos = useRandomPos
+        self._algorithm = _algorithm
         self._logLevel = _logLevel
         self._terminated = 0
         self._collision_pen = 0.
@@ -210,6 +213,7 @@ class BaxterGymEnv(gym.Env):
 
         Args:
           action: 7-vector parameterizing joint offsets
+
         Returns:
           observation: Next observation.
           reward: Float of the per-step reward as a result of taking the action.
@@ -219,8 +223,12 @@ class BaxterGymEnv(gym.Env):
         # action = [int(round(x)) for x in action]
 
         if (self._isDiscrete):
-            action = [int(round(np.nan_to_num(x)))
-                      for x in np.clip(action, -1, 1)]
+            if self._algorithm == 'DDPG':
+                action = [int(round(np.nan_to_num(x)))
+                          for x in np.clip(action, -1, 1)]
+            elif self._algorithm == 'DQN':
+                action = utils.int2action(action)
+
             self.logger.debug("Action: %s" % str(action))
 
             d_s0 = [-self._dv, 0, self._dv][action[0]]

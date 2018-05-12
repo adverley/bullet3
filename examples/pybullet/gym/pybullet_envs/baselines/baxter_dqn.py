@@ -28,22 +28,6 @@ import numpy as np
 import time
 import string
 
-def int2base(x, base):
-    digs = string.digits + string.ascii_letters
-    digits = []
-
-    if x < 0:
-        raise ValueError('Got negative number: {}'.format(str(x)))
-    elif x == 0:
-        return digs[0]
-
-    while x:
-        digits.append(digs[int(x % base)])
-        x = int(x / base)
-
-    digits.reverse()
-    return ''.join(digits)
-
 def main(args):
     ENV_NAME = "BaxterGymEnv"
     EXP_NAME = args.exp_name
@@ -55,7 +39,8 @@ def main(args):
             renders=False,
             isDiscrete=True,
             useCamera=False,
-            maxSteps=400
+            maxSteps=400,
+            _algorithm='DQN'
             )
     state_size = env.observation_space.shape
     action_size = env.action_space.shape
@@ -107,7 +92,7 @@ def main(args):
         callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=250000)]
         callbacks += [FileLogger(log_filename, interval=100)]
         callbacks += [DataLogger(data_filename)]
-        dqn.fit(env, callbacks=callbacks, nb_steps=2000000, log_interval=10000)
+        dqn.fit(env, callbacks=callbacks, nb_steps=2000000, log_interval=10000, verbose=2)
 
         # After training is done, we save the final weights one more time.
         dqn.save_weights(weights_filename, overwrite=True)
@@ -123,6 +108,6 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', choices=['train', 'test'], default='train')
-    parser.add_argument('--exp-name', type=str, required=True)
+    parser.add_argument('--exp_name', type=str, required=True)
     args = parser.parse_args()
     main(args)
