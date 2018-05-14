@@ -13,7 +13,13 @@ import time
 def main():
 
     environment = BaxterGymEnv(
-        renders=True, isDiscrete=False, maxSteps=10000000, useCamera=False)
+                    renders=True,
+                    isDiscrete=False,
+                    maxSteps=10000000,
+                    useCamera=False,
+                    useBlock=True,
+                    _reward_function=None
+                )
 
     motorsIds = []
 
