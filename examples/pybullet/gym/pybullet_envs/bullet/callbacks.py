@@ -97,7 +97,7 @@ class DataLogger(Callback):
         }
         # print(template.format(**variables))
 
-        for key, value in variables.iteritems():
+        for key, value in variables.items():
             if key not in self.data:
                 self.data[key] = []
             self.data[key].append(value)
