@@ -219,14 +219,16 @@ class Baxter:
             self.baxterUid, 29, controlMode=p.POSITION_CONTROL, targetPosition=0, force=10000)
 
 
-    def applyTorque(self, torqueCommands):
-        assert len(torqueCommands) == len(self.motorIndices)
+    def applyVelocity(self, velocityCommands):
+        assert len(velocityCommands) == len(self.motorIndices)
 
-        commands = [self.maxTorque * x for x in torqueCommands]
+        commands = [x for x in velocityCommands] #Scaling
+        forces = [500 for x in range(len(torqueCommands))]
 
         p.setJointMotorControlArray(
             self.baxterUid,
             self.motorIndices,
-            controlMode=p.TORQUE_CONTROL,
-            forces=commands
+            controlMode=p.VELOCITY_CONTROL,
+            targetVelocities=commands,
+            forces=forces
         )
