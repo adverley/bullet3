@@ -10,6 +10,7 @@ import argparse
 
 from pybullet_envs.bullet.baxterGymEnv import BaxterGymEnv
 from pybullet_envs.bullet.callbacks import DataLogger
+from reward_function import RewardZoo
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
@@ -28,19 +29,28 @@ import numpy as np
 import time
 import string
 
+reward_functions = [
+                    'finite_line_distance',
+                    'line_distance',
+                    'sparse',
+                    'torus_distance'
+                    ]
+
 def main(args):
     ENV_NAME = "BaxterGymEnv"
     EXP_NAME = args.exp_name
+    REWARD = RewardZoo.create_function(args.reward)
     WINDOW_LENGTH = 1
 
     filepath_experiment = "experiments/"
 
     env = BaxterGymEnv(
-            renders=False,
-            isDiscrete=True,
+            renders=args.render,
             useCamera=False,
             maxSteps=400,
-            _algorithm='DQN'
+            _algorithm='DQN',
+            _reward_function=REWARD,
+            _action_type='single'
             )
     state_size = env.observation_space.shape
     action_size = env.action_space.shape
@@ -49,7 +59,8 @@ def main(args):
 
     assert len(env.action_space.shape) == 1
     # Interpret result as base 3 number to index arrays
-    nb_actions = int('2222222', 3)
+    #nb_actions = int('2222222', 3)
+    nb_actions = env.action_space.n #21
 
     model = Sequential()
     model.add(Flatten(input_shape=(WINDOW_LENGTH,) + env.observation_space.shape))
@@ -60,7 +71,7 @@ def main(args):
     model.add(Dense(256))
     model.add(Activation('relu'))
     model.add(Dense(nb_actions))
-    model.add(Activation('linear'))
+    model.add(Activation('tanh'))
     print(model.summary())
 
     memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
@@ -80,14 +91,14 @@ def main(args):
     # policy = BoltzmannQPolicy(tau=1.)
 
     dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
-               processor=processor, nb_steps_warmup=50000, gamma=.99, target_model_update=10000,
+               processor=processor, nb_steps_warmup=50000, gamma=.99, target_model_update=1000,
                train_interval=4, delta_clip=1.)
     dqn.compile(Adam(lr=.00025), metrics=['mae'])
 
     if args.mode == 'train':
-        weights_filename = 'dqn_{}_{}_weights.h5f'.format(ENV_NAME, EXP_NAME)
-        checkpoint_weights_filename = 'dqn_{}_{}_weights_checkpoint.h5f'.format(ENV_NAME, EXP_NAME)
-        log_filename = 'dqn_{}_{}_log.json'.format(ENV_NAME, EXP_NAME)
+        weights_filename = os.path.join(filepath_experiment, 'dqn_{}_{}_weights.h5f'.format(ENV_NAME, EXP_NAME))
+        checkpoint_weights_filename = os.path.join(filepath_experiment, 'dqn_{}_{}_weights_checkpoint.h5f'.format(ENV_NAME, EXP_NAME))
+        log_filename = os.path.join(filepath_experiment, 'dqn_{}_{}_log.json'.format(ENV_NAME, EXP_NAME))
         data_filename = filepath_experiment + 'ddpg_{}_{}_data.json'.format(ENV_NAME, EXP_NAME)
         callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=250000)]
         callbacks += [FileLogger(log_filename, interval=100)]
@@ -101,13 +112,15 @@ def main(args):
         dqn.test(env, nb_episodes=10, visualize=False)
 
     elif args.mode == 'test':
-        weights_filename = 'dqn_{}_{}_weights.h5f'.format(ENV_NAME, EXP_NAME)
+        weights_filename = os.path.join(filepath_experiment, 'dqn_{}_{}_weights.h5f'.format(ENV_NAME, EXP_NAME))
         dqn.load_weights(weights_filename)
         dqn.test(env, nb_episodes=10, visualize=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', choices=['train', 'test'], default='train')
+    parser.add_argument('--render', type=bool, default=False)
     parser.add_argument('--exp_name', type=str, required=True)
+    parser.add_argument('--reward', type=str, choices=reward_functions, default=reward_functions[0])
     args = parser.parse_args()
     main(args)

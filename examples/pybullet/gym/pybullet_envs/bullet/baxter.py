@@ -30,6 +30,7 @@ class Baxter:
         self.torusScale = 1.
         self.torusRad = 0.23 * self.torusScale
         self.margin = 0.06
+        self.maxTorque = 500
         self.llSpace = [0.32, -0.83, 0.062]
         self.ulSpace = [1.23, 0.20, 1.94]
         self.reset()
@@ -216,3 +217,16 @@ class Baxter:
             self.baxterUid, 27, controlMode=p.POSITION_CONTROL, targetPosition=0, force=10000)
         p.setJointMotorControl2(
             self.baxterUid, 29, controlMode=p.POSITION_CONTROL, targetPosition=0, force=10000)
+
+
+    def applyTorque(self, torqueCommands):
+        assert len(torqueCommands) == len(self.motorIndices)
+
+        commands = [self.maxTorque * x for x in torqueCommands]
+
+        p.setJointMotorControlArray(
+            self.baxterUid,
+            self.motorIndices,
+            controlMode=p.TORQUE_CONTROL,
+            forces=commands
+        )

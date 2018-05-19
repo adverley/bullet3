@@ -39,13 +39,14 @@ class BaxterGymEnv(gym.Env):
                  urdfRoot=pybullet_data.getDataPath(),
                  actionRepeat=1,
                  renders=False,
-                 isDiscrete=True,
                  dv=0.01,
                  useCamera=True,
                  useHack=True,
                  useBlock=True,
                  useRandomPos=True,
                  _algorithm='DDPG',
+                 _reward_function=None,
+                 _action_type='discrete',
                  _logLevel=logging.INFO,
                  maxSteps=100,
                  timeStep=(1. / 240.),
@@ -62,12 +63,13 @@ class BaxterGymEnv(gym.Env):
         self._cameraRandom = cameraRandom
         self._width = 240
         self._height = 240
-        self._isDiscrete = isDiscrete
         self._useCamera = useCamera
         self._useHack = useHack
         self._useBlock = useBlock
         self._useRandomPos = useRandomPos
         self._algorithm = _algorithm
+        self._reward_function = _reward_function
+        self._action_type = _action_type
         self._logLevel = _logLevel
         self._terminated = 0
         self._collision_pen = 0.
@@ -94,14 +96,14 @@ class BaxterGymEnv(gym.Env):
 
         observation_high = np.array(
             [np.finfo(np.float32).max] * observationDim)
-        if (self._isDiscrete):
-            # self.action_space = spaces.Discrete(7)
-            # self.action_space = spaces.Box(
-            #    low=0, high=2, shape=(1, 7), dtype=np.uint8)
-
+        if self._action_type == 'discrete':
             self.action_space = spaces.Box(
                 low=0, high=2, shape=(7,))
-        else:
+
+        elif self._action_type == 'single':
+            self.action_space = spaces.Discrete(21)
+
+        elif self._action_type == 'continuous':
             action_dim = 7
             self._action_bound = 1
             action_high = np.array([self._action_bound] * action_dim)
@@ -212,7 +214,8 @@ class BaxterGymEnv(gym.Env):
         """Environment step.
 
         Args:
-          action: 7-vector parameterizing joint offsets
+          action: integer or 7-vector parameterizing joint offsets depending on
+                  the algorithm that is used
 
         Returns:
           observation: Next observation.
@@ -222,7 +225,16 @@ class BaxterGymEnv(gym.Env):
         """
         # action = [int(round(x)) for x in action]
 
-        if (self._isDiscrete):
+        if self._action_type == 'single':
+            assert isinstance(action, int) == True
+
+            row = int(action / len(self._baxter.motorIndices))
+            column = action % len(self._baxter.motorIndices)
+
+            self.action[column] += [-self._dv, 0, self._dv][row]
+
+        elif self._action_type == 'discrete':
+            self.assertTrue(isinstance(action, int))
             if self._algorithm == 'DDPG':
                 action = [int(round(np.nan_to_num(x)))
                           for x in np.clip(action, -1, 1)]
@@ -242,7 +254,11 @@ class BaxterGymEnv(gym.Env):
             realAction = [d_s0, d_s1, d_e0, d_e1, d_w0, d_w1, d_w2]
             self.action = [x + y for x, y in zip(realAction, self.action)]
             # realAction = [dx, dy, -0.002, da, f] # dz=-0.002 to guide the search downward
-        else:
+
+        elif self._action_type == 'continuous':
+            self.assertTrue(len(action) == 7)
+            action = [np.nan_to_num(x) for x in np.clip(action, -1, 1)]
+
             self._dv = 1
             d_s0 = action[0] * self._dv
             d_s1 = action[1] * self._dv
@@ -258,7 +274,10 @@ class BaxterGymEnv(gym.Env):
 
     def step2(self, action):
         for i in range(self._actionRepeat):
-            self._baxter.applyAction(action)
+            if self._action_type == 'discrete' or self._action_type == 'single':
+                self._baxter.applyAction(action)
+            else:
+                self._baxter.applyVelocity(action)
             p.stepSimulation()
             if self._termination():
                 break
@@ -320,57 +339,10 @@ class BaxterGymEnv(gym.Env):
     def _reward(self):
         """Calculates the reward for the episode.
         """
-
-        torus_pos = np.array(
-            p.getBasePositionAndOrientation(self._baxter.torusUid)[0])
-        self.logger.debug("Reward torus position: %s" % str(torus_pos))
-
-        if self._useBlock:
-            block_pos = np.array(
-                p.getBasePositionAndOrientation(self._baxter.blockUid)[0])
+        if self._reward_function is None:
+            return 0.
         else:
-            block_pos = np.array(
-                p.getLinkState(self._baxter.baxterUid, 26)[0])  # 26 or avg between 28 and 30
-
-        # Move towards the line through the center of the torus
-        orn = np.array(p.getEulerFromQuaternion(
-            p.getBasePositionAndOrientation(self._baxter.torusUid)[1]))
-
-        if self._useBlock:
-            distance = p.getClosestPoints(self._baxter.blockUid, self._baxter.torusLineUid, 100, -1, -1)[0][8]
-        else:
-            distance = p.getClosestPoints(self._baxter.baxterUid, self._baxter.torusLineUid, 100, 26, -1)[0][8]
-
-        reward = -distance
-
-        if(distance < self._baxter.torusRad):
-            #distance = norm(torus_pos - block_pos)
-            distance = math.sqrt((torus_pos[0] - block_pos[0])**2 +
-                                 (torus_pos[1] - block_pos[1])**2)
-            reward += 4 - distance
-
-        x_bool = (torus_pos[0] + self._baxter.margin) < block_pos[0]
-        y_bool = (
-            torus_pos[1] - self._baxter.torusRad) < block_pos[1] and (torus_pos[1] + self._baxter.torusRad) > block_pos[1]
-        z_bool = (
-            torus_pos[2] - self._baxter.torusRad) < block_pos[2] and (block_pos[2] + self._baxter.torusRad) > block_pos[2]
-
-        cp_list = p.getContactPoints(
-            self._baxter.baxterUid, self._baxter.torusUid)
-        if any(cp_list):
-            reward += self._collision_pen
-
-        if y_bool and z_bool and x_bool:
-            self.logger.debug(
-                "Block within the hole. block_pos: {0} torus_pos: {1}".format(
-                    str(block_pos), str(torus_pos)))
-            self.logger.debug("self._envStepCounter: %s" %
-                              str(self._envStepCounter))
-            reward = reward + 10000
-            print("Task completed!")
-
-        self.logger.debug("Reward: %s \n" % str(reward))
-        return reward
+            return self._reward_function(self)
 
     if parse_version(gym.__version__) >= parse_version('0.9.6'):
         render = _render
