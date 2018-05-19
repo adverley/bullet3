@@ -7,23 +7,24 @@ os.sys.path.insert(0, currentdir)
 
 import math
 import gym
+import logging
+import numpy as np
+import pybullet as p
+import pybullet_data
+import random
+import sys
+import time
+
+from utils import int2action
+from baxter import Baxter
+from reward_function import RewardZoo
+
 from gym import spaces
 from gym.utils import seeding
-import numpy as np
-import time
-import pybullet as p
-from . import baxter
-from . import utils
-import random
-import pybullet_data
-from pkg_resources import parse_version
-import logging
-import sys
-
 from numpy.linalg import norm
 from numpy import vdot
+from pkg_resources import parse_version
 
-largeValObservation = 100
 
 RENDER_HEIGHT = 720
 RENDER_WIDTH = 960
@@ -126,7 +127,7 @@ class BaxterGymEnv(gym.Env):
         p.setTimeStep(self._timeStep)
 
         # Load in Baxter together with all the other objects
-        self._baxter = baxter.Baxter(
+        self._baxter = Baxter(
             urdfRootPath=self._urdfRoot, timeStep=self._timeStep, useBlock=self._useBlock)
 
         # Set action according to randomized gripper position
@@ -226,7 +227,8 @@ class BaxterGymEnv(gym.Env):
         # action = [int(round(x)) for x in action]
 
         if self._action_type == 'single':
-            assert isinstance(action, int) == True
+            print("\nAction:", type(action), action)
+            assert isinstance(action, np.int32) or isinstance(action, np.int64) == True
 
             row = int(action / len(self._baxter.motorIndices))
             column = action % len(self._baxter.motorIndices)
@@ -239,7 +241,7 @@ class BaxterGymEnv(gym.Env):
                 action = [int(round(np.nan_to_num(x)))
                           for x in np.clip(action, -1, 1)]
             elif self._algorithm == 'DQN':
-                action = utils.int2action(action)
+                action = int2action(action)
 
             self.logger.debug("Action: %s" % str(action))
 
@@ -342,7 +344,8 @@ class BaxterGymEnv(gym.Env):
         if self._reward_function is None:
             return 0.
         else:
-            return self._reward_function(self)
+            reward_function = RewardZoo.create_function(self._reward_function)
+            return reward_function(self)
 
     if parse_version(gym.__version__) >= parse_version('0.9.6'):
         render = _render
