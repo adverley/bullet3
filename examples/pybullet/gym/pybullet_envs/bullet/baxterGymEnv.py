@@ -227,11 +227,12 @@ class BaxterGymEnv(gym.Env):
         # action = [int(round(x)) for x in action]
 
         if self._action_type == 'single':
-            print("\nAction:", type(action), action)
             assert isinstance(action, np.int32) or isinstance(action, np.int64) == True
 
             row = int(action / len(self._baxter.motorIndices))
             column = action % len(self._baxter.motorIndices)
+
+            self.logger.debug("Action: %s, row: %s, column:%s" % str(action), str(row), str(column))
 
             self.action[column] += [-self._dv, 0, self._dv][row]
 
