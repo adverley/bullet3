@@ -10,7 +10,6 @@ import argparse
 
 from pybullet_envs.bullet.baxterGymEnv import BaxterGymEnv
 from pybullet_envs.bullet.callbacks import DataLogger
-from reward_function import RewardZoo
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
@@ -39,7 +38,7 @@ reward_functions = [
 def main(args):
     ENV_NAME = "BaxterGymEnv"
     EXP_NAME = args.exp_name
-    REWARD = RewardZoo.create_function(args.reward)
+    REWARD = args.reward
     WINDOW_LENGTH = 1
 
     filepath_experiment = "experiments/"
@@ -57,7 +56,7 @@ def main(args):
     print("Action size:", action_size)
     print("State size:", state_size)
 
-    assert len(env.action_space.shape) == 1
+    #assert len(env.action_space.shape) == 1
     # Interpret result as base 3 number to index arrays
     #nb_actions = int('2222222', 3)
     nb_actions = env.action_space.n #21
