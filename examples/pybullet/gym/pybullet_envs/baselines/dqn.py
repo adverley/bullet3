@@ -40,7 +40,7 @@ class DQNAgent:
         self.cs_reward = 0
         self.bound_reward = [sys.maxsize, -sys.maxsize - 1]
         self.cs_qval = 0
-        self.bound_qval = [sys.maxsize, -sys.maxsize - 1]
+        self.bound_qval = [0, 0]
 
     def create_model(self):
         model = Sequential()
@@ -54,9 +54,12 @@ class DQNAgent:
             optimizer=Adam(lr=self.learning_rate))
         return model
 
-    def act(self, state):
+    def update_exploration(self): #Epsilon was decaying to fast when it was in act, is this better?
         self.epsilon *= self.epsilon_decay
+        print(self.epsilon)
         self.epsilon = max(self.epsilon_min, self.epsilon)
+
+    def act(self, state):
         if np.random.random() < self.epsilon:
             action = self.env.action_space.sample()
         else:
@@ -141,11 +144,12 @@ class DQNAgent:
         self.model.load_weights(name)
 
     def print_stats(self, ep, ep_tot, trial_len, time, steps):
-        print(" {}/{}".format(ep, ep_tot),
+        print("\n{}/{}".format(ep, ep_tot),
               "Execution time: {} steps/s".format(round(steps/time, 2)),
-              "Episode reward:", self.cs_reward, self.bound_reward,
+              "Episode reward:", self.cs_reward, [round(x, 4) for x in self.bound_reward],
               "Mean action:", self.cs_action / trial_len, self.bound_action,
-              "Mean Q value:", round(self.cs_qval / trial_len, 4), self.bound_qval
+              "Mean Q:", round(self.cs_qval / trial_len, 4), [round(x / trial_len, 4) for x in self.bound_qval],
+              "Curr epsilon:", self.epsilon
              ) #trail_len
 
         # Reset Statistics
@@ -154,7 +158,7 @@ class DQNAgent:
         self.cs_reward = 0
         self.bound_reward = [sys.maxsize, -sys.maxsize - 1]
         self.cs_qval = 0
-        self.bound_qval = [sys.maxsize, -sys.maxsize - 1]
+        self.bound_qval = [0, 0]
 
 
 def main(args):
@@ -202,6 +206,10 @@ def main(args):
             dqn_agent.target_train() # iterates target model
 
             cur_state = new_state
+
+            if step % 100 == 0:
+                dqn_agent.update_exploration()
+
             if done:
                 break
 
