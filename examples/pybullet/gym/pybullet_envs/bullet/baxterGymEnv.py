@@ -15,6 +15,8 @@ import random
 import sys
 import time
 
+import matplotlib.pyplot as plt
+
 from utils import int2action
 from baxter import Baxter
 from reward_function import RewardZoo
@@ -74,7 +76,10 @@ class BaxterGymEnv(gym.Env):
         self._logLevel = _logLevel
         self._terminated = 0
         self._collision_pen = 0.
+        self.action_batch = []
         self.action = [0, 0, 0, 0, 0, 0, 0]
+        self.old_pos = None
+        self.clipped_counter = 0
         self._p = p
         if self._renders:
             cid = p.connect(p.SHARED_MEMORY)
@@ -132,6 +137,7 @@ class BaxterGymEnv(gym.Env):
 
         # Set action according to randomized gripper position
         if self._useRandomPos:
+            self.old_pos = self._baxter.getEndEffectorPos()
             self._baxter.randomizeGripperPos()
             self.setAction()
 
@@ -162,6 +168,7 @@ class BaxterGymEnv(gym.Env):
         self._env_step = 0
         self._terminated = 0
         self._envStepCounter = 0
+        self.clipped_counter = 0
         self.setAction()
         # p.setGravity(0, 0, -10)
 
@@ -180,6 +187,24 @@ class BaxterGymEnv(gym.Env):
         for i in range(len(self._baxter.motorIndices)):
             self.action[i] = p.getJointState(
                 self._baxter.baxterUid, self._baxter.motorIndices[i])[0]
+
+    def createActionHist(self, fn):
+        avg_action = sum(self.action_batch) / len(self.action_batch)
+
+        n, bins, patches = plt.hist(self.action_batch, bins=[x+0.5 for x in range(-1,21)], facecolor='green')
+        ax = plt.gca()
+        ax.set_xticks([x for x in range(21)])
+        plt.xlabel('Actions')
+        plt.ylabel('Frequency')
+        plt.title(r'$\mathrm{Histogram\ of\ actions}$' + ' (avg action: {})'.format(avg_action))
+        #plt.grid(True)
+        #plt.axis([0, 20.5, 0, 2500])
+        plt.xlim(0, 20.5)
+        plt.savefig(fn)
+        plt.show()
+
+        return avg_action
+
 
     def getExtendedObservation(self):
         """Return the observation as an image.
@@ -227,20 +252,21 @@ class BaxterGymEnv(gym.Env):
         # action = [int(round(x)) for x in action]
 
         if self._action_type == 'single':
-            assert isinstance(action, np.int32) or isinstance(action, np.int64) == True
+            assert isinstance(action, np.int32) or isinstance(action, np.int64) or isinstance(action, int) == True
 
+            self.action_batch.append(action)
             row = int(action / len(self._baxter.motorIndices))
             column = action % len(self._baxter.motorIndices)
 
-            self.logger.debug("Action: %s, row: %s, column:%s" % str(action), str(row), str(column))
+            self.logger.debug("Action: {}, row: {}, column:{}".format(str(action), str(row), str(column)))
 
             self.action[column] += [-self._dv, 0, self._dv][row]
 
         elif self._action_type == 'discrete':
-            self.assertTrue(isinstance(action, int))
             if self._algorithm == 'DDPG':
-                action = [int(round(np.nan_to_num(x)))
-                          for x in np.clip(action, -1, 1)]
+                # action = [int(round(np.nan_to_num(x)))
+                #           for x in np.clip(action, -1, 1)]
+                action = [int(round(x)) for x in action]
             elif self._algorithm == 'DQN':
                 action = int2action(action)
 
@@ -259,7 +285,7 @@ class BaxterGymEnv(gym.Env):
             # realAction = [dx, dy, -0.002, da, f] # dz=-0.002 to guide the search downward
 
         elif self._action_type == 'continuous':
-            self.assertTrue(len(action) == 7)
+            assert len(action) == 7
             action = [np.nan_to_num(x) for x in np.clip(action, -1, 1)]
 
             self._dv = 1
@@ -276,6 +302,7 @@ class BaxterGymEnv(gym.Env):
         return self.step2(self.action)
 
     def step2(self, action):
+        self.old_pos = self._baxter.getEndEffectorPos()
         for i in range(self._actionRepeat):
             if self._action_type == 'discrete' or self._action_type == 'single':
                 self._baxter.applyAction(action)
@@ -320,20 +347,16 @@ class BaxterGymEnv(gym.Env):
             block_pos = np.array(
                 p.getLinkState(self._baxter.baxterUid, 26)[0])  # 26 or avg between 28 and 30
 
-        # Caculate distance between the center of the torus and the block
-        distance = np.linalg.norm(np.array(torus_pos) - np.array(block_pos))
-
         x_bool = (torus_pos[0] + self._baxter.margin) < block_pos[0]
-        y_bool = (
-            torus_pos[1] - self._baxter.torusRad) < block_pos[1] and (torus_pos[1] + self._baxter.torusRad) > block_pos[1]
-        z_bool = (
-            torus_pos[2] - self._baxter.torusRad) < block_pos[2] and (block_pos[2] + self._baxter.torusRad) > block_pos[2]
+        y_bool = (torus_pos[1] - self._baxter.torusRad) < block_pos[1] and (torus_pos[1] + self._baxter.torusRad) > block_pos[1]
+        z_bool = (torus_pos[2] - self._baxter.torusRad) < block_pos[2] and (torus_pos[2] + self._baxter.torusRad) > block_pos[2]
 
         if y_bool and z_bool and x_bool:
+            #print("Average action:", self.createActionHist("action_hist.png"))
             print("Task completed!")
             self._terminated = 1
 
-        if(self._terminated or self._envStepCounter >= self._maxSteps):
+        if(self._terminated or self._envStepCounter >= self._maxSteps or self.clipped_counter > 2):
             self._observation = self.getExtendedObservation()
             return True
         else:
