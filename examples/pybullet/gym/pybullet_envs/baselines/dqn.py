@@ -17,7 +17,6 @@ from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
 
 from pybullet_envs.bullet.baxterGymEnv import BaxterGymEnv
-
 from collections import deque
 
 class DQNAgent:
@@ -29,7 +28,7 @@ class DQNAgent:
         self.epsilon = 1.0
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
-        self.learning_rate = 0.005
+        self.learning_rate = 0.05
         self.tau = .125
 
         self.model = self.create_model()
@@ -69,6 +68,9 @@ class DQNAgent:
         return action
 
     def remember(self, state, action, reward, new_state, done):
+        self.bound_reward = [min(reward, self.bound_reward[0]),
+                             max(reward, self.bound_reward[1])]
+        self.cs_reward += reward
         self.memory.append([state, action, reward, new_state, done])
 
     def replay(self):
@@ -76,30 +78,54 @@ class DQNAgent:
         if len(self.memory) < batch_size:
             return
 
+        samples = {
+            'state': [],
+            'action': [],
+            'reward': [],
+            'new_state': [],
+            'done': []
+        }
+
+        _states = []
+        _targets = []
+
         mean_qval = 0
-        mean_reward = 0
-        samples = random.sample(self.memory, batch_size)
-        for sample in samples:
-            state, action, reward, new_state, done = sample
-            target = self.target_model.predict(state)
+        bound_qval = [0, 0]
 
-            mean_qval += np.mean(target[0])
-            self.bound_qval = [min(target[0]), max(target[0])]
+        sample = random.sample(self.memory, batch_size)
+        for s in sample:
+            #state, action, reward, new_state, done = sample
+            samples['state'].append(s[0][0])
+            samples['action'].append(s[1])
+            samples['reward'].append(s[2])
+            samples['new_state'].append(s[3][0])
+            samples['done'].append(s[4])
 
-            mean_reward += reward
-            self.bound_reward = [min(reward, self.bound_reward[0]),
-                                 max(reward, self.bound_reward[1])]
+        # Update is done to late so what's the point in using the target network principle here?
+        targets = self.target_model.predict_on_batch(np.array(samples['state']))
+        q_vals = self.target_model.predict_on_batch(np.array(samples['new_state']))
 
-            #print("Network prediction type, output:", target)
+        for target, q_val, state, new_state, action, reward, done in zip(targets, q_vals, samples['state'], samples['new_state'],
+                                                                            samples['action'], samples['reward'], samples['done']):
+            mean_qval += np.mean(target)
+            bound_qval[0] += min(target)
+            bound_qval[1] += max(target)
+
             if done:
-                target[0][action] = reward
+                target[action] = reward
             else:
-                Q_future = max(self.target_model.predict(new_state)[0])
-                target[0][action] = reward + Q_future * self.gamma
-            self.model.fit(state, target, epochs=1, verbose=0)
+                Q_future = max(q_val)
+                target[action] = reward + Q_future * self.gamma
 
-            self.cs_qval = mean_qval / float(batch_size)
-            self.cs_reward = mean_reward / float(batch_size)
+            _states.append(state)
+            _targets.append(target)
+
+        self.model.train_on_batch(np.array(_states), np.array(_targets))
+
+        # Stats
+        self.cs_qval += mean_qval / float(batch_size)
+        self.bound_qval[0] += bound_qval[0] / float(batch_size)
+        self.bound_qval[1] += bound_qval[1] / float(batch_size)
 
     def target_train(self):
         weights = self.model.get_weights()
@@ -115,9 +141,9 @@ class DQNAgent:
         self.model.load_weights(name)
 
     def print_stats(self, ep, ep_tot, trial_len, time, steps):
-        print("{}/{}".format(ep, ep_tot),
+        print(" {}/{}".format(ep, ep_tot),
               "Execution time: {} steps/s".format(round(steps/time, 2)),
-              "Mean reward:", round(self.cs_reward / trial_len, 4), self.bound_reward,
+              "Episode reward:", self.cs_reward, self.bound_reward,
               "Mean action:", self.cs_action / trial_len, self.bound_action,
               "Mean Q value:", round(self.cs_qval / trial_len, 4), self.bound_qval
              ) #trail_len
@@ -141,13 +167,13 @@ def main(args):
             renders=args.render,
             useCamera=False,
             maxSteps=400,
-            dv=0.06,
+            dv=0.2,
             _algorithm='DQN',
             _reward_function=REWARD,
             _action_type='single'
             )
 
-    EPISODES  = 1000 #env.nb_episodes
+    EPISODES  = 2000 #env.nb_episodes
     trial_len = env._maxSteps  #env.nb_steps
 
     filepath_experiment = "experiments/"
@@ -200,7 +226,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', choices=['train', 'test'], default='train')
     parser.add_argument('--render', type=bool, default=False)
-    parser.add_argument('--exp_name', type=str, required=True)
+    parser.add_argument('--exp_name', type=str, default="test")#required=True)
     parser.add_argument('--reward', type=str, choices=reward_functions, default=reward_functions[0])
     args = parser.parse_args()
     main(args)
