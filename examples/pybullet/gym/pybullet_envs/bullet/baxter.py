@@ -31,8 +31,8 @@ class Baxter:
         self.torusRad = 0.23 * self.torusScale
         self.margin = 0.06
         self.maxTorque = 500
-        self.llSpace = [0.32, -0.83, 0.062]
-        self.ulSpace = [1.23, 0.20, 1.94]
+        self.llSpace = [0.32, -0.83, 0.062] #x,y,z
+        self.ulSpace = [1.23, 0.20, 1.94] #x,y,z
         self.reset()
 
     def reset(self):
@@ -175,6 +175,9 @@ class Baxter:
         joints = [1, 2, 3, 4, 5, 6, 7]
         action = [jointPoses[i] for i in joints]
         return action
+
+    def getEndEffectorPos(self):
+        return p.getLinkState(self.baxterUid, self.baxterEndEffectorIndex)[0]
 
     def calculateEndEffectorPos(self, action):
         old_pos = []
