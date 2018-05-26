@@ -184,7 +184,8 @@ def main(args):
     print("Action size", action_size)
 
     dqn_agent = DQNAgent(env=env)
-    # agent.load("./save/cartpole-dqn.h5f")
+    # fn = os.path.join(filepath_experiment, 'baxter_dqn_checkpoint_dqn_test.h5f')
+    # dqn_agent.load_model(fn)
 
     for ep in range(EPISODES):
         cur_state = env.reset().reshape(1, state_size)
