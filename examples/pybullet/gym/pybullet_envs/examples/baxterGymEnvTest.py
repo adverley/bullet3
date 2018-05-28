@@ -18,7 +18,8 @@ def main(args):
                     maxSteps=10000000,
                     useCamera=False,
                     useBlock=True,
-                    _reward_function=None,
+                    useRandomPos=False,
+                    _reward_function='clipped_reward',
                     _action_type=args.action_type
                 )
 
@@ -49,7 +50,7 @@ def main(args):
     elif args.action_type == 'single':
         motorsIds = []
 
-        motorsIds.append(environment._p.addUserDebugParameter("motor", 0, 7, 0))
+        motorsIds.append(environment._p.addUserDebugParameter("motor", 0, 6, 0))
         motorsIds.append(environment._p.addUserDebugParameter("dv", 0, 2, 1))
 
         done = False
@@ -64,12 +65,35 @@ def main(args):
             state, reward, done, info = environment.step(action)
             obs = environment.getExtendedObservation()
 
+    elif args.action_type == 'discrete':
+        motorsIds = []
+
+        dv = 2
+        min = 0
+        max = 2
+        motorsIds.append(environment._p.addUserDebugParameter("s0", 0, dv, 1))
+        motorsIds.append(environment._p.addUserDebugParameter("s1", 0, dv, 1))
+        motorsIds.append(environment._p.addUserDebugParameter("e0", 0, dv, 1))
+        motorsIds.append(environment._p.addUserDebugParameter("e1", 0, dv, 1))
+        motorsIds.append(environment._p.addUserDebugParameter("w0", 0, dv, 1))
+        motorsIds.append(environment._p.addUserDebugParameter("w1", 0, dv, 1))
+        motorsIds.append(environment._p.addUserDebugParameter("w2", 0, dv, 1))
+
+        done = False
+        while (not done):
+
+            action = []
+            for motorId in motorsIds:
+                action.append(environment._p.readUserDebugParameter(motorId))
+
+            state, reward, done, info = environment.step(action)
+            obs = environment.getExtendedObservation()
     else:
         raise NotImplementedError()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--action-type', choices=['single', 'discrete', 'continuous'], default='continuous')
+    parser.add_argument('--action-type', choices=['single', 'discrete', 'continuous', 'test'], required=True)
     args = parser.parse_args()
     main(args)
