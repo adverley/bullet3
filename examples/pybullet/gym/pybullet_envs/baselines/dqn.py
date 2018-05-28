@@ -169,6 +169,7 @@ def main(args):
     env = BaxterGymEnv(
             renders=args.render,
             useCamera=False,
+            useRandomPos=False,
             maxSteps=400,
             dv=0.1,
             _algorithm='DQN',
