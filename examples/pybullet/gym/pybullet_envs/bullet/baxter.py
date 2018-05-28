@@ -20,9 +20,6 @@ class Baxter:
         self.timeStep = timeStep
         self.maxVelocity = .35
         self.maxForce = 5000.
-        self.useSimulation = 1
-        self.useNullSpace = 21
-        self.useOrientation = 1
         self.baxterEndEffectorIndex = 26  # or 25
         self.baxterGripperIndex = 20  # or 26
         self.baxterHeadCameraIndex = 9
@@ -30,7 +27,6 @@ class Baxter:
         self.torusScale = 1.
         self.torusRad = 0.23 * self.torusScale
         self.margin = 0.06
-        self.maxTorque = 500
         self.llSpace = [0.32, -0.83, 0.062] #x,y,z
         self.ulSpace = [1.23, 0.20, 1.94] #x,y,z
         self.reset()
@@ -49,7 +45,7 @@ class Baxter:
         ypos = -.1 + 0.05 * np.random.random()
         zpos = 1. + 0.05 * np.random.random()
         torus_coord = [1.1, ypos, zpos]
-        # ang = 3.1415925438 * random.random() --> TODO maybe randomize angle in the future as dom randomization
+        # ang = 3.1415925438 * random.random() --> TODO maybe randomize angle as dom randomization
         # orn = p.getQuaternionFromEuler([0, 0, ang])
 
         self.torusUid = p.loadURDF(os.path.join(
@@ -70,12 +66,6 @@ class Baxter:
             p.resetBasePositionAndOrientation(self.blockUid, block_coord, orn)
             self.cid_base = p.createConstraint(self.baxterUid, self.baxterEndEffectorIndex, self.blockUid, -1, jointType=p.JOINT_FIXED,
                                                jointAxis=[1, 0, 0], parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0], parentFrameOrientation=p.getQuaternionFromEuler([0, math.pi / 2., 0]))
-            """
-            self.cid_rfinger = p.createConstraint(self.baxterUid, self.baxterEndEffectorIndex, self.blockUid, -1,
-                                                  jointType=p.JOINT_POINT2POINT, jointAxis=[0, -1, 0], parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0])
-            self.cid_lfinger = p.createConstraint(self.baxterUid, self.baxterEndEffectorIndex, self.blockUid, -1,
-                                                  jointType=p.JOINT_POINT2POINT, jointAxis=[0, -1, 0], parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0])
-            """
 
         # Create line for reward function
         orn = np.array(p.getEulerFromQuaternion(p.getBasePositionAndOrientation(self.torusUid)[1]))
@@ -151,7 +141,7 @@ class Baxter:
         else:
             if orn is None:
                 jointPoses = p.calculateInverseKinematics(
-                                self.kukaUid,
+                                self.baxterUid,
                                 self.baxterEndEffectorIndex,
                                 pos,
                                 lowerLimits=self.ll,
@@ -161,7 +151,7 @@ class Baxter:
                                 )
             else:
                 jointPoses = p.calculateInverseKinematics(
-                                self.kukaUid,
+                                self.baxterUid,
                                 self.baxterEndEffectorIndex,
                                 pos,
                                 orn,

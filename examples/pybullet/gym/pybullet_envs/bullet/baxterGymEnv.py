@@ -139,7 +139,8 @@ class BaxterGymEnv(gym.Env):
         if self._useRandomPos:
             self.old_pos = self._baxter.getEndEffectorPos()
             self._baxter.randomizeGripperPos()
-            self.setAction()
+
+        self.setAction()
 
         # Set the camera settings.
         head_camera_index = 9
@@ -164,12 +165,10 @@ class BaxterGymEnv(gym.Env):
         self._proj_matrix = p.computeProjectionMatrixFOV(
             fov, aspect, near, far)
 
-        self._attempted_grasp = False
         self._env_step = 0
         self._terminated = 0
         self._envStepCounter = 0
         self.clipped_counter = 0
-        self.setAction()
         # p.setGravity(0, 0, -10)
 
         p.stepSimulation()
@@ -231,7 +230,7 @@ class BaxterGymEnv(gym.Env):
 
             if (self._useHack):
                 torus_pos = np.array(p.getBasePositionAndOrientation(
-                    self._baxter.torusUid)[0]) + [0, 0, self._baxter.torusRad]
+                    self._baxter.torusUid)[0])
                 self._observation += list(torus_pos)
 
             return self._observation
@@ -320,8 +319,7 @@ class BaxterGymEnv(gym.Env):
         if self._renders:
             time.sleep(self._timeStep)
 
-        self.logger.debug("self._envStepCounter: %s" %
-                          str(self._envStepCounter))
+        self.logger.debug("self._envStepCounter: %s" % str(self._envStepCounter))
 
         reward = self._reward()
         done = self._termination()
