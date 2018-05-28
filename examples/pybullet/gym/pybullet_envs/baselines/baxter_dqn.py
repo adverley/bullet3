@@ -32,7 +32,8 @@ reward_functions = [
                     'finite_line_distance',
                     'line_distance',
                     'sparse',
-                    'torus_distance'
+                    'torus_distance',
+                    'clipped_reward'
                     ]
 
 def main(args):

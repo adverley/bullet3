@@ -56,7 +56,6 @@ class DQNAgent:
 
     def update_exploration(self): #Epsilon was decaying to fast when it was in act, is this better?
         self.epsilon *= self.epsilon_decay
-        print(self.epsilon)
         self.epsilon = max(self.epsilon_min, self.epsilon)
 
     def act(self, state):
@@ -229,7 +228,8 @@ if __name__ == "__main__":
                         'finite_line_distance',
                         'line_distance',
                         'sparse',
-                        'torus_distance'
+                        'torus_distance',
+                        'clipped_reward'
                         ]
 
     parser = argparse.ArgumentParser()
