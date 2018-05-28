@@ -23,7 +23,7 @@ class RewardZoo():
         elif(REWARD_TYPE == 'sparse'):
             return cls.sparse_reward
         elif(REWARD_TYPE == 'torus_distance'):
-            return cls.sparse_reward
+            return cls.torus_distance_reward
         elif(REWARD_TYPE == 'clipped_reward'):
             return cls.clipped_line_distance_reward
         else:
