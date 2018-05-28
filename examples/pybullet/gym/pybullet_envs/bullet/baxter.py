@@ -7,10 +7,8 @@ os.sys.path.insert(0, parentdir)
 
 import pybullet as p
 import numpy as np
-import copy
 import math
 import pybullet_data
-
 
 class Baxter:
     "This class will only use the right arm of the Baxter robot"

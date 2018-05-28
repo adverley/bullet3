@@ -5,14 +5,11 @@ currentdir = os.path.dirname(os.path.abspath(
 print ("current_dir=" + currentdir)
 os.sys.path.insert(0, currentdir)
 
-import math
 import gym
 import logging
 import numpy as np
 import pybullet as p
 import pybullet_data
-import random
-import sys
 import time
 
 import matplotlib.pyplot as plt
@@ -23,8 +20,6 @@ from reward_function import RewardZoo
 
 from gym import spaces
 from gym.utils import seeding
-from numpy.linalg import norm
-from numpy import vdot
 from pkg_resources import parse_version
 
 
@@ -136,6 +131,7 @@ class BaxterGymEnv(gym.Env):
             urdfRootPath=self._urdfRoot, timeStep=self._timeStep, useBlock=self._useBlock)
 
         # Set action according to randomized gripper position
+        # TODO: curriculum learning
         if self._useRandomPos:
             self.old_pos = self._baxter.getEndEffectorPos()
             self._baxter.randomizeGripperPos()
@@ -233,7 +229,7 @@ class BaxterGymEnv(gym.Env):
                     self._baxter.torusUid)[0])
                 self._observation += list(torus_pos)
 
-            return self._observation
+            return np.array(self._observation)
 
     def _step(self, action):
         """Environment step.
@@ -325,7 +321,7 @@ class BaxterGymEnv(gym.Env):
         done = self._termination()
         # print("len=%r" % len(self._observation))
 
-        return np.array(self._observation), reward, done, {}
+        return self._observation, reward, done, {}
 
     def _render(self, mode='human', close=False):
         pass
