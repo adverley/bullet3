@@ -26,7 +26,7 @@ class DQNAgent:
 
         self.gamma = 0.85
         self.epsilon = 1.0
-        self.epsilon_min = 0.01
+        self.epsilon_min = 0.1
         self.epsilon_decay = 0.995
         self.learning_rate = 0.05
         self.tau = .125
@@ -45,9 +45,9 @@ class DQNAgent:
     def create_model(self):
         model = Sequential()
         state_shape = self.env.observation_space.shape
-        model.add(Dense(1024, input_dim=state_shape[0], activation="relu"))
-        model.add(Dense(512, activation="relu"))
+        model.add(Dense(512, input_dim=state_shape[0], activation="relu"))
         model.add(Dense(256, activation="relu"))
+        model.add(Dense(128, activation="relu"))
         model.add(Dense(self.env.action_space.n))
         print(model.summary())
         model.compile(loss="mean_squared_error",
@@ -170,7 +170,7 @@ def main(args):
             renders=args.render,
             useCamera=False,
             maxSteps=400,
-            dv=0.2,
+            dv=0.1,
             _algorithm='DQN',
             _reward_function=REWARD,
             _action_type='single'
