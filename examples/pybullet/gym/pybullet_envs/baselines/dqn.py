@@ -45,9 +45,9 @@ class DQNAgent:
     def create_model(self):
         model = Sequential()
         state_shape = self.env.observation_space.shape
-        model.add(Dense(24, input_dim=state_shape[0], activation="relu"))
-        model.add(Dense(48, activation="relu"))
-        model.add(Dense(24, activation="relu"))
+        model.add(Dense(1024, input_dim=state_shape[0], activation="relu"))
+        model.add(Dense(512, activation="relu"))
+        model.add(Dense(256, activation="relu"))
         model.add(Dense(self.env.action_space.n))
         print(model.summary())
         model.compile(loss="mean_squared_error",
@@ -206,11 +206,11 @@ def main(args):
 
             cur_state = new_state
 
-            if step % 100 == 0:
-                dqn_agent.update_exploration()
-
             if done:
                 break
+
+        if ep > 500:
+            dqn_agent.update_exploration()
 
         dqn_agent.print_stats(ep, EPISODES, trial_len, time.time()-start_time, step)
         if step < trial_len-1:
