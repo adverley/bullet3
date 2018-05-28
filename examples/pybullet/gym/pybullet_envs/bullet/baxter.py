@@ -11,10 +11,12 @@ import math
 import pybullet_data
 
 class Baxter:
-    "This class will only use the right arm of the Baxter robot"
+    """
+    This class will only use the right arm of the Baxter robot
+    """
 
     def __init__(self, urdfRootPath=pybullet_data.getDataPath(), timeStep=0.01, useBlock=True):
-        self.urdfRootPath = pybullet_data.getDataPath()
+        self.urdfRootPath = urdfRootPath
         self.timeStep = timeStep
         self.maxVelocity = .35
         self.maxForce = 5000.
@@ -27,9 +29,9 @@ class Baxter:
         self.margin = 0.06
         self.llSpace = [0.32, -0.83, 0.062] #x,y,z
         self.ulSpace = [1.23, 0.20, 1.94] #x,y,z
-        self.reset()
+        self.setup()
 
-    def reset(self):
+    def setup(self):
         self.baxterUid = p.loadURDF(os.path.join(
             self.urdfRootPath, "baxter_common/baxter.urdf"), [0, 0, 0.62], useFixedBase=True, flags=p.URDF_USE_SELF_COLLISION_EXCLUDE_PARENT)
         self.numJoints = p.getNumJoints(self.baxterUid)  # 42
@@ -62,8 +64,10 @@ class Baxter:
                 self.urdfRootPath, "block_rot.urdf"), block_coord)
 
             p.resetBasePositionAndOrientation(self.blockUid, block_coord, orn)
-            self.cid_base = p.createConstraint(self.baxterUid, self.baxterEndEffectorIndex, self.blockUid, -1, jointType=p.JOINT_FIXED,
-                                               jointAxis=[1, 0, 0], parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0], parentFrameOrientation=p.getQuaternionFromEuler([0, math.pi / 2., 0]))
+            self.cid_base = p.createConstraint(self.baxterUid, self.baxterEndEffectorIndex, self.blockUid, -1,
+                                               jointType=p.JOINT_FIXED, jointAxis=[1, 0, 0],
+                                               parentFramePosition=[0, 0, 0], childFramePosition=[0, 0, 0],
+                                               parentFrameOrientation=p.getQuaternionFromEuler([0, math.pi / 2., 0]))
 
         # Create line for reward function
         orn = np.array(p.getEulerFromQuaternion(p.getBasePositionAndOrientation(self.torusUid)[1]))
@@ -73,7 +77,8 @@ class Baxter:
         #dir = vdot(dir_vector, np.array([0, 0, -0.2]))
         #line_coord += dir
         line_coord[0] -= 0.2
-        self.torusLineUid = p.loadURDF(os.path.join(self.urdfRootPath, "block_line.urdf"), torus_coord, p.getQuaternionFromEuler(orn), useFixedBase=True)
+        self.torusLineUid = p.loadURDF(os.path.join(self.urdfRootPath, "block_line.urdf"),
+                                       torus_coord, p.getQuaternionFromEuler(orn), useFixedBase=True)
 
         self.motorNames = []
         self.motorIndices = [12, 13, 14, 15, 16, 18, 19]
@@ -84,6 +89,25 @@ class Baxter:
             if qIndex > -1:
                 # print "motorname", jointInfo[1]
                 self.motorNames.append(str(jointInfo[1]))
+
+    def reset(self):
+        # reset joint state of baxter
+        base_pos = [0 for x in range(len(self.motorIndices))]
+        for i in range(len(self.motorIndices)):
+            p.resetJointState(self.baxterUid, self.motorIndices[i], base_pos[i])
+
+        # re-randomize torus position
+        ypos = -.1 + 0.05 * np.random.random()
+        zpos = 1. + 0.05 * np.random.random()
+        torus_coord = np.array([1.1, ypos, zpos])
+        orn = p.getQuaternionFromEuler([0, 0, math.pi / 2.])
+        p.resetBasePositionAndOrientation(self.torusUid, torus_coord, orn)
+
+        # Reset torusLine
+        orn = np.array(p.getEulerFromQuaternion(p.getBasePositionAndOrientation(self.torusUid)[1]))
+        orn[2] = orn[2] + math.pi / 2.  # Rotate within plane perpendicular to torus
+        line_coord = torus_coord
+        p.resetBasePositionAndOrientation(self.torusLineUid, torus_coord, p.getQuaternionFromEuler(orn))
 
     def getActionDimension(self):
         return len(self.motorIndices)
@@ -142,10 +166,10 @@ class Baxter:
                                 self.baxterUid,
                                 self.baxterEndEffectorIndex,
                                 pos,
-                                lowerLimits=self.ll,
-                                upperLimits=self.ul,
-                                jointRanges=self.jr,
-                                restPoses=self.rp
+                                lowerLimits=ll,
+                                upperLimits=ul,
+                                jointRanges=jr,
+                                restPoses=rp
                                 )
             else:
                 jointPoses = p.calculateInverseKinematics(
@@ -153,10 +177,10 @@ class Baxter:
                                 self.baxterEndEffectorIndex,
                                 pos,
                                 orn,
-                                lowerLimits=self.ll,
-                                upperLimits=self.ul,
-                                jointRanges=self.jr,
-                                restPoses=self.rp
+                                lowerLimits=ll,
+                                upperLimits=ul,
+                                jointRanges=jr,
+                                restPoses=rp
                                 )
 
         # process action for applyAction
@@ -214,7 +238,7 @@ class Baxter:
         assert len(velocityCommands) == len(self.motorIndices)
 
         commands = [x for x in velocityCommands] #Scaling
-        forces = [500 for x in range(len(torqueCommands))]
+        forces = [500 for x in range(len(velocityCommands))]
 
         p.setJointMotorControlArray(
             self.baxterUid,

@@ -28,6 +28,7 @@ RENDER_WIDTH = 960
 
 
 class BaxterGymEnv(gym.Env):
+    _baxter: Baxter
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second': 50
@@ -83,6 +84,11 @@ class BaxterGymEnv(gym.Env):
             p.resetDebugVisualizerCamera(1.3, 180, -41, [0.52, -0.2, -0.33])
         else:
             p.connect(p.DIRECT)
+
+        # Load in Baxter together with all the other objects
+        self._baxter = Baxter(
+            urdfRootPath=self._urdfRoot, timeStep=self._timeStep, useBlock=self._useBlock)
+
         self._seed()
         self.reset()
         observationDim = len(self.getExtendedObservation())
@@ -110,7 +116,7 @@ class BaxterGymEnv(gym.Env):
             action_high = np.array([self._action_bound] * action_dim)
             self.action_space = spaces.Box(-action_high, action_high)
 
-        if (self._useCamera):
+        if self._useCamera:
             self.observation_space = spaces.Box(
                 low=0, high=255, shape=(self._height, self._width, 3))
         else:
@@ -122,13 +128,11 @@ class BaxterGymEnv(gym.Env):
     def _reset(self):
         """Environment reset called at the beginning of an episode.
         """
-        p.resetSimulation()
+        #p.resetSimulation()
         p.setPhysicsEngineParameter(numSolverIterations=150)
         p.setTimeStep(self._timeStep)
 
-        # Load in Baxter together with all the other objects
-        self._baxter = Baxter(
-            urdfRootPath=self._urdfRoot, timeStep=self._timeStep, useBlock=self._useBlock)
+        self._baxter.reset()
 
         # Set action according to randomized gripper position
         # TODO: curriculum learning
@@ -145,7 +149,8 @@ class BaxterGymEnv(gym.Env):
             self._baxter.baxterUid, head_camera_index)[0]) + t_v
         p.resetDebugVisualizerCamera(1.3, 180, -41, cam_pos)
 
-        # TODO self._cameraRandom*np.random.uniform(-3, 3) randomize yaw, pitch and roll as example of domain randomization
+        # TODO self._cameraRandom*np.random.uniform(-3, 3)
+        # randomize yaw, pitch and roll as example of domain randomization
         # see kuka_diverse_object_gym_env
         look = cam_pos
         distance = 1.
