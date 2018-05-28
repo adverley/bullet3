@@ -1,14 +1,6 @@
 import math
-import gym
-from gym.utils import seeding
 import numpy as np
-import time
 import pybullet as p
-import random
-import pybullet_data
-from pkg_resources import parse_version
-import logging
-import sys
 
 from numpy.linalg import norm
 from numpy import vdot
