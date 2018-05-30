@@ -11,6 +11,8 @@ import numpy as np
 import pybullet as p
 import pybullet_data
 import time
+import math
+import random
 
 import matplotlib.pyplot as plt
 
@@ -188,6 +190,42 @@ class BaxterGymEnv(gym.Env):
             self.action[i] = p.getJointState(
                 self._baxter.baxterUid, self._baxter.motorIndices[i])[0]
 
+    def getGuidedAction(self, margin=0.3):
+        torus_pos = np.array(p.getBasePositionAndOrientation(self._baxter.torusUid)[0])
+        torus_pos[0] += self._baxter.margin
+        end_effector_pos = self._baxter.getEndEffectorPos()
+
+        distance = math.sqrt((torus_pos[0] - end_effector_pos[0]) ** 2 +
+                             (torus_pos[1] - end_effector_pos[1]) ** 2)
+
+        self.logger.debug("Distance:", distance)
+
+        if distance < margin:
+            # Do random action to explore this space
+            single = self.action_space.sample()
+        else:
+            # Do action to move towards interesting area of the space
+            action = self._baxter.calculateInverseKinematics(torus_pos)
+            pos = self.getPossibleSingleActions(action)
+            self.logger.debug("Possible actions:", pos)
+            single = random.choice(pos)
+
+        return single
+
+    def getPossibleSingleActions(self, action):
+        """
+        Convert a multi-joint action into a list of single joint actions (No-op actions are left out)
+        :param action: numpy.ndarray
+        :return: numpy.ndarray
+        """
+        res = []
+        for i in range(len(action)):
+            if action[i] > self._dv:
+                res.append(i + 2*7)
+            elif action[i] < -self._dv:
+                res.append(i + 2*0)
+        return np.array(res)
+
     def createActionHist(self, fn):
         avg_action = sum(self.action_batch) / len(self.action_batch)
 
@@ -204,7 +242,6 @@ class BaxterGymEnv(gym.Env):
         plt.show()
 
         return avg_action
-
 
     def getExtendedObservation(self):
         """Return the observation as an image.

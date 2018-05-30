@@ -60,7 +60,8 @@ class DQNAgent:
 
     def act(self, state):
         if np.random.random() < self.epsilon:
-            action = self.env.action_space.sample()
+            #action = self.env.action_space.sample()
+            action = self.env.getGuidedAction()
         else:
             action = np.argmax(self.model.predict(state)[0])
 
