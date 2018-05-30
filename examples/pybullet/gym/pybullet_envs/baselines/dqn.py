@@ -16,20 +16,63 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
 
+from tqdm import tqdm
+
 from pybullet_envs.bullet.baxterGymEnv import BaxterGymEnv
 from collections import deque
 
-class DQNAgent:
-    def __init__(self, env):
-        self.env = env
-        self.memory = deque(maxlen=2000)
+experiments = [
+    {'learning_rate' : 0.05,
+     'memory_size': 200000,
+     'gamma': 0.99,
+     'replay_mem_update_freq': 10000,
+     'replay_mem_init_size': 50000,
+     'loss_function': 'mse',
+     'optimizer': 'adam'
+     },
+    {'learning_rate' : 0.05,
+     'memory_size': 200000,
+     'gamma': 0.85,
+     'replay_mem_update_freq': 10000,
+     'replay_mem_init_size': 50000,
+     },
+    {'learning_rate' : 0.0025,
+     'memory_size': 200000,
+     'gamma': 0.99,
+     'replay_mem_update_freq': 20000,
+     'replay_mem_init_size': 50000,
+     },
+    {'learning_rate' : 0.0025,
+     'memory_size': 200000,
+     'gamma': 0.99,
+     'replay_mem_update_freq': 50000,
+     'replay_mem_init_size': 50000,
+     },
+    {'learning_rate' : 0.0025,
+     'memory_size': 200000,
+     'gamma': 0.99,
+     'replay_mem_update_freq': 10000,
+     'replay_mem_init_size': 50000,
+     }
+]
 
-        self.gamma = 0.85
+class DQNAgent:
+    def __init__(self, env, exp_num):
+        exp = experiments[exp_num]
+        print(exp)
+
+        self.env = env
+        self.memory = deque(maxlen=exp['memory_size'])
+
+        self.gamma = exp['gamma'] #0.85
         self.epsilon = 1.0
         self.epsilon_min = 0.1
         self.epsilon_decay = 0.995
-        self.learning_rate = 0.05
+        self.learning_rate = exp['learning_rate'] #0.05
         self.tau = .125
+
+        self.replay_mem_init_size = exp['replay_mem_init_size']
+        self.replay_mem_update_freq = exp['replay_mem_update_freq']
 
         self.model = self.create_model()
         self.target_model = self.create_model()
@@ -50,8 +93,8 @@ class DQNAgent:
         model.add(Dense(128, activation="relu"))
         model.add(Dense(self.env.action_space.n))
         print(model.summary())
-        model.compile(loss="mean_squared_error",
-            optimizer=Adam(lr=self.learning_rate))
+        model.compile(loss="mean_squared_error", #TODO HuberLoss
+            optimizer=Adam(lr=self.learning_rate)) #TODO testing with RMS_prop -> hyperparameter default from keras
         return model
 
     def update_exploration(self): #Epsilon was decaying to fast when it was in act, is this better?
@@ -60,8 +103,8 @@ class DQNAgent:
 
     def act(self, state):
         if np.random.random() < self.epsilon:
-            #action = self.env.action_space.sample()
-            action = self.env.getGuidedAction()
+            action = self.env.action_space.sample()
+            #action = self.env.getGuidedAction()
         else:
             action = np.argmax(self.model.predict(state)[0])
 
@@ -70,11 +113,28 @@ class DQNAgent:
                              max(self.bound_action[1], action)]
         return action
 
+    def test(self, state):
+        return np.argmax(self.model.predict(state)[0])
+
     def remember(self, state, action, reward, new_state, done):
         self.bound_reward = [min(reward, self.bound_reward[0]),
                              max(reward, self.bound_reward[1])]
         self.cs_reward += reward
         self.memory.append([state, action, reward, new_state, done])
+
+    def init_replay_mem(self):
+        state_size = self.env.observation_space.shape[0]
+        action_size = self.env.action_space.n
+        cur_state = self.env.reset().reshape(1, state_size)
+
+        print("Starting replay memory initialization")
+        for i in tqdm(range(self.replay_mem_init_size)):
+            action = np.random.randint(0, action_size)
+            new_state, reward, done, _ = self.env.step(action)
+
+            new_state = new_state.reshape(1, state_size)
+            self.memory.append([cur_state, action, reward, new_state, done])
+            cur_state = new_state
 
     def replay(self):
         batch_size = 32
@@ -164,6 +224,7 @@ class DQNAgent:
 def main(args):
     EXP_NAME = args.exp_name
     REWARD = args.reward
+    EXP_NUM = args.exp_num
     WINDOW_LENGTH = 1
 
     #env = gym.make("MountainCar-v0")
@@ -188,42 +249,90 @@ def main(args):
     print("State size", state_size)
     print("Action size", action_size)
 
-    dqn_agent = DQNAgent(env=env)
+    dqn_agent = DQNAgent(env=env, exp_num=EXP_NUM)
     # fn = os.path.join(filepath_experiment, 'baxter_dqn_checkpoint_dqn_test.h5f')
     # dqn_agent.load_model(fn)
 
-    for ep in range(EPISODES):
-        cur_state = env.reset().reshape(1, state_size)
-        start_time = time.time()
-        for step in range(trial_len):
-            action = dqn_agent.act(cur_state)
-            new_state, reward, done, _ = env.step(action)
+    dqn_agent.init_replay_mem()
 
-            # reward = reward if not done else -20
-            new_state = new_state.reshape(1,state_size)
-            dqn_agent.remember(cur_state, action, reward, new_state, done)
+    if args.mode == 'train':
+        for ep in range(EPISODES):
+            cur_state = env.reset().reshape(1, state_size)
+            start_time = time.time()
+            for step in range(trial_len):
+                action = dqn_agent.act(cur_state)
+                new_state, reward, done, _ = env.step(action)
 
-            dqn_agent.replay()       # internally iterates default (prediction) model
-            dqn_agent.target_train() # iterates target model
+                # reward = reward if not done else -20
+                new_state = new_state.reshape(1,state_size)
+                dqn_agent.remember(cur_state, action, reward, new_state, done)
 
-            cur_state = new_state
+                dqn_agent.replay()       # internally iterates default (prediction) model
 
-            if done:
-                break
+                if ep*step % dqn_agent.replay_mem_update_freq == 0:
+                    dqn_agent.target_train() # iterates target model
 
-        if ep > 500:
-            dqn_agent.update_exploration()
+                cur_state = new_state
 
-        dqn_agent.print_stats(ep, EPISODES, trial_len, time.time()-start_time, step)
-        if step < trial_len-1:
-            print("Completed in {} steps".format(step))
+                if done:
+                    break
 
-        if ep % 100 == 0:
-            weights_filename = os.path.join(filepath_experiment, "baxter_dqn_checkpoint_{}.h5f".format(EXP_NAME))
-            dqn_agent.save_model(weights_filename)
+            if ep > 500:
+                dqn_agent.update_exploration()
 
-    weights_filename = os.path.join(filepath_experiment, "baxter_dqn_{}.h5f".format(EXP_NAME))
-    dqn_agent.save_model(weights_filename)
+            dqn_agent.print_stats(ep, EPISODES, trial_len, time.time()-start_time, step)
+            if step < trial_len-1:
+                print("Completed in {} steps".format(step))
+
+            if ep % 100 == 0:
+                weights_filename = os.path.join(filepath_experiment, "baxter_dqn_checkpoint_{}.h5f".format(EXP_NAME))
+                dqn_agent.save_model(weights_filename)
+
+        weights_filename = os.path.join(filepath_experiment, "baxter_dqn_{}.h5f".format(EXP_NAME))
+        dqn_agent.save_model(weights_filename)
+
+    elif args.mode == 'test':
+        # Write test procedure here
+        # load weights
+        fn = os.path.join(filepath_experiment, "baxter_dqn_checkpoint_{}.h5f".format(EXP_NAME))
+        dqn_agent.load_model(fn)
+
+        EPISODES = 10
+        trial_len = env._maxSteps
+
+        for ep in range(EPISODES):
+            cur_state = env.reset().reshape(1, state_size)
+            start_time = time.time()
+            ep_reward = 0
+            bound_reward = [sys.maxsize, -sys.maxsize - 1]
+            ep_action = 0
+            bound_action = [sys.maxsize, -sys.maxsize - 1]
+
+            for step in range(trial_len):
+                action = dqn_agent.test(cur_state)
+                new_state, reward, done, _ = env.step(action)
+
+                # Stats
+                ep_reward += reward
+                ep_action += action
+                bound_reward = [min(bound_reward[0], reward), max(bound_reward[1], reward)]
+                bound_action = [min(bound_action[0], action), max(bound_action[1], action)]
+
+                new_state = new_state.reshape(1, state_size)
+                cur_state = new_state
+
+                if done:
+                    break
+
+            #dqn_agent.print_stats(ep, EPISODES, trial_len, time.time() - start_time, step)
+            print("\n{}/{}".format(ep, EPISODES),
+                  "Execution time: {} steps/s".format(round(trial_len / (time.time() - start_time), 2)),
+                  "Episode reward:", ep_reward, [round(x, 4) for x in bound_reward],
+                  "Mean action:", ep_action / trial_len, bound_action,
+                  )
+
+            if step < trial_len - 1:
+                print("Completed in {} steps".format(step))
 
 if __name__ == "__main__":
     reward_functions = [
@@ -239,5 +348,6 @@ if __name__ == "__main__":
     parser.add_argument('--render', type=bool, default=False)
     parser.add_argument('--exp_name', type=str, default="test")#required=True)
     parser.add_argument('--reward', type=str, choices=reward_functions, default=reward_functions[0])
+    parser.add_argument('--exp_num', type=int, default=0)
     args = parser.parse_args()
     main(args)
