@@ -309,7 +309,7 @@ def main(args):
             _action_type='single'
             )
 
-    EPISODES  = 2000 #env.nb_episodes
+    EPISODES  = 10000 #env.nb_episodes
     trial_len = env._maxSteps  #env.nb_steps
 
     filepath_experiment = "experiments/"
