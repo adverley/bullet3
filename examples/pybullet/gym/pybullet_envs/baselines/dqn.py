@@ -52,6 +52,8 @@ experiments = [
      'gamma': 0.99,
      'replay_mem_update_freq': 20000,
      'replay_mem_init_size': 50000,
+     'loss_function': 'mse',
+     'optimizer': 'adam'
      },
     {'learning_rate' : 0.0025,
      'memory_size': 200000,
@@ -343,7 +345,6 @@ def main(args):
                 action = dqn_agent.act(cur_state)
                 new_state, reward, done, _ = env.step(action)
 
-                # reward = reward if not done else -20
                 new_state = new_state.reshape(1,state_size)
                 dqn_agent.remember(cur_state, action, reward, new_state, done)
 
