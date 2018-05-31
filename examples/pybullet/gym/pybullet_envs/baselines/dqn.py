@@ -329,6 +329,11 @@ def main(args):
         except KeyboardInterrupt:
             print("Interrupted initialization, continuing with training...")
 
+        #load pre-trained weights
+        if args.pre_name is not None:
+            fn = os.path.join(filepath_experiment, "baxter_dqn_{}.h5f".format(args.pre_name))
+            dqn_agent.load_model(fn)
+
         for ep in range(EPISODES):
             cur_state = env.reset().reshape(1, state_size)
             start_time = time.time()
@@ -427,5 +432,6 @@ if __name__ == "__main__":
     parser.add_argument('--exp_name', type=str, default="test")#required=True)
     parser.add_argument('--reward', type=str, choices=reward_functions, default=reward_functions[0])
     parser.add_argument('--exp_num', type=int, default=0)
+    parser.add_argument('--pre_name', type=str, default=None)
     args = parser.parse_args()
     main(args)
