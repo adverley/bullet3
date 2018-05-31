@@ -334,6 +334,8 @@ def main(args):
             fn = os.path.join(filepath_experiment, "baxter_dqn_{}.h5f".format(args.pre_name))
             dqn_agent.load_model(fn)
 
+        tot_step = 0
+
         for ep in range(EPISODES):
             cur_state = env.reset().reshape(1, state_size)
             start_time = time.time()
@@ -346,8 +348,9 @@ def main(args):
                 dqn_agent.remember(cur_state, action, reward, new_state, done)
 
                 dqn_agent.replay()       # internally iterates default (prediction) model
+                tot_step += 1            # Used to determine replay memory update
 
-                if (ep+1)*(step+1) % dqn_agent.replay_mem_update_freq == 0:
+                if tot_step % dqn_agent.replay_mem_update_freq == 0:
                     print("Updating target network...")
                     dqn_agent.target_train() # iterates target model
 
