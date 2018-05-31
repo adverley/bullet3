@@ -6,7 +6,7 @@ parentdir = os.path.dirname(os.path.dirname(currentdir))
 os.sys.path.insert(0, parentdir)
 
 import argparse
-import gym
+import json
 import numpy as np
 import random
 import sys
@@ -84,6 +84,20 @@ class DQNAgent:
         self.bound_reward = [sys.maxsize, -sys.maxsize - 1]
         self.cs_qval = 0
         self.bound_qval = [0, 0]
+
+        self.metrics = {
+            'episode': [],
+            'episode_reward': [],
+            'min_reward': [],
+            'max_reward': [],
+            'mean_q': [],
+            'max_q': [],
+            'min_q': [],
+            'mean_action': [],
+            'max_action': [],
+            'min_action': [],
+            'epsilon': [],
+        }
 
     def create_model(self):
         model = Sequential()
@@ -197,6 +211,15 @@ class DQNAgent:
             target_weights[i] = weights[i] * self.tau + target_weights[i] * (1 - self.tau)
         self.target_model.set_weights(target_weights)
 
+    def save_data(self, fn, ep):
+        with open(fn, 'w') as fp:
+            json.dump(self.metrics, fp)
+
+    def load_data(self, fn):
+        with open(fn, 'r') as fp:
+            data = json.load(fp)
+        return data
+
     def save_model(self, fn):
         self.model.save(fn)
 
@@ -204,13 +227,30 @@ class DQNAgent:
         self.model.load_weights(name)
 
     def print_stats(self, ep, ep_tot, trial_len, time, steps):
+        mean_q = round(self.cs_qval / trial_len, 4)
+        mean_bound_q = [round(x / trial_len, 4) for x in self.bound_qval]
+        mean_action = self.cs_action / trial_len
+        mean_bound_reward = [round(x, 4) for x in self.bound_reward]
+
         print("\n{}/{}".format(ep, ep_tot),
               "Execution time: {} steps/s".format(round(steps/time, 2)),
-              "Episode reward:", self.cs_reward, [round(x, 4) for x in self.bound_reward],
-              "Mean action:", self.cs_action / trial_len, self.bound_action,
-              "Mean Q:", round(self.cs_qval / trial_len, 4), [round(x / trial_len, 4) for x in self.bound_qval],
+              "Episode reward:", self.cs_reward, mean_bound_reward,
+              "Mean action:", mean_action, self.bound_action,
+              "Mean Q:", mean_q, mean_bound_q,
               "Curr epsilon:", self.epsilon
              ) #trail_len
+
+        self.metrics['episode'].append(ep)
+        self.metrics['episode_reward'].append(self.cs_reward)
+        self.metrics['min_reward'].append(self.bound_reward[0])
+        self.metrics['max_reward'].append(self.bound_reward[1])
+        self.metrics['mean_q'].append(mean_q)
+        self.metrics['min_q'].append(mean_bound_q[0])
+        self.metrics['max_q'].append(mean_bound_q[1])
+        self.metrics['mean_action'].append(mean_action)
+        self.metrics['min_action'].append(self.bound_action[0])
+        self.metrics['max_action'].append(self.bound_action[1])
+        self.metrics['epsilon'].append(self.epsilon)
 
         # Reset Statistics
         self.cs_action = 0
@@ -253,9 +293,12 @@ def main(args):
     # fn = os.path.join(filepath_experiment, 'baxter_dqn_checkpoint_dqn_test.h5f')
     # dqn_agent.load_model(fn)
 
-    dqn_agent.init_replay_mem()
-
     if args.mode == 'train':
+        try:
+            dqn_agent.init_replay_mem()
+        except KeyboardInterrupt:
+            print("Interrupted initialization, continuing with training...")
+
         for ep in range(EPISODES):
             cur_state = env.reset().reshape(1, state_size)
             start_time = time.time()
@@ -270,6 +313,7 @@ def main(args):
                 dqn_agent.replay()       # internally iterates default (prediction) model
 
                 if ep*step % dqn_agent.replay_mem_update_freq == 0:
+                    print("Updating target network...")
                     dqn_agent.target_train() # iterates target model
 
                 cur_state = new_state
@@ -279,6 +323,10 @@ def main(args):
 
             if ep > 500:
                 dqn_agent.update_exploration()
+
+            if ep % 2000 == 0:
+                print("Saving data...")
+                dqn_agent.save_data(os.path.join(filepath_experiment, 'baxter_dqn_{}_data.json'.format(EXP_NAME)), ep)
 
             dqn_agent.print_stats(ep, EPISODES, trial_len, time.time()-start_time, step)
             if step < trial_len-1:
@@ -294,7 +342,7 @@ def main(args):
     elif args.mode == 'test':
         # Write test procedure here
         # load weights
-        fn = os.path.join(filepath_experiment, "baxter_dqn_checkpoint_{}.h5f".format(EXP_NAME))
+        fn = os.path.join(filepath_experiment, "baxter_dqn_{}.h5f".format(EXP_NAME))
         dqn_agent.load_model(fn)
 
         EPISODES = 10
