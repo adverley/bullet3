@@ -347,7 +347,7 @@ def main(args):
 
                 dqn_agent.replay()       # internally iterates default (prediction) model
 
-                if ep*step % dqn_agent.replay_mem_update_freq == 0:
+                if (ep+1)*(step+1) % dqn_agent.replay_mem_update_freq == 0:
                     print("Updating target network...")
                     dqn_agent.target_train() # iterates target model
 
