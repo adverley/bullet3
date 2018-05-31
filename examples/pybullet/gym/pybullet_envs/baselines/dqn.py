@@ -11,10 +11,11 @@ import numpy as np
 import random
 import sys
 import time
+import tensorflow as tf
 
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
-from keras.optimizers import Adam
+from keras.optimizers import Adam, RMSprop
 
 from tqdm import tqdm
 
@@ -99,7 +100,16 @@ class DQNAgent:
             'epsilon': [],
         }
 
-    def create_model(self):
+    def create_model(self, loss='mse'):
+        def huber_loss(y_true, y_pred, clip_delta=1.0):
+            error = y_true - y_pred
+            cond = tf.keras.backend.abs(error) < clip_delta
+
+            squared_loss = 0.5 * tf.keras.backend.square(error)
+            linear_loss = clip_delta * (tf.keras.backend.abs(error) - 0.5 * clip_delta)
+
+            return tf.where(cond, squared_loss, linear_loss)
+
         model = Sequential()
         state_shape = self.env.observation_space.shape
         model.add(Dense(512, input_dim=state_shape[0], activation="relu"))
@@ -107,8 +117,12 @@ class DQNAgent:
         model.add(Dense(128, activation="relu"))
         model.add(Dense(self.env.action_space.n))
         print(model.summary())
-        model.compile(loss="mean_squared_error", #TODO HuberLoss
-            optimizer=Adam(lr=self.learning_rate)) #TODO testing with RMS_prop -> hyperparameter default from keras
+        if loss == 'mse':
+            model.compile(loss="mean_squared_error", optimizer=Adam(lr=self.learning_rate))
+        elif loss == 'huber':
+            model.compile(loss=huber_loss, optimizer=RMSprop(lr=self.learning_rate))
+        else:
+            raise NotImplementedError
         return model
 
     def update_exploration(self): #Epsilon was decaying to fast when it was in act, is this better?
