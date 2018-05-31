@@ -259,8 +259,8 @@ class DQNAgent:
         self.model.load_weights(name)
 
     def print_stats(self, ep, ep_tot, trial_len, time, steps):
-        mean_q = round(self.cs_qval / trial_len, 4)
-        mean_bound_q = [round(x / trial_len, 4) for x in self.bound_qval]
+        mean_q = float(round(self.cs_qval / trial_len, 4))
+        mean_bound_q = [float(round(x / trial_len, 4)) for x in self.bound_qval]
         mean_action = self.cs_action / trial_len
         mean_bound_reward = [round(x, 4) for x in self.bound_reward]
 
