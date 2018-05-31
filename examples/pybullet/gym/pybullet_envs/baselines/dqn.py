@@ -33,9 +33,19 @@ experiments = [
      },
     {'learning_rate' : 0.05,
      'memory_size': 200000,
+     'gamma': 0.99,
+     'replay_mem_update_freq': 10000,
+     'replay_mem_init_size': 50000,
+     'loss_function': 'huber',
+     'optimizer': 'RMSprob'
+     },
+    {'learning_rate' : 0.05,
+     'memory_size': 200000,
      'gamma': 0.85,
      'replay_mem_update_freq': 10000,
      'replay_mem_init_size': 50000,
+     'loss_function': 'mse',
+     'optimizer': 'adam'
      },
     {'learning_rate' : 0.0025,
      'memory_size': 200000,
@@ -48,12 +58,16 @@ experiments = [
      'gamma': 0.99,
      'replay_mem_update_freq': 50000,
      'replay_mem_init_size': 50000,
+     'loss_function': 'mse',
+     'optimizer': 'adam'
      },
     {'learning_rate' : 0.0025,
      'memory_size': 200000,
      'gamma': 0.99,
      'replay_mem_update_freq': 10000,
      'replay_mem_init_size': 50000,
+     'loss_function': 'mse',
+     'optimizer': 'adam'
      }
 ]
 
@@ -74,6 +88,8 @@ class DQNAgent:
 
         self.replay_mem_init_size = exp['replay_mem_init_size']
         self.replay_mem_update_freq = exp['replay_mem_update_freq']
+
+        self.loss_optimizer = exp['loss_function']
 
         self.model = self.create_model()
         self.target_model = self.create_model()
@@ -100,7 +116,7 @@ class DQNAgent:
             'epsilon': [],
         }
 
-    def create_model(self, loss='mse'):
+    def create_model(self):
         def huber_loss(y_true, y_pred, clip_delta=1.0):
             error = y_true - y_pred
             cond = tf.keras.backend.abs(error) < clip_delta
@@ -117,9 +133,9 @@ class DQNAgent:
         model.add(Dense(128, activation="relu"))
         model.add(Dense(self.env.action_space.n))
         print(model.summary())
-        if loss == 'mse':
+        if self.loss_optimizer == 'mse':
             model.compile(loss="mean_squared_error", optimizer=Adam(lr=self.learning_rate))
-        elif loss == 'huber':
+        elif self.loss_optimizer == 'huber':
             model.compile(loss=huber_loss, optimizer=RMSprop(lr=self.learning_rate))
         else:
             raise NotImplementedError
