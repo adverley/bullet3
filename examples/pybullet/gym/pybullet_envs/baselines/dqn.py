@@ -19,59 +19,12 @@ from keras.optimizers import Adam, RMSprop
 
 from tqdm import tqdm
 
+from dqn_config import DQNConfig
 from pybullet_envs.bullet.baxterGymEnv import BaxterGymEnv
 from collections import deque
 
-experiments = [
-    {'learning_rate' : 0.05,
-     'memory_size': 200000,
-     'gamma': 0.99,
-     'replay_mem_update_freq': 10000,
-     'replay_mem_init_size': 50000,
-     'loss_function': 'mse',
-     'optimizer': 'adam'
-     },
-    {'learning_rate' : 0.05,
-     'memory_size': 200000,
-     'gamma': 0.99,
-     'replay_mem_update_freq': 10000,
-     'replay_mem_init_size': 50000,
-     'loss_function': 'huber',
-     'optimizer': 'RMSprob'
-     },
-    {'learning_rate' : 0.05,
-     'memory_size': 200000,
-     'gamma': 0.85,
-     'replay_mem_update_freq': 10000,
-     'replay_mem_init_size': 50000,
-     'loss_function': 'mse',
-     'optimizer': 'adam'
-     },
-    {'learning_rate' : 0.0025,
-     'memory_size': 200000,
-     'gamma': 0.99,
-     'replay_mem_update_freq': 20000,
-     'replay_mem_init_size': 50000,
-     'loss_function': 'mse',
-     'optimizer': 'adam'
-     },
-    {'learning_rate' : 0.0025,
-     'memory_size': 200000,
-     'gamma': 0.99,
-     'replay_mem_update_freq': 50000,
-     'replay_mem_init_size': 50000,
-     'loss_function': 'mse',
-     'optimizer': 'adam'
-     },
-    {'learning_rate' : 0.0025,
-     'memory_size': 200000,
-     'gamma': 0.99,
-     'replay_mem_update_freq': 10000,
-     'replay_mem_init_size': 50000,
-     'loss_function': 'mse',
-     'optimizer': 'adam'
-     }
-]
+config = DQNConfig()
+experiments = config.experiments
 
 class DQNAgent:
     def __init__(self, env, exp_num):
@@ -84,7 +37,8 @@ class DQNAgent:
         self.gamma = exp['gamma'] #0.85
         self.epsilon = 1.0
         self.epsilon_min = 0.1
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = exp['epsilon_decay'] #0.995
+        self.epsilon_guided = exp['epsilon_guided']
         self.learning_rate = exp['learning_rate'] #0.05
         self.tau = .125
 
@@ -149,8 +103,11 @@ class DQNAgent:
 
     def act(self, state):
         if np.random.random() < self.epsilon:
-            action = self.env.action_space.sample()
-            #action = self.env.getGuidedAction()
+            if self.epsilon_guided:
+                action = self.env.getGuidedAction()
+            else:
+                action = self.env.action_space.sample()
+
         else:
             action = np.argmax(self.model.predict(state)[0])
 
@@ -243,9 +200,13 @@ class DQNAgent:
             target_weights[i] = weights[i] * self.tau + target_weights[i] * (1 - self.tau)
         self.target_model.set_weights(target_weights)
 
-    def save_data(self, fn, ep):
+    def save_data(self, fn):
+        def default(o):
+            if isinstance(o, np.int64): return int(o)
+            raise TypeError
+
         with open(fn, 'w') as fp:
-            json.dump(self.metrics, fp)
+            json.dump(self.metrics, fp, default=default)
 
     def load_data(self, fn):
         with open(fn, 'r') as fp:
@@ -299,6 +260,8 @@ def main(args):
     EXP_NUM = args.exp_num
     WINDOW_LENGTH = 1
 
+    EXP = experiments[EXP_NUM]
+
     #env = gym.make("MountainCar-v0")
     env = BaxterGymEnv(
             renders=args.render,
@@ -307,7 +270,7 @@ def main(args):
             maxSteps=400,
             dv=0.1,
             _algorithm='DQN',
-            _reward_function=REWARD,
+            _reward_function=EXP['reward'],
             _action_type='single'
             )
 
@@ -360,12 +323,12 @@ def main(args):
                 if done:
                     break
 
-            if ep > 500:
+            if ep > EXP['epsilon_start']:
                 dqn_agent.update_exploration()
 
             if ep % 2000 == 0:
                 print("Saving data...")
-                dqn_agent.save_data(os.path.join(filepath_experiment, 'baxter_dqn_{}_data.json'.format(EXP_NAME)), ep)
+                dqn_agent.save_data(os.path.join(filepath_experiment, 'baxter_dqn_{}_data.json'.format(EXP_NAME)))
 
             dqn_agent.print_stats(ep, EPISODES, trial_len, time.time()-start_time, step)
             if step < trial_len-1:
