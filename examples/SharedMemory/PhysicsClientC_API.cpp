@@ -1829,6 +1829,11 @@ B3_SHARED_API int b3GetStatusBodyIndex(b3SharedMemoryStatusHandle statusHandle)
 					bodyId  = status->m_loadSoftBodyResultArguments.m_objectUniqueId;
 					break;
 				}
+                case CMD_LOAD_SOFT_WIRE_COMPLETED:
+                {
+                   bodyId = status->m_loadSoftWireResultArguments.m_objectUniqueId;
+                   break;
+                }
 				default:
 				{
 					b3Assert(0);
