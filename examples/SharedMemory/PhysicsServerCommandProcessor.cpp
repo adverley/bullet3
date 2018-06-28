@@ -6069,6 +6069,7 @@ bool PhysicsServerCommandProcessor::processLoadSoftWireCommand(const struct Shar
 	int bodyUniqueId = m_data->m_bodyHandles.allocHandle();
 	InternalBodyHandle* bodyHandle = m_data->m_bodyHandles.getHandle(bodyUniqueId);
 	//bodyHandle->m_softBody = psb;
+    bodyHandle->m_rigidBody = boxes[total_boxes - total_boxes/2];
 	serverStatusOut.m_loadSoftWireResultArguments.m_objectUniqueId = bodyUniqueId;
 	serverStatusOut.m_type = CMD_LOAD_SOFT_WIRE_COMPLETED;
 
