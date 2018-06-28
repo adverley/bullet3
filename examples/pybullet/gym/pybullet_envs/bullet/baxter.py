@@ -1,5 +1,6 @@
 import os
 import inspect
+import time
 currentdir = os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(os.path.dirname(currentdir))
@@ -27,8 +28,9 @@ class Baxter:
         self.torusScale = 1.
         self.torusRad = 0.23 * self.torusScale
         self.margin = 0.06
-        self.llSpace = [0.32, -0.83, 0.062] #x,y,z
-        self.ulSpace = [1.23, 0.20, 1.94] #x,y,z
+        self.maxIter = 40
+        self.llSpace = [0.3, -0.8, 0.06] #x,y,z
+        self.ulSpace = [1.1, 0.10, 1.80] #x,y,z
         self.setup()
 
     def setup(self):
@@ -141,13 +143,18 @@ class Baxter:
 
     def randomizeGripperPos(self):
         # Randomize the right arm start position
-
         gripperPos = np.array([np.random.uniform(self.llSpace[i], self.ulSpace[i]) for i in range(len(self.llSpace))])
-        jointPoses = self.calculateInverseKinematics(gripperPos)
 
-        for i in range(len(self.motorIndices)):
-            p.resetJointState(self.baxterUid, self.motorIndices[i], jointPoses[i])
+        iter = 0
+        # Loop until arm is in correct position alternatively use for loop with range(50)
+        while np.any(np.abs(gripperPos - np.array(self.getEndEffectorPos())) > np.array([0.01, 0.01, 0.01])) and (iter < self.maxIter):
+            jointPoses = np.array(self.calculateInverseKinematics(gripperPos))
+            iter += 1
 
+            for i in range(len(self.motorIndices)):
+                p.resetJointState(self.baxterUid, self.motorIndices[i], jointPoses[i])
+
+        #print("Gripper expected: ", gripperPos, "\t Actual gripper pos:", self.getEndEffectorPos())
         #TODO check collision with torus, if true, recalculate gripperPos
 
     def calculateInverseKinematics(self, pos, orn=None, ll=None, ul=None, jr=None, rp=None):
