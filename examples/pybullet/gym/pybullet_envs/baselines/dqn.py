@@ -57,6 +57,8 @@ class DQNAgent:
         self.bound_reward = [sys.maxsize, -sys.maxsize - 1]
         self.cs_qval = 0
         self.bound_qval = [0, 0]
+        self.mae = -1
+        self.loss = -1
 
         self.metrics = {
             'episode': [],
@@ -70,6 +72,8 @@ class DQNAgent:
             'max_action': [],
             'min_action': [],
             'epsilon': [],
+            'mae': [],
+            'loss': []
         }
 
     def create_model(self):
@@ -90,9 +94,9 @@ class DQNAgent:
         model.add(Dense(self.env.action_space.n))
         print(model.summary())
         if self.loss_optimizer == 'mse':
-            model.compile(loss="mean_squared_error", optimizer=Adam(lr=self.learning_rate))
+            model.compile(loss="mean_squared_error", optimizer=Adam(lr=self.learning_rate), metrics=['mae'])
         elif self.loss_optimizer == 'huber':
-            model.compile(loss=huber_loss, optimizer=RMSprop(lr=self.learning_rate))
+            model.compile(loss=huber_loss, optimizer=RMSprop(lr=self.learning_rate), metrics=['mae'])
         else:
             raise NotImplementedError
         return model
@@ -187,7 +191,10 @@ class DQNAgent:
             _states.append(state)
             _targets.append(target)
 
-        self.model.train_on_batch(np.array(_states), np.array(_targets))
+        # Take only the last value of each episode
+        losses = self.model.train_on_batch(np.array(_states), np.array(_targets))
+        self.loss = losses[0]
+        self.mae = losses[1]
 
         # Stats
         self.cs_qval += mean_qval / float(batch_size)
@@ -233,7 +240,9 @@ class DQNAgent:
               "Episode reward:", self.cs_reward, mean_bound_reward,
               "Mean action:", mean_action, self.bound_action,
               "Mean Q:", mean_q, mean_bound_q,
-              "Curr epsilon:", self.epsilon
+              "Curr epsilon:", self.epsilon,
+              "Mae:", self.mae,
+              "Loss:", self.loss
              ) #trail_len
 
         self.metrics['episode'].append(ep)
@@ -247,6 +256,8 @@ class DQNAgent:
         self.metrics['min_action'].append(self.bound_action[0])
         self.metrics['max_action'].append(self.bound_action[1])
         self.metrics['epsilon'].append(self.epsilon)
+        self.metrics['mae'].append(self.mae)
+        self.metrics['loss'].append(self.loss)
 
         # Reset Statistics
         self.cs_action = 0
@@ -255,6 +266,8 @@ class DQNAgent:
         self.bound_reward = [sys.maxsize, -sys.maxsize - 1]
         self.cs_qval = 0
         self.bound_qval = [0, 0]
+        self.mae = -1
+        self.loss = -1
 
 
 def main(args):
