@@ -13,7 +13,7 @@ import sys
 import time
 import tensorflow as tf
 
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout
 from keras.optimizers import Adam, RMSprop
 
@@ -117,7 +117,8 @@ class DQNAgent:
         return action
 
     def test(self, state):
-        return np.argmax(self.model.predict(state)[0])
+        q_values = self.model.predict(state)[0]
+        return np.argmax(q_values)
 
     def remember(self, state, action, reward, new_state, done):
         self.bound_reward = [min(reward, self.bound_reward[0]),
@@ -214,10 +215,12 @@ class DQNAgent:
         return data
 
     def save_model(self, fn):
-        self.model.save(fn)
+        #self.model.save(fn)
+        self.model.save_weights(fn, overwrite=True)
 
     def load_model(self, name):
         self.model.load_weights(name)
+        self.target_model.set_weights(self.model.get_weights())
 
     def print_stats(self, ep, ep_tot, trial_len, time, steps):
         mean_q = float(round(self.cs_qval / trial_len, 4))
@@ -266,7 +269,7 @@ def main(args):
     env = BaxterGymEnv(
             renders=args.render,
             useCamera=False,
-            useRandomPos=False,
+            useRandomPos=EXP['randomPos'],
             maxSteps=400,
             dv=0.1,
             _algorithm='DQN',
@@ -342,7 +345,6 @@ def main(args):
         dqn_agent.save_model(weights_filename)
 
     elif args.mode == 'test':
-        # Write test procedure here
         # load weights
         fn = os.path.join(filepath_experiment, "baxter_dqn_{}.h5f".format(EXP_NAME))
         dqn_agent.load_model(fn)
@@ -360,6 +362,7 @@ def main(args):
 
             for step in range(trial_len):
                 action = dqn_agent.test(cur_state)
+                print("Next action:", np.argmax(dqn_agent.target_model.predict(cur_state)[0]))
                 new_state, reward, done, _ = env.step(action)
 
                 # Stats

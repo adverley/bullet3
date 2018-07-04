@@ -57,8 +57,8 @@ experiments = [
      'optimizer': 'adam',
      'reward': 'torus_distance',
      'randomPos': True,
-     'epsilon_start': 500,
-     'epsilon_decay': 0.995,
+     'epsilon_start': 1000,
+     'epsilon_decay': 0.9977,
      'epsilon_guided': False
      },
     {'name': 'exp2',
