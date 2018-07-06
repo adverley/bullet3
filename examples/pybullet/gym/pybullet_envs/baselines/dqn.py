@@ -193,8 +193,8 @@ class DQNAgent:
 
         # Take only the last value of each episode
         losses = self.model.train_on_batch(np.array(_states), np.array(_targets))
-        self.loss = losses[0]
-        self.mae = losses[1]
+        self.loss = float(losses[0])
+        self.mae = float(losses[1])
 
         # Stats
         self.cs_qval += mean_qval / float(batch_size)
