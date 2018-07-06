@@ -57,8 +57,8 @@ class DQNAgent:
         self.bound_reward = [sys.maxsize, -sys.maxsize - 1]
         self.cs_qval = 0
         self.bound_qval = [0, 0]
-        self.mae = -1
-        self.loss = -1
+        self.mae = -1.
+        self.loss = -1.
 
         self.metrics = {
             'episode': [],
@@ -354,8 +354,10 @@ def main(args):
                 weights_filename = os.path.join(filepath_experiment, "baxter_dqn_checkpoint_{}.h5f".format(EXP_NAME))
                 dqn_agent.save_model(weights_filename)
 
+        print("Saving weights and data...")
         weights_filename = os.path.join(filepath_experiment, "baxter_dqn_{}.h5f".format(EXP_NAME))
         dqn_agent.save_model(weights_filename)
+        dqn_agent.save_data(os.path.join(filepath_experiment, 'baxter_dqn_{}_data.json'.format(EXP_NAME)))
 
     elif args.mode == 'test':
         # load weights
