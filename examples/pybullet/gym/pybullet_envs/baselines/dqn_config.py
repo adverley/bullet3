@@ -45,7 +45,8 @@ experiments = [
      'randomPos': True,
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
-     'epsilon_guided': False
+     'epsilon_guided': False,
+     'model': "3layer_LH"
      },
     {'name': 'exp1',
      'learning_rate' : 0.05,
@@ -59,7 +60,8 @@ experiments = [
      'randomPos': True,
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
-     'epsilon_guided': False
+     'epsilon_guided': False,
+     'model': "3layer_LH"
      },
     {'name': 'exp2',
      'learning_rate' : 0.05,
@@ -73,7 +75,8 @@ experiments = [
      'randomPos': True,
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
-     'epsilon_guided': False
+     'epsilon_guided': False,
+     'model': "3layer_LH"
      },
     {'name': 'exp3',
      'learning_rate': 0.05,
@@ -87,7 +90,8 @@ experiments = [
      'randomPos': True,
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
-     'epsilon_guided': False
+     'epsilon_guided': False,
+     'model': "3layer_LH"
      },
     {'name': 'exp4',
      'learning_rate' : 0.05,
@@ -101,7 +105,8 @@ experiments = [
      'randomPos': True,
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
-     'epsilon_guided': False
+     'epsilon_guided': False,
+     'model': "3layer_LH"
      },
     {'name': 'exp5',
      'learning_rate' : 0.0025,
@@ -115,7 +120,8 @@ experiments = [
      'randomPos': True,
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
-     'epsilon_guided': False
+     'epsilon_guided': False,
+     'model': "3layer_LH"
      },
     {'name': 'exp6',
      'learning_rate' : 0.0025,
@@ -129,7 +135,8 @@ experiments = [
      'randomPos': True,
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
-     'epsilon_guided': False
+     'epsilon_guided': False,
+     'model': "3layer_LH"
      },
     {'name': 'exp7',
      'learning_rate' : 0.0025,
@@ -143,7 +150,8 @@ experiments = [
      'randomPos': True,
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
-     'epsilon_guided': False
+     'epsilon_guided': False,
+     'model': "3layer_LH"
      },
     {'name': 'exp8',
      'learning_rate' : 0.05,
@@ -157,7 +165,8 @@ experiments = [
      'randomPos': True,
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
-     'epsilon_guided': False
+     'epsilon_guided': False,
+     'model': "3layer_LH"
      },
     {'name': 'exp9',
      'learning_rate' : 0.05,
@@ -171,6 +180,67 @@ experiments = [
      'randomPos': True,
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
-     'epsilon_guided': False
+     'epsilon_guided': False,
+     'model': "3layer_LH"
+     },
+    {'name': 'exp10',
+     'learning_rate' : 0.05,
+     'memory_size': 200000,
+     'gamma': 0.85,
+     'replay_mem_update_freq': 50000,
+     'replay_mem_init_size': 50000,
+     'loss_function': 'mse',
+     'optimizer': 'adam',
+     'reward': 'line_distance',
+     'randomPos': True,
+     'epsilon_start': 1000,
+     'epsilon_decay': 0.9977,
+     'epsilon_guided': False,
+     'model': "3layer_LH"
+     },
+    {'name': 'exp11',
+     'learning_rate' : 0.0025,
+     'memory_size': 200000,
+     'gamma': 0.85,
+     'replay_mem_update_freq': 50000,
+     'replay_mem_init_size': 50000,
+     'loss_function': 'mse',
+     'optimizer': 'adam',
+     'reward': 'line_distance',
+     'randomPos': True,
+     'epsilon_start': 1000,
+     'epsilon_decay': 0.9977,
+     'epsilon_guided': False,
+     'model': "3layer_LH"
+     },
+    {'name': 'exp12',
+     'learning_rate' : 0.05,
+     'memory_size': 200000,
+     'gamma': 0.85,
+     'replay_mem_update_freq': 50000,
+     'replay_mem_init_size': 50000,
+     'loss_function': 'mse',
+     'optimizer': 'adam',
+     'reward': 'torus_distance',
+     'randomPos': True,
+     'epsilon_start': 1000,
+     'epsilon_decay': 0.9977,
+     'epsilon_guided': False,
+     'model': "3layer_LH"
+     },
+    {'name': 'exp13',
+     'learning_rate' : 0.0025,
+     'memory_size': 200000,
+     'gamma': 0.85,
+     'replay_mem_update_freq': 50000,
+     'replay_mem_init_size': 50000,
+     'loss_function': 'mse',
+     'optimizer': 'adam',
+     'reward': 'torus_distance',
+     'randomPos': True,
+     'epsilon_start': 1000,
+     'epsilon_decay': 0.9977,
+     'epsilon_guided': False,
+     'model': "3layer_LH"
      }
 ]
