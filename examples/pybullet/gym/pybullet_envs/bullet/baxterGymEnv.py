@@ -112,6 +112,9 @@ class BaxterGymEnv(gym.Env):
         elif self._action_type == 'single':
             self.action_space = spaces.Discrete(21)
 
+        elif self._action_type == 'end_effector':
+            self.action_space = spaces.Discrete(6)
+
         elif self._action_type == 'continuous':
             action_dim = 7
             self._action_bound = 1
@@ -299,6 +302,24 @@ class BaxterGymEnv(gym.Env):
 
             self.action[column] += [-self._dv, 0, self._dv][row]
 
+        elif self._action_type == 'end_effector':
+            self.stepsize = .05
+            # 6 actions: left (0), right (1), up (2), down (3), forward (4), backward (5)
+            targetPos = np.array(self._baxter.getEndEffectorPos())
+            if action < 2:
+                # Move gripper left or right use IK (y not sure)
+                targetPos[1] += self.stepsize if action == 0 else -self.stepsize #Determine step size
+            elif action < 4:
+                # Move gripper up or down use IK (z not sure)
+                targetPos[2] += self.stepsize if action == 2 else -self.stepsize #Determine step size
+            else:
+                # Move gripper forward or backward use IK (x direction)
+                targetPos[0] += self.stepsize if action == 4 else -self.stepsize #Determine step size
+
+            self.logger.debug("Action: {}, Old end_effector_pos: {}".format(str(action), str(targetPos)))
+            self.action = self._baxter.calculateInverseKinematics(targetPos)
+
+
         elif self._action_type == 'discrete':
             if self._algorithm == 'DDPG':
                 # action = [int(round(np.nan_to_num(x)))
@@ -341,7 +362,7 @@ class BaxterGymEnv(gym.Env):
     def step2(self, action):
         self.old_pos = self._baxter.getEndEffectorPos()
         for i in range(self._actionRepeat):
-            if self._action_type == 'discrete' or self._action_type == 'single':
+            if self._action_type == 'discrete' or self._action_type == 'single' or self._action_type == 'end_effector':
                 self._baxter.applyAction(action)
             else:
                 self._baxter.applyVelocity(action)
