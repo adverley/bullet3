@@ -27,7 +27,7 @@ config = DQNConfig()
 experiments = config.experiments
 
 class DQNAgent:
-    def __init__(self, env, exp_num):
+    def __init__(self, env, exp_num, use_ddqn=False):
         exp = experiments[exp_num]
         print(exp)
 
@@ -41,6 +41,7 @@ class DQNAgent:
         self.epsilon_guided = exp['epsilon_guided']
         self.learning_rate = exp['learning_rate'] #0.05
         self.tau = .125
+        self.use_ddqn = use_ddqn
 
         self.replay_mem_init_size = exp['replay_mem_init_size']
         self.replay_mem_update_freq = exp['replay_mem_update_freq']
@@ -176,20 +177,43 @@ class DQNAgent:
         targets = self.target_model.predict_on_batch(np.array(samples['state']))
         q_vals = self.target_model.predict_on_batch(np.array(samples['new_state']))
 
-        for target, q_val, state, new_state, action, reward, done in zip(targets, q_vals, samples['state'], samples['new_state'],
-                                                                            samples['action'], samples['reward'], samples['done']):
-            mean_qval += np.mean(target)
-            bound_qval[0] += min(target)
-            bound_qval[1] += max(target)
+        if self.use_ddqn:
+            q_vals_online_model = self.model.predict_on_batch(np.array(samples['new_state']))
+            for_set = zip(targets, q_vals, q_vals_online_model, samples['state'],
+                          samples['new_state'], samples['action'], samples['reward'], samples['done'])
 
-            if done:
-                target[action] = reward
-            else:
-                Q_future = max(q_val)
-                target[action] = reward + Q_future * self.gamma
+            for target, q_val, q_val_online, state, new_state, action, reward, done in for_set:
+                mean_qval += np.mean(target)
+                bound_qval[0] += min(target)
+                bound_qval[1] += max(target)
 
-            _states.append(state)
-            _targets.append(target)
+                if done:
+                    target[action] = reward
+                else:
+                    # online network determines action but value is determined by target network
+                    which_action = np.argmax(q_val_online)  # online network obv q_vals_online_model
+                    Q_future = q_val[which_action]
+                    target[action] = reward + Q_future * self.gamma
+
+                _states.append(state)
+                _targets.append(target)
+        else:
+            for_set = zip(targets, q_vals, samples['state'], samples['new_state'],
+                          samples['action'], samples['reward'], samples['done'])
+
+            for target, q_val, state, new_state, action, reward, done in for_set:
+                mean_qval += np.mean(target)
+                bound_qval[0] += min(target)
+                bound_qval[1] += max(target)
+
+                if done:
+                    target[action] = reward
+                else:
+                    Q_future = max(q_val)
+                    target[action] = reward + Q_future * self.gamma
+
+                _states.append(state)
+                _targets.append(target)
 
         # Take only the last value of each episode
         losses = self.model.train_on_batch(np.array(_states), np.array(_targets))
@@ -287,7 +311,7 @@ def main(args):
             dv=0.1,
             _algorithm='DQN',
             _reward_function=EXP['reward'],
-            _action_type='single'
+            _action_type=args.action_type
             )
 
     EPISODES  = 10000 #env.nb_episodes
@@ -418,5 +442,6 @@ if __name__ == "__main__":
     parser.add_argument('--reward', type=str, choices=reward_functions, default=reward_functions[0])
     parser.add_argument('--exp_num', type=int, default=0)
     parser.add_argument('--pre_name', type=str, default=None)
+    parser.add_argument('--action_type', choices=['single', 'end_effector'], default='single')
     args = parser.parse_args()
     main(args)
