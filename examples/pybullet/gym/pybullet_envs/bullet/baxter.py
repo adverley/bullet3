@@ -145,10 +145,12 @@ class Baxter:
         # Randomize the right arm start position
         gripperPos = np.array([np.random.uniform(self.llSpace[i], self.ulSpace[i]) for i in range(len(self.llSpace))])
 
+        joints = [1, 2, 3, 4, 5, 6, 7]
         iter = 0
         # Loop until arm is in correct position alternatively use for loop with range(50)
         while np.any(np.abs(gripperPos - np.array(self.getEndEffectorPos())) > np.array([0.01, 0.01, 0.01])) and (iter < self.maxIter):
-            jointPoses = np.array(self.calculateInverseKinematics(gripperPos))
+            jointPoses = np.array(p.calculateInverseKinematics(self.baxterUid, self.baxterEndEffectorIndex, gripperPos))
+            jointPoses = [jointPoses[i] for i in joints]
             iter += 1
 
             for i in range(len(self.motorIndices)):
@@ -157,43 +159,37 @@ class Baxter:
         #print("Gripper expected: ", gripperPos, "\t Actual gripper pos:", self.getEndEffectorPos())
         #TODO check collision with torus, if true, recalculate gripperPos
 
-    def calculateInverseKinematics(self, pos, orn=None, ll=None, ul=None, jr=None, rp=None):
-        # Use inverse kinematics on the right arm of the baxter robot
+    def calculateInverseKinematics(self, targetPosition, ll=None, ul=None, jr=None, rp=None,
+                                useNullSpace=False, maxIter=40, threshold=1e-2):
+        """Use inverse kinematics on the right arm of the baxter robot
+        """
+        closeEnough = False
+        iter = 0
+        dist2 = 1e30
 
-        if (ll is None) or (ul is None) or (jr is None) or (rp is None):
-            if orn is None:
-                jointPoses = p.calculateInverseKinematics(
-                    self.baxterUid, self.baxterEndEffectorIndex, pos)
-            else:
-                jointPoses = p.calculateInverseKinematics(
-                    self.baxterUid, self.baxterEndEffectorIndex, pos, orn)
-        else:
-            if orn is None:
-                jointPoses = p.calculateInverseKinematics(
-                                self.baxterUid,
-                                self.baxterEndEffectorIndex,
-                                pos,
-                                lowerLimits=ll,
-                                upperLimits=ul,
-                                jointRanges=jr,
-                                restPoses=rp
-                                )
-            else:
-                jointPoses = p.calculateInverseKinematics(
-                                self.baxterUid,
-                                self.baxterEndEffectorIndex,
-                                pos,
-                                orn,
-                                lowerLimits=ll,
-                                upperLimits=ul,
-                                jointRanges=jr,
-                                restPoses=rp
-                                )
-
-        # process action for applyAction
         joints = [1, 2, 3, 4, 5, 6, 7]
-        action = [jointPoses[i] for i in joints]
-        return action
+
+        while (not closeEnough and iter < maxIter):
+            if useNullSpace:
+                jointPoses = np.array(p.calculateInverseKinematics(self.baxterUid, self.baxterEndEffectorIndex, targetPosition,
+                                                                   lowerLimits=ll, upperLimits=ul, jointRanges=jr, restPoses=rp))
+            else:
+                jointPoses = np.array(p.calculateInverseKinematics(self.baxterUid, self.baxterEndEffectorIndex, targetPosition))
+
+            jointPoses = [jointPoses[i] for i in joints]
+
+            for i in range(len(joints)):
+                p.resetJointState(self.baxterUid, self.motorIndices[i], jointPoses[i])
+
+            ls = p.getLinkState(self.baxterUid, self.baxterEndEffectorIndex)
+            newPos = ls[4]
+            diff = [targetPosition[0] - newPos[0], targetPosition[1] - newPos[1], targetPosition[2] - newPos[2]]
+            dist2 = np.sqrt((diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2]))
+            # print("dist2=", dist2)
+            closeEnough = (dist2 < threshold)
+            iter = iter + 1
+        #print("RandomPos:", targetPosition, "Actual Pos:", np.array(p.getLinkState(self.baxterUid, self.baxterEndEffectorIndex)[0]), "iter:", iter)
+        return jointPoses
 
     def getEndEffectorPos(self):
         return p.getLinkState(self.baxterUid, self.baxterEndEffectorIndex)[0]
