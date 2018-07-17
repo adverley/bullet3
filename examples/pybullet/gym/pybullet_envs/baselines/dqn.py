@@ -383,6 +383,45 @@ def main(args):
         dqn_agent.save_model(weights_filename)
         dqn_agent.save_data(os.path.join(filepath_experiment, 'baxter_dqn_{}_data.json'.format(EXP_NAME)))
 
+        #Testing
+        EPISODES = 5
+        trail_len = env._maxSteps
+
+        for ep in range(EPISODES):
+            cur_state = env.reset().reshape(1, state_size)
+            start_time = time.time()
+            ep_reward = 0
+            bound_reward = [sys.maxsize, -sys.maxsize - 1]
+            ep_action = 0
+            bound_action = [sys.maxsize, -sys.maxsize - 1]
+
+            for step in range(trial_len):
+                action = dqn_agent.test(cur_state)
+                new_state, reward, done, _ = env.step(action)
+
+                # Stats
+                ep_reward += reward
+                ep_action += action
+                bound_reward = [min(bound_reward[0], reward), max(bound_reward[1], reward)]
+                bound_action = [min(bound_action[0], action), max(bound_action[1], action)]
+
+                new_state = new_state.reshape(1, state_size)
+                cur_state = new_state
+
+                if done:
+                    break
+
+            # dqn_agent.print_stats(ep, EPISODES, trial_len, time.time() - start_time, step)
+            print("\n{}/{}".format(ep, EPISODES),
+                  "Execution time: {} steps/s".format(round(trial_len / (time.time() - start_time), 2)),
+                  "Episode reward:", ep_reward, [round(x, 4) for x in bound_reward],
+                  "Mean action:", ep_action / trial_len, bound_action,
+                  )
+
+            if step < trial_len - 1:
+                print("Completed in {} steps".format(step))
+
+
     elif args.mode == 'test':
         # load weights
         fn = os.path.join(filepath_experiment, "baxter_dqn_{}.h5f".format(EXP_NAME))
