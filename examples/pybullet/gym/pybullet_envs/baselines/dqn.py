@@ -255,9 +255,9 @@ class DQNAgent:
         self.target_model.set_weights(self.model.get_weights())
 
     def print_stats(self, ep, ep_tot, trial_len, time, steps):
-        mean_q = float(round(self.cs_qval / trial_len, 4))
-        mean_bound_q = [float(round(x / trial_len, 4)) for x in self.bound_qval]
-        mean_action = self.cs_action / trial_len
+        mean_q = float(round(self.cs_qval / steps, 4))
+        mean_bound_q = [float(round(x / steps, 4)) for x in self.bound_qval]
+        mean_action = self.cs_action / steps
         mean_bound_reward = [round(x, 4) for x in self.bound_reward]
 
         print("\n{}/{}".format(ep, ep_tot),
@@ -283,7 +283,7 @@ class DQNAgent:
         self.metrics['epsilon'].append(self.epsilon)
         self.metrics['mae'].append(self.mae)
         self.metrics['loss'].append(self.loss)
-        self.metrics['completion_step'].append((steps, self.env._notCompleted))
+        self.metrics['completion_step'].append((steps, self.env._notCompleted, trial_len))
 
         # Reset Statistics
         self.cs_action = 0
@@ -309,11 +309,12 @@ def main(args):
             renders=args.render,
             useCamera=False,
             useRandomPos=EXP['randomPos'],
+            useTorusCollision=EXP['torusCollision'],
             maxSteps=400,
             dv=0.1,
             _algorithm='DQN',
             _reward_function=EXP['reward'],
-            _action_type=args.action_type
+            _action_type=EXP['action_type']
             )
 
     EPISODES  = 10000 #env.nb_episodes
@@ -415,9 +416,9 @@ def main(args):
 
             # dqn_agent.print_stats(ep, EPISODES, trial_len, time.time() - start_time, step)
             print("\n{}/{}".format(ep, EPISODES),
-                  "Execution time: {} steps/s".format(round(trial_len / (time.time() - start_time), 2)),
+                  "Execution time: {} steps/s".format(round(step / (time.time() - start_time), 2)),
                   "Episode reward:", ep_reward, [round(x, 4) for x in bound_reward],
-                  "Mean action:", ep_action / trial_len, bound_action,
+                  "Mean action:", ep_action / step, bound_action,
                   )
 
             if step < trial_len - 1:
@@ -459,9 +460,9 @@ def main(args):
 
             #dqn_agent.print_stats(ep, EPISODES, trial_len, time.time() - start_time, step)
             print("\n{}/{}".format(ep, EPISODES),
-                  "Execution time: {} steps/s".format(round(trial_len / (time.time() - start_time), 2)),
+                  "Execution time: {} steps/s".format(round(step / (time.time() - start_time), 2)),
                   "Episode reward:", ep_reward, [round(x, 4) for x in bound_reward],
-                  "Mean action:", ep_action / trial_len, bound_action,
+                  "Mean action:", ep_action / step, bound_action,
                   )
 
             if step < trial_len - 1:
@@ -483,6 +484,5 @@ if __name__ == "__main__":
     parser.add_argument('--reward', type=str, choices=reward_functions, default=reward_functions[0])
     parser.add_argument('--exp_num', type=int, default=0)
     parser.add_argument('--pre_name', type=str, default=None)
-    parser.add_argument('--action_type', choices=['single', 'end_effector'], default='single')
     args = parser.parse_args()
     main(args)
