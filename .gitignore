@@ -24,3 +24,6 @@ build_cmake/
 
 cmake-build-debug/
 .idea/*
+
+# Ignore experiments
+/examples/pybullet/gym/pybullet_envs/baselines/experiments/
