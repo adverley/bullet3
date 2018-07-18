@@ -46,7 +46,9 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp1',
      'learning_rate' : 0.05,
@@ -61,7 +63,9 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp2',
      'learning_rate' : 0.05,
@@ -76,7 +80,9 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp3',
      'learning_rate': 0.05,
@@ -91,7 +97,9 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp4',
      'learning_rate' : 0.05,
@@ -106,7 +114,9 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp5',
      'learning_rate' : 0.0025,
@@ -121,7 +131,9 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp6',
      'learning_rate' : 0.0025,
@@ -136,7 +148,9 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp7',
      'learning_rate' : 0.0025,
@@ -151,7 +165,9 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp8',
      'learning_rate' : 0.05,
@@ -166,7 +182,9 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp9',
      'learning_rate' : 0.05,
@@ -181,7 +199,9 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp10',
      'learning_rate' : 0.05,
@@ -196,7 +216,9 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp11',
      'learning_rate' : 0.0025,
@@ -211,7 +233,9 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp12',
      'learning_rate' : 0.05,
@@ -226,7 +250,9 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp13',
      'learning_rate' : 0.0025,
@@ -241,7 +267,9 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp14',
      'learning_rate' : 0.05,
@@ -256,7 +284,9 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp15',
      'learning_rate' : 0.05,
@@ -271,7 +301,9 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp16',
      'learning_rate' : 0.0025,
@@ -286,7 +318,9 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
      },
     {'name': 'exp17',
      'learning_rate' : 0.0025,
@@ -301,6 +335,76 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
-     'model': "3layer_LH"
+     'model': "3layer_LH",
+     'torusCollision': False,
+     'action_type': 'single'
+     },
+    {'name': 'exp18',
+     'learning_rate' : 0.05,
+     'memory_size': 200000,
+     'gamma': 0.99,
+     'replay_mem_update_freq': 10000,
+     'replay_mem_init_size': 50000,
+     'loss_function': 'mse',
+     'optimizer': 'adam',
+     'reward': 'advanced_sparse_reward',
+     'randomPos': True,
+     'epsilon_start': 500,
+     'epsilon_decay': 0.9977,
+     'epsilon_guided': False,
+     'model': "3layer_LH",
+     'torusCollision': True,
+     'action_type': 'end_effector'
+     },
+    {'name': 'exp19',
+     'learning_rate' : 0.05,
+     'memory_size': 200000,
+     'gamma': 0.999,
+     'replay_mem_update_freq': 10000,
+     'replay_mem_init_size': 50000,
+     'loss_function': 'mse',
+     'optimizer': 'adam',
+     'reward': 'advanced_sparse_reward',
+     'randomPos': True,
+     'epsilon_start': 500,
+     'epsilon_decay': 0.9977,
+     'epsilon_guided': False,
+     'model': "3layer_LH",
+     'torusCollision': True,
+     'action_type': 'end_effector'
+     },
+    {'name': 'exp20',
+     'learning_rate' : 0.0025,
+     'memory_size': 200000,
+     'gamma': 0.99,
+     'replay_mem_update_freq': 50000,
+     'replay_mem_init_size': 50000,
+     'loss_function': 'mse',
+     'optimizer': 'adam',
+     'reward': 'advanced_sparse_reward',
+     'randomPos': True,
+     'epsilon_start': 1000,
+     'epsilon_decay': 0.9977,
+     'epsilon_guided': False,
+     'model': "3layer_LH",
+     'torusCollision': True,
+     'action_type': 'end_effector'
+     },
+    {'name': 'exp21',
+     'learning_rate' : 0.0025,
+     'memory_size': 200000,
+     'gamma': 0.999,
+     'replay_mem_update_freq': 50000,
+     'replay_mem_init_size': 50000,
+     'loss_function': 'mse',
+     'optimizer': 'adam',
+     'reward': 'advanced_sparse_reward',
+     'randomPos': True,
+     'epsilon_start': 1000,
+     'epsilon_decay': 0.9977,
+     'epsilon_guided': False,
+     'model': "3layer_LH",
+     'torusCollision': True,
+     'action_type': 'end_effector'
      },
 ]
