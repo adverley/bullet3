@@ -45,6 +45,7 @@ class BaxterGymEnv(gym.Env):
                  useHack=True,
                  useBlock=True,
                  useRandomPos=True,
+                 useTorusCollision=False,
                  _algorithm='DDPG',
                  _reward_function=None,
                  _action_type='discrete',
@@ -68,11 +69,13 @@ class BaxterGymEnv(gym.Env):
         self._useHack = useHack
         self._useBlock = useBlock
         self._useRandomPos = useRandomPos
+        self._useTorusCollision = useTorusCollision
         self._algorithm = _algorithm
         self._reward_function = _reward_function
         self._action_type = _action_type
         self._logLevel = _logLevel
         self._terminated = 0
+        self._notCompleted = 0  # Whether task was completed or episode was terminated early
         self._collision_pen = 0.
         self.action_batch = []
         self.action = [0, 0, 0, 0, 0, 0, 0]
@@ -173,6 +176,7 @@ class BaxterGymEnv(gym.Env):
 
         self._env_step = 0
         self._terminated = 0
+        self._notCompleted = 0
         self._envStepCounter = 0
         self.clipped_counter = 0
         # p.setGravity(0, 0, -10)
@@ -403,6 +407,14 @@ class BaxterGymEnv(gym.Env):
         else:
             block_pos = np.array(
                 p.getLinkState(self._baxter.baxterUid, 26)[0])  # 26 or avg between 28 and 30
+
+        if self._useTorusCollision:
+            cp_list = p.getContactPoints(
+                self._baxter.baxterUid, self._baxter.torusUid)
+            if any(cp_list):
+                print("Torus collision!")
+                self._terminated = 1
+                self._notCompleted = 1
 
         x_bool = (torus_pos[0] + self._baxter.margin) < block_pos[0]
         y_bool = (torus_pos[1] - self._baxter.torusRad) < block_pos[1] and (torus_pos[1] + self._baxter.torusRad) > block_pos[1]
