@@ -76,7 +76,7 @@ class BaxterGymEnv(gym.Env):
         self._logLevel = _logLevel
         self._terminated = 0
         self._notCompleted = 0  # Whether task was completed or episode was terminated early
-        self._collision_pen = 0.
+        self._collision_pen = -10000 #0.
         self.action_batch = []
         self.action = [0, 0, 0, 0, 0, 0, 0]
         self.old_pos = None
