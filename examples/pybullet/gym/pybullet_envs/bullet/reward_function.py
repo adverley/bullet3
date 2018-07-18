@@ -55,10 +55,11 @@ class RewardZoo():
         y_bool = (torus_pos[1] - env._baxter.torusRad) < block_pos[1] and (torus_pos[1] + env._baxter.torusRad) > block_pos[1]
         z_bool = (torus_pos[2] - env._baxter.torusRad) < block_pos[2] and (torus_pos[2] + env._baxter.torusRad) > block_pos[2]
 
-        cp_list = p.getContactPoints(
-            env._baxter.baxterUid, env._baxter.torusUid)
-        if any(cp_list):
-            reward += env._collision_pen
+        if env._useTorusCollision:
+            cp_list = p.getContactPoints(
+                env._baxter.baxterUid, env._baxter.torusUid)
+            if any(cp_list):
+                reward += env._collision_pen
 
         if y_bool and z_bool and x_bool:
             env.logger.debug(
@@ -112,10 +113,11 @@ class RewardZoo():
         y_bool = (torus_pos[1] - env._baxter.torusRad) < block_pos[1] and (torus_pos[1] + env._baxter.torusRad) > block_pos[1]
         z_bool = (torus_pos[2] - env._baxter.torusRad) < block_pos[2] and (torus_pos[2] + env._baxter.torusRad) > block_pos[2]
 
-        cp_list = p.getContactPoints(
-            env._baxter.baxterUid, env._baxter.torusUid)
-        if any(cp_list):
-            reward += env._collision_pen
+        if env._useTorusCollision:
+            cp_list = p.getContactPoints(
+                env._baxter.baxterUid, env._baxter.torusUid)
+            if any(cp_list):
+                reward += env._collision_pen
 
         if y_bool and z_bool and x_bool:
             env.logger.debug(
@@ -183,10 +185,11 @@ class RewardZoo():
         y_bool = (torus_pos[1] - env._baxter.torusRad) < block_pos[1] and (torus_pos[1] + env._baxter.torusRad) > block_pos[1]
         z_bool = (torus_pos[2] - env._baxter.torusRad) < block_pos[2] and (torus_pos[2] + env._baxter.torusRad) > block_pos[2]
 
-        cp_list = p.getContactPoints(
-            env._baxter.baxterUid, env._baxter.torusUid)
-        if any(cp_list):
-            reward += env._collision_pen
+        if env._useTorusCollision:
+            cp_list = p.getContactPoints(
+                env._baxter.baxterUid, env._baxter.torusUid)
+            if any(cp_list):
+                reward += env._collision_pen
 
         if y_bool and z_bool and x_bool:
             env.logger.debug(
@@ -243,10 +246,11 @@ class RewardZoo():
         y_bool = (torus_pos[1] - env._baxter.torusRad) < gripper_pos[1] and (torus_pos[1] + env._baxter.torusRad) > gripper_pos[1]
         z_bool = (torus_pos[2] - env._baxter.torusRad) < gripper_pos[2] and (torus_pos[2] + env._baxter.torusRad) > gripper_pos[2]
 
-        # cp_list = p.getContactPoints(
-        #     env._baxter.baxterUid, env._baxter.torusUid)
-        # if any(cp_list):
-        #     reward += env._collision_pen
+        if env._useTorusCollision:
+            cp_list = p.getContactPoints(
+                env._baxter.baxterUid, env._baxter.torusUid)
+            if any(cp_list):
+                reward += env._collision_pen
 
         if y_bool and z_bool and x_bool:
             env.logger.debug(
@@ -294,6 +298,12 @@ class RewardZoo():
         if (distance < tan_a * x1[0]):
             # distance = norm(torus_pos - block_pos)
             reward = 100
+
+        if env._useTorusCollision:
+            cp_list = p.getContactPoints(
+                env._baxter.baxterUid, env._baxter.torusUid)
+            if any(cp_list):
+                reward = -10000
 
         x_bool = (torus_pos[0] + env._baxter.margin) < block_pos[0]
         y_bool = (torus_pos[1] - env._baxter.torusRad) < block_pos[1] and (torus_pos[1] + env._baxter.torusRad) > \
