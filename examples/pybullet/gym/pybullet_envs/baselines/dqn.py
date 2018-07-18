@@ -283,7 +283,7 @@ class DQNAgent:
         self.metrics['epsilon'].append(self.epsilon)
         self.metrics['mae'].append(self.mae)
         self.metrics['loss'].append(self.loss)
-        self.metrics['completion_step'].append(steps)
+        self.metrics['completion_step'].append((steps, self.env._notCompleted))
 
         # Reset Statistics
         self.cs_action = 0
