@@ -74,7 +74,8 @@ class DQNAgent:
             'min_action': [],
             'epsilon': [],
             'mae': [],
-            'loss': []
+            'loss': [],
+            'completion_step': []
         }
 
     def create_model(self):
@@ -282,6 +283,7 @@ class DQNAgent:
         self.metrics['epsilon'].append(self.epsilon)
         self.metrics['mae'].append(self.mae)
         self.metrics['loss'].append(self.loss)
+        self.metrics['completion_step'].append(steps)
 
         # Reset Statistics
         self.cs_action = 0
