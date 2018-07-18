@@ -29,8 +29,8 @@ class Baxter:
         self.torusRad = 0.23 * self.torusScale
         self.margin = 0.06
         self.maxIter = 40
-        self.llSpace = [0.3, -0.3, 0.9] #x,y,z
-        self.ulSpace = [0.9, 0.2, 1.3] #x,y,z
+        self.llSpace = [0.3, -0.8, 0.06] #x,y,z
+        self.ulSpace = [1.1, 0.1, 1.8] #x,y,z
         self.setup()
 
     def setup(self):
