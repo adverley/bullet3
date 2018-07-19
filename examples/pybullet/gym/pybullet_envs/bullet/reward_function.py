@@ -297,7 +297,7 @@ class RewardZoo():
         # Only valid if torus angle doesn't change over iterations
         if (distance < tan_a * x1[0]):
             # distance = norm(torus_pos - block_pos)
-            reward = 10
+            reward = 100
 
         if env._useTorusCollision:
             cp_list = p.getContactPoints(
