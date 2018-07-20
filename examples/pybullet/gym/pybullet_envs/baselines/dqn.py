@@ -255,6 +255,8 @@ class DQNAgent:
         self.target_model.set_weights(self.model.get_weights())
 
     def print_stats(self, ep, ep_tot, trial_len, time, steps):
+        if steps == 0:
+            steps += 1
         mean_q = float(round(self.cs_qval / steps, 4))
         mean_bound_q = [float(round(x / steps, 4)) for x in self.bound_qval]
         mean_action = self.cs_action / steps
