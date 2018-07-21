@@ -29,8 +29,16 @@ class Baxter:
         self.torusRad = 0.23 * self.torusScale
         self.margin = 0.06
         self.maxIter = 40
-        self.llSpace = [0.3, -0.8, 0.06] #x,y,z
-        self.ulSpace = [1.1, 0.1, 1.8] #x,y,z
+        # First semi-circle
+        #   self.llSpace = [0.8333, -0.5, 0.64]
+        #   self.ulSpace = [1.1, -0.2, 1.22]
+        # Second semi-circle
+        #   self.llSpace = [0.5666, -0.65, 0.35]
+        #   self.ulSpace = [1.1, -0.05, 1.51]
+        # Third semi-circle
+        self.llSpace = [0.3, -0.8, 0.06]  # x,y,z
+        self.ulSpace = [1.1, 0.1, 1.8]  # x,y,z
+
         self.setup()
 
     def setup(self):
