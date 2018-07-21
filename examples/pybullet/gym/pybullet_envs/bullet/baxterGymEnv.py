@@ -46,6 +46,7 @@ class BaxterGymEnv(gym.Env):
                  useBlock=True,
                  useRandomPos=True,
                  useTorusCollision=False,
+                 use2D=False,
                  _algorithm='DDPG',
                  _reward_function=None,
                  _action_type='discrete',
@@ -70,6 +71,7 @@ class BaxterGymEnv(gym.Env):
         self._useBlock = useBlock
         self._useRandomPos = useRandomPos
         self._useTorusCollision = useTorusCollision
+        self._use2d = use2D
         self._algorithm = _algorithm
         self._reward_function = _reward_function
         self._action_type = _action_type
@@ -92,7 +94,7 @@ class BaxterGymEnv(gym.Env):
 
         # Load in Baxter together with all the other objects
         self._baxter = Baxter(
-            urdfRootPath=self._urdfRoot, timeStep=self._timeStep, useBlock=self._useBlock)
+            urdfRootPath=self._urdfRoot, timeStep=self._timeStep, useBlock=self._useBlock, use2D=self._use2d)
 
         self._seed()
         self.reset()
@@ -108,7 +110,13 @@ class BaxterGymEnv(gym.Env):
 
         observation_high = np.array(
             [np.finfo(np.float32).max] * observationDim)
-        if self._action_type == 'discrete':
+
+        if self._use2d:
+            self.action_space = spaces.Discrete(4)
+            self._action_type = '2d'
+            print("\n\tAction_type set to 2D!")
+
+        elif self._action_type == 'discrete':
             self.action_space = spaces.Box(
                 low=0, high=2, shape=(7,))
 
@@ -312,17 +320,30 @@ class BaxterGymEnv(gym.Env):
             targetPos = np.array(self._baxter.getEndEffectorPos())
             if action < 2:
                 # Move gripper left or right use IK (y not sure)
-                targetPos[1] += self.stepsize if action == 0 else -self.stepsize #Determine step size
+                targetPos[1] += self.stepsize if action == 0 else -self.stepsize
             elif action < 4:
                 # Move gripper up or down use IK (z not sure)
-                targetPos[2] += self.stepsize if action == 2 else -self.stepsize #Determine step size
+                targetPos[2] += self.stepsize if action == 2 else -self.stepsize
             else:
                 # Move gripper forward or backward use IK (x direction)
-                targetPos[0] += self.stepsize if action == 4 else -self.stepsize #Determine step size
+                targetPos[0] += self.stepsize if action == 4 else -self.stepsize
 
             self.logger.debug("Action: {}, Old end_effector_pos: {}".format(str(action), str(targetPos)))
             self.action = self._baxter.calculateInverseKinematics(targetPos)
 
+        elif self._action_type == '2d':
+            self.stepsize = .05
+            # 6 actions: left (0), right (1), forward (2), backward (3)
+            targetPos = np.array(self._baxter.getEndEffectorPos())
+            if action < 2:
+                # Move gripper left or right use IK (y not sure)
+                targetPos[1] += self.stepsize if action == 0 else -self.stepsize
+            else:
+                # Move gripper forward or backward use IK (x direction)
+                targetPos[0] += self.stepsize if action == 2 else -self.stepsize
+
+            self.logger.debug("Action: {}, Old end_effector_pos: {}".format(str(action), str(targetPos)))
+            self.action = self._baxter.calculateInverseKinematics(targetPos)
 
         elif self._action_type == 'discrete':
             if self._algorithm == 'DDPG':
@@ -366,7 +387,8 @@ class BaxterGymEnv(gym.Env):
     def step2(self, action):
         self.old_pos = self._baxter.getEndEffectorPos()
         for i in range(self._actionRepeat):
-            if self._action_type == 'discrete' or self._action_type == 'single' or self._action_type == 'end_effector':
+            if self._action_type == 'discrete' or self._action_type == 'single' or \
+                    self._action_type == 'end_effector' or self._action_type == '2d':
                 self._baxter.applyAction(action)
             else:
                 self._baxter.applyVelocity(action)

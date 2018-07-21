@@ -16,7 +16,7 @@ class Baxter:
     This class will only use the right arm of the Baxter robot
     """
 
-    def __init__(self, urdfRootPath=pybullet_data.getDataPath(), timeStep=0.01, useBlock=True):
+    def __init__(self, urdfRootPath=pybullet_data.getDataPath(), timeStep=0.01, useBlock=True, use2D=False):
         self.urdfRootPath = urdfRootPath
         self.timeStep = timeStep
         self.maxVelocity = .35
@@ -25,6 +25,7 @@ class Baxter:
         self.baxterGripperIndex = 20  # or 26
         self.baxterHeadCameraIndex = 9
         self.useBlock = useBlock
+        self.use2d = use2D
         self.torusScale = 1.
         self.torusRad = 0.23 * self.torusScale
         self.margin = 0.06
@@ -38,6 +39,10 @@ class Baxter:
         # Third semi-circle
         self.llSpace = [0.3, -0.8, 0.06]  # x,y,z
         self.ulSpace = [1.1, 0.1, 1.8]  # x,y,z
+
+        if self.use2d:
+            self.llSpace[2] = 1.
+            self.ulSpace[2] = 1.
 
         self.setup()
 
@@ -53,7 +58,10 @@ class Baxter:
         orn = p.getQuaternionFromEuler([0, 0, math.pi / 2.])
 
         ypos = -.1 + 0.05 * np.random.random()
-        zpos = 1. + 0.05 * np.random.random()
+        if self.use2d:
+            zpos = 1.
+        else:
+            zpos = 1. + 0.05 * np.random.random()
         torus_coord = [1.1, ypos, zpos]
         # ang = 3.1415925438 * random.random() --> TODO maybe randomize angle as dom randomization
         # orn = p.getQuaternionFromEuler([0, 0, ang])
@@ -108,7 +116,10 @@ class Baxter:
 
         # re-randomize torus position
         ypos = -.1 + 0.05 * np.random.random()
-        zpos = 1. + 0.05 * np.random.random()
+        if self.use2d:
+            zpos = 1.
+        else:
+            zpos = 1. + 0.05 * np.random.random()
         torus_coord = np.array([1.1, ypos, zpos])
         orn = p.getQuaternionFromEuler([0, 0, math.pi / 2.])
         p.resetBasePositionAndOrientation(self.torusUid, torus_coord, orn)
