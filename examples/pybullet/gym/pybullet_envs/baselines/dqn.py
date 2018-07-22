@@ -53,6 +53,7 @@ class DQNAgent:
 
         #Statistics
         self.cs_action = 0
+        self.action_counter = 0
         self.bound_action = [sys.maxsize, -sys.maxsize - 1]
         self.cs_reward = 0
         self.bound_reward = [sys.maxsize, -sys.maxsize - 1]
@@ -118,6 +119,7 @@ class DQNAgent:
             action = np.argmax(self.model.predict(state)[0])
 
         self.cs_action += action
+        self.action_counter += 1
         self.bound_action = [min(self.bound_action[0], action),
                              max(self.bound_action[1], action)]
         return action
@@ -259,7 +261,7 @@ class DQNAgent:
             steps += 1
         mean_q = float(round(self.cs_qval / steps, 4))
         mean_bound_q = [float(round(x / steps, 4)) for x in self.bound_qval]
-        mean_action = self.cs_action / steps
+        mean_action = float(self.cs_action) / self.action_counter
         mean_bound_reward = [round(x, 4) for x in self.bound_reward]
 
         print("\n{}/{}".format(ep, ep_tot),
@@ -289,6 +291,7 @@ class DQNAgent:
 
         # Reset Statistics
         self.cs_action = 0
+        self.action_counter = 0
         self.bound_action = [sys.maxsize, -sys.maxsize - 1]
         self.cs_reward = 0
         self.bound_reward = [sys.maxsize, -sys.maxsize - 1]
@@ -377,11 +380,11 @@ def main(args):
             if ep > EXP['epsilon_start']:
                 dqn_agent.update_exploration()
 
+            dqn_agent.print_stats(ep, EPISODES, trial_len, time.time() - start_time, step)
             if ep % 2000 == 0:
                 print("Saving data...")
                 dqn_agent.save_data(os.path.join(filepath_experiment, 'baxter_dqn_{}_data.json'.format(EXP_NAME)))
 
-            dqn_agent.print_stats(ep, EPISODES, trial_len, time.time()-start_time, step)
             if step < trial_len-1:
                 print("Completed in {} steps".format(step))
 
