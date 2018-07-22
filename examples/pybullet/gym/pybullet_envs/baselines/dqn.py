@@ -306,12 +306,18 @@ def main(args):
 
     EXP = experiments[EXP_NUM]
 
+    if EXP['action_type'] == '2D':
+        EXP['use2D'] = True
+    else:
+        EXP['use2D'] = False
+
     #env = gym.make("MountainCar-v0")
     env = BaxterGymEnv(
             renders=args.render,
             useCamera=False,
             useRandomPos=EXP['randomPos'],
             useTorusCollision=EXP['torusCollision'],
+            use2D=EXP['use2D'],
             maxSteps=400,
             dv=0.1,
             _algorithm='DQN',

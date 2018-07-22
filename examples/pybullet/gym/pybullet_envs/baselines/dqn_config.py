@@ -483,31 +483,13 @@ experiments = [
      'replay_mem_init_size': 50000,
      'loss_function': 'mse',
      'optimizer': 'adam',
-     'reward': 'line_distance',
+     'reward': 'advanced_sparse_reward',
      'randomPos': True,
      'epsilon_start': 500,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
      'model': "3layer_LH",
      'torusCollision': True,
-     'action_type': 'end_effector'
+     'action_type': '2D'
      },
-    {'name': 'exp27',
-     'learning_rate' : 0.05,
-     'memory_size': 200000,
-     'gamma': 0.99,
-     'replay_mem_update_freq': 10000,
-     'replay_mem_init_size': 50000,
-     'loss_function': 'mse',
-     'optimizer': 'adam',
-     'reward': 'torus_distance',
-     'randomPos': True,
-     'epsilon_start': 500,
-     'epsilon_decay': 0.9977,
-     'epsilon_guided': False,
-     'model': "3layer_LH",
-     'torusCollision': True,
-     'action_type': 'end_effector'
-     },
-
 ]
