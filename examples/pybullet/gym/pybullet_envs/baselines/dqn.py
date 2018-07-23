@@ -407,6 +407,7 @@ def main(args):
             ep_reward = 0
             bound_reward = [sys.maxsize, -sys.maxsize - 1]
             ep_action = 0
+            action_counter = 0
             bound_action = [sys.maxsize, -sys.maxsize - 1]
 
             for step in range(trial_len):
@@ -416,6 +417,7 @@ def main(args):
                 # Stats
                 ep_reward += reward
                 ep_action += action
+                action_counter += 1
                 bound_reward = [min(bound_reward[0], reward), max(bound_reward[1], reward)]
                 bound_action = [min(bound_action[0], action), max(bound_action[1], action)]
 
@@ -429,7 +431,7 @@ def main(args):
             print("\n{}/{}".format(ep, EPISODES),
                   "Execution time: {} steps/s".format(round(step / (time.time() - start_time), 2)),
                   "Episode reward:", ep_reward, [round(x, 4) for x in bound_reward],
-                  "Mean action:", ep_action / step, bound_action,
+                  "Mean action:", ep_action / action_counter, bound_action,
                   )
 
             if step < trial_len - 1:
