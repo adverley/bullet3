@@ -42,6 +42,7 @@ class DQNAgent:
         self.learning_rate = exp['learning_rate'] #0.05
         self.tau = .125
         self.use_ddqn = use_ddqn
+        self.batch_size = exp['batch_size']
 
         self.replay_mem_init_size = exp['replay_mem_init_size']
         self.replay_mem_update_freq = exp['replay_mem_update_freq']
@@ -146,11 +147,13 @@ class DQNAgent:
 
             new_state = new_state.reshape(1, state_size)
             self.memory.append([cur_state, action, reward, new_state, done])
+            if self.log_mem:
+                self.mem_log.append([cur_state, action, reward, new_state, done])
             cur_state = new_state
 
     def replay(self):
-        batch_size = 32
-        if len(self.memory) < batch_size:
+        #batch_size = 32
+        if len(self.memory) < self.batch_size:
             return
 
         samples = {
@@ -167,7 +170,7 @@ class DQNAgent:
         mean_qval = 0
         bound_qval = [0, 0]
 
-        sample = random.sample(self.memory, batch_size)
+        sample = random.sample(self.memory, self.batch_size)
         for s in sample:
             #state, action, reward, new_state, done = sample
             samples['state'].append(s[0][0])
@@ -224,9 +227,9 @@ class DQNAgent:
         self.mae = float(losses[1])
 
         # Stats
-        self.cs_qval += mean_qval / float(batch_size)
-        self.bound_qval[0] += bound_qval[0] / float(batch_size)
-        self.bound_qval[1] += bound_qval[1] / float(batch_size)
+        self.cs_qval += mean_qval / float(self.batch_size)
+        self.bound_qval[0] += bound_qval[0] / float(self.batch_size)
+        self.bound_qval[1] += bound_qval[1] / float(self.batch_size)
 
     def target_train(self):
         weights = self.model.get_weights()

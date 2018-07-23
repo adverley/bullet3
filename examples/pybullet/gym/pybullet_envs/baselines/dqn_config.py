@@ -46,6 +46,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -63,6 +64,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -80,6 +82,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -97,6 +100,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -114,6 +118,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -131,6 +136,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -148,6 +154,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -165,6 +172,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.995,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -182,6 +190,7 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -199,6 +208,7 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -216,6 +226,7 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -233,6 +244,7 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -250,6 +262,7 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -267,6 +280,7 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -284,6 +298,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -301,6 +316,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -318,6 +334,7 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -335,6 +352,7 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': False,
      'action_type': 'single'
@@ -352,6 +370,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': True,
      'action_type': 'end_effector'
@@ -369,6 +388,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': True,
      'action_type': 'end_effector'
@@ -386,6 +406,7 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': True,
      'action_type': 'end_effector'
@@ -403,6 +424,7 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': True,
      'action_type': 'end_effector'
@@ -420,6 +442,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': True,
      'action_type': 'end_effector'
@@ -437,6 +460,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': True,
      'action_type': 'end_effector'
@@ -454,6 +478,7 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': True,
      'action_type': 'end_effector'
@@ -471,6 +496,7 @@ experiments = [
      'epsilon_start': 1000,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': True,
      'action_type': 'end_effector'
@@ -488,6 +514,7 @@ experiments = [
      'epsilon_start': 500,
      'epsilon_decay': 0.9977,
      'epsilon_guided': False,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': True,
      'action_type': '2D'
