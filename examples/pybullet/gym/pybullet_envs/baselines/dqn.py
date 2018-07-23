@@ -27,7 +27,7 @@ config = DQNConfig()
 experiments = config.experiments
 
 class DQNAgent:
-    def __init__(self, env, exp_num, use_ddqn=False):
+    def __init__(self, env, exp_num, use_ddqn=False, log_mem=False):
         exp = experiments[exp_num]
         print(exp)
 
@@ -51,6 +51,10 @@ class DQNAgent:
 
         self.model = self.create_model()
         self.target_model = self.create_model()
+
+        self.log_mem = log_mem
+        if log_mem:
+            self.mem_log = []
 
         #Statistics
         self.cs_action = 0
@@ -134,6 +138,8 @@ class DQNAgent:
                              max(reward, self.bound_reward[1])]
         self.cs_reward += reward
         self.memory.append([state, action, reward, new_state, done])
+        if self.log_mem:
+            self.mem_log.append([state, action, reward, new_state, done])
 
     def init_replay_mem(self):
         state_size = self.env.observation_space.shape[0]
@@ -341,7 +347,7 @@ def main(args):
     print("State size", state_size)
     print("Action size", action_size)
 
-    dqn_agent = DQNAgent(env=env, exp_num=EXP_NUM)
+    dqn_agent = DQNAgent(env=env, exp_num=EXP_NUM, log_mem=args.log_mem)
     # fn = os.path.join(filepath_experiment, 'baxter_dqn_checkpoint_dqn_test.h5f')
     # dqn_agent.load_model(fn)
 
@@ -500,5 +506,6 @@ if __name__ == "__main__":
     parser.add_argument('--reward', type=str, choices=reward_functions, default=reward_functions[0])
     parser.add_argument('--exp_num', type=int, default=0)
     parser.add_argument('--pre_name', type=str, default=None)
+    parser.add_argument('--log_mem', type=bool, default=False)
     args = parser.parse_args()
     main(args)
