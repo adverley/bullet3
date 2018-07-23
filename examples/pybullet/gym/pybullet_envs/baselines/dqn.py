@@ -265,6 +265,14 @@ class DQNAgent:
         self.model.load_weights(name)
         self.target_model.set_weights(self.model.get_weights())
 
+    def save_mem_log(self, fn):
+        def default(o):
+            if isinstance(o, np.int64): return int(o)
+            raise TypeError
+
+        with open(fn, 'w') as fp:
+            json.dump(self.mem_log, fp, default=default)
+
     def print_stats(self, ep, ep_tot, trial_len, time, steps):
         if steps == 0:
             steps += 1
@@ -405,6 +413,8 @@ def main(args):
         weights_filename = os.path.join(filepath_experiment, "baxter_dqn_{}.h5f".format(EXP_NAME))
         dqn_agent.save_model(weights_filename)
         dqn_agent.save_data(os.path.join(filepath_experiment, 'baxter_dqn_{}_data.json'.format(EXP_NAME)))
+        if args.log_mem:
+            dqn_agent.save_mem_log(os.path.join(filepath_experiment, 'baxter_dqn_{}_mem_log.json'.format(EXP_NAME)))
 
         #Testing
         EPISODES = 5
