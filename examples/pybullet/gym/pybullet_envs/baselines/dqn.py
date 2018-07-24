@@ -54,6 +54,7 @@ class DQNAgent:
 
         self.log_mem = log_mem
         if log_mem:
+            print("\n Logging memory!")
             self.mem_log = []
 
         #Statistics
@@ -139,7 +140,7 @@ class DQNAgent:
         self.cs_reward += reward
         self.memory.append([state, action, reward, new_state, done])
         if self.log_mem:
-            self.mem_log.append([state, action, reward, new_state, done])
+            self.mem_log.append([state.tolist(), action, float(reward), new_state.tolist(), done])
 
     def init_replay_mem(self):
         state_size = self.env.observation_space.shape[0]
@@ -154,7 +155,7 @@ class DQNAgent:
             new_state = new_state.reshape(1, state_size)
             self.memory.append([cur_state, action, reward, new_state, done])
             if self.log_mem:
-                self.mem_log.append([cur_state, action, reward, new_state, done])
+                self.mem_log.append([cur_state.tolist(), action, float(reward), new_state.tolist(), done])
             cur_state = new_state
 
     def replay(self):
@@ -270,8 +271,19 @@ class DQNAgent:
             if isinstance(o, np.int64): return int(o)
             raise TypeError
 
-        with open(fn, 'w') as fp:
-            json.dump(self.mem_log, fp, default=default)
+        if os.path.isfile(fn):
+            with open(fn, 'w') as fp:
+                json.dump(self.mem_log, fp, default=default)
+            self.mem_log = []
+        else:
+            with open(fn) as fp:
+                data = json.load(fp)
+
+            data = data + self.mem_log
+
+            with open(fn, 'w') as fp:
+                json.dump(data, fp)
+            self.mem_log = []
 
     def print_stats(self, ep, ep_tot, trial_len, time, steps):
         if steps == 0:
@@ -401,6 +413,9 @@ def main(args):
             if ep % 2000 == 0:
                 print("Saving data...")
                 dqn_agent.save_data(os.path.join(filepath_experiment, 'baxter_dqn_{}_data.json'.format(EXP_NAME)))
+
+                if args.log_mem:
+                    dqn_agent.save_mem_log(os.path.join(filepath_experiment, 'baxter_dqn_{}_mem_log.json'.format(EXP_NAME)))
 
             if step < trial_len-1:
                 print("Completed in {} steps".format(step))
