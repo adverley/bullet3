@@ -271,7 +271,7 @@ class DQNAgent:
             if isinstance(o, np.int64): return int(o)
             raise TypeError
 
-        if os.path.isfile(fn):
+        if not os.path.isfile(fn):
             with open(fn, 'w') as fp:
                 json.dump(self.mem_log, fp, default=default)
             self.mem_log = []
