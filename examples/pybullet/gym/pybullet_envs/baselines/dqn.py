@@ -382,6 +382,12 @@ def main(args):
             fn = os.path.join(filepath_experiment, "baxter_dqn_{}.h5f".format(args.pre_name))
             dqn_agent.load_model(fn)
 
+        if args.log_mem:
+            try:
+                os.remove(os.path.join(filepath_experiment, 'baxter_dqn_{}_mem_log.json'.format(EXP_NAME)))
+            except OSError:
+                pass
+
         tot_step = 0
 
         for ep in range(EPISODES):
