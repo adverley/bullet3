@@ -51,8 +51,9 @@ class ModelAgent:
 
     def add_sample(self):
         self.memory.append(self.data[self.cur_idx])
+        done = self.data[self.cur_idx][4]
         self.cur_idx += 1
-        return self.data[self.cur_idx][4] #Done
+        return done
 
     def train_batch(self):
         samples = {
@@ -191,7 +192,7 @@ def main(args):
             metrics['loss'].append(agent.loss)
             metrics['mae'].append(agent.mae)
 
-            if agent.cur_idx > len(agent.data):
+            if agent.cur_idx >= len(agent.data):
                 break
 
         results.append((exp_counter, metrics['loss'], metrics['mae']))
