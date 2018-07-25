@@ -282,7 +282,7 @@ class DQNAgent:
             data = data + self.mem_log
 
             with open(fn, 'w') as fp:
-                json.dump(data, fp)
+                json.dump(data, fp, default=default)
             self.mem_log = []
 
     def print_stats(self, ep, ep_tot, trial_len, time, steps):
