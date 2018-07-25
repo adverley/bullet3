@@ -213,8 +213,8 @@ def save_output(fn, output):
         if isinstance(o, np.int64): return int(o)
         raise TypeError
 
-    with open(fn) as fp:
-        json.dump(output, default=default)
+    with open(fn, 'w') as fp:
+        json.dump(output, fp, default=default)
 
 
 if __name__ == "__main__":
