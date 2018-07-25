@@ -50,7 +50,7 @@ class ModelAgent:
         return model
 
     def add_sample(self):
-        self.memory.append(self.data[self.cur_idx + 1])
+        self.memory.append(self.data[self.cur_idx])
         self.cur_idx += 1
         return self.data[self.cur_idx][4] #Done
 
@@ -106,7 +106,7 @@ class ModelAgent:
     def init_memory(self):
         print("Starting replay memory initialization")
         for i in range(self.mem_init_size):
-            self.memory.append(self.data[self.cur_idx + 1])
+            self.memory.append(self.data[self.cur_idx])
             self.cur_idx += 1
 
     def print_stats(self, ep, ep_tot, time, steps):
@@ -172,7 +172,7 @@ def main(args):
 
         tot_step = 0
 
-        for ep in range(EPISODES):
+        for ep in tqdm(range(EPISODES)):
             start_time = time.time()
             for step in range(trial_len):
                 done = agent.add_sample()
@@ -180,15 +180,19 @@ def main(args):
                 tot_step += 1  # Used to determine replay memory update
 
                 if tot_step % agent.target_net_update_freq == 0:
-                    print("Updating target network...")
+                    #print("Updating target network...")
                     agent.target_train()  # iterates target model
 
                 if done:
                     break
 
-            agent.print_stats(ep, EPISODES, time.time() - start_time, step)
+            if ep % 2000 == 0:
+                agent.print_stats(ep, EPISODES, time.time() - start_time, step)
             metrics['loss'].append(agent.loss)
             metrics['mae'].append(agent.mae)
+
+            if agent.cur_idx > len(agent.data):
+                break
 
         results.append((exp_counter, metrics['loss'], metrics['mae']))
         exp_counter += 1
