@@ -19,7 +19,7 @@ from tqdm import tqdm
 # Not enough variation?
 
 class ModelAgent:
-    def __init__(self, data, lr, n1, n2, bs, gamma):
+    def __init__(self, data, lr, n1, n2, bs, target_net_update_freq):
         self.lr = lr
         self.state_space = 10
         self.action_space = 4
@@ -27,11 +27,11 @@ class ModelAgent:
         self.target_model = self.create_model(n1, n2)
 
         self.mem_init_size = 200000
-        self.target_net_update_freq = 10000
+        self.target_net_update_freq = target_net_update_freq
         self.memory = deque(maxlen=self.mem_init_size)
         self.batch_size = bs
         self.tau = .125
-        self.gamma = gamma
+        self.gamma = 0.999
 
         self.data = data
         self.cur_idx = 0
@@ -121,32 +121,34 @@ class ModelAgent:
              ) #trail_len
 
 def main(args):
-    configs = [(0.0001, 16, 8, 32, 0.99),
-               (0.0001, 16, 8, 32, 0.999),
-               (0.0001, 16, 8, 64, 0.99),
-               (0.0001, 16, 8, 64, 0.999),
-               (0.001, 16, 8, 32, 0.99),
-               (0.001, 16, 8, 32, 0.999),
-               (0.001, 16, 8, 64, 0.99),
-               (0.001, 16, 8, 64, 0.999),
+    configs = [
+               #Test impact update_freq
+               (0.0001, 32, 16, 32, 5000),
+               (0.0001, 32, 16, 32, 10000),
+               (0.0001, 32, 16, 32, 20000),
+               (0.0001, 32, 16, 32, 40000),
 
-               (0.0001, 32, 16, 32, 0.99),
-               (0.0001, 32, 16, 32, 0.999),
-               (0.0001, 32, 16, 64, 0.99),
-               (0.0001, 32, 16, 64, 0.999),
-               (0.001, 32, 16, 32, 0.99),
-               (0.001, 32, 16, 32, 0.999),
-               (0.001, 32, 16, 64, 0.99),
-               (0.001, 32, 16, 64, 0.999),
+               (0.0001, 32, 16, 64, 5000),
+               (0.0001, 32, 16, 64, 10000),
+               (0.0001, 32, 16, 64, 20000),
+               (0.0001, 32, 16, 64, 40000),
 
-               (0.0001, 64, 32, 32, 0.99),
-               (0.0001, 64, 32, 32, 0.999),
-               (0.0001, 64, 32, 64, 0.99),
-               (0.0001, 64, 32, 64, 0.999),
-               (0.001, 64, 32, 32, 0.99),
-               (0.001, 64, 32, 32, 0.999),
-               (0.001, 64, 32, 64, 0.99),
-               (0.001, 63, 32, 64, 0.999),
+               (0.0001, 32, 16, 128, 5000),
+               (0.0001, 32, 16, 128, 10000),
+               (0.0001, 32, 16, 128, 20000),
+               (0.0001, 32, 16, 128, 40000),
+
+                # Test impact LR
+               (0.0001, 32, 16, 64, 10000),
+               (0.0001, 32, 16, 64, 20000),
+               (0.0001, 32, 16, 128, 10000),
+               (0.0001, 32, 16, 128, 20000),
+
+               (0.001, 32, 16, 64, 10000),
+               (0.001, 32, 16, 64, 20000),
+               (0.001, 32, 16, 128, 10000),
+               (0.001, 32, 16, 128, 20000),
+
                ] #(lr, n1, n2, bs, gamma)
 
     results = [] #(exp, los, mae)
@@ -206,7 +208,6 @@ def main(args):
         print("Saving data...")
         out_fn = os.path.join(filepath_experiment, args.out)
         save_output(out_fn, results)
-
 
 def save_output(fn, output):
     def default(o):
