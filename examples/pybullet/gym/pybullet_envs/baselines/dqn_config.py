@@ -605,7 +605,7 @@ experiments = [
      'epsilon_start': 10000,
      'epsilon_decay': 0,
      'epsilon_guided': False,
-     'batch_size': 64,
+     'batch_size': 32,
      'model': "3layer_LH",
      'torusCollision': True,
      'action_type': '2D'
