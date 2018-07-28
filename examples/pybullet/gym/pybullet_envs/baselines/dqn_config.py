@@ -591,5 +591,23 @@ experiments = [
      'torusCollision': True,
      'action_type': '2D'
      },
-
+    # Pure exploration test for zone stats
+    {'name': 'exp31',
+     'learning_rate' : 0.0001,
+     'memory_size': 200000,
+     'gamma': 0.999,
+     'replay_mem_update_freq': 10000,
+     'replay_mem_init_size': 200000,
+     'loss_function': 'mse',
+     'optimizer': 'adam',
+     'reward': 'advanced_sparse_reward',
+     'randomPos': True,
+     'epsilon_start': 10000,
+     'epsilon_decay': 0,
+     'epsilon_guided': False,
+     'batch_size': 64,
+     'model': "3layer_LH",
+     'torusCollision': True,
+     'action_type': '2D'
+     },
 ]

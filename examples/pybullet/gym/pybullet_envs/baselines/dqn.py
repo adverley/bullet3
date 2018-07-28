@@ -67,6 +67,10 @@ class DQNAgent:
         self.bound_qval = [0, 0]
         self.mae = -1.
         self.loss = -1.
+        # Metric only works for some reward functions and for some type of scaling
+        self.zone_rewards = {'outside': -10, 'cone': 100, 'torus_col': -100, 'completion': 10000}
+        self.zone_dict = {'outside': 0, 'cone': 0, 'torus_col': 0, 'completion': 0}
+        self.batch_dict = {'outside': 0, 'cone': 0, 'torus_col': 0, 'completion': 0}
 
         self.metrics = {
             'episode': [],
@@ -82,7 +86,9 @@ class DQNAgent:
             'epsilon': [],
             'mae': [],
             'loss': [],
-            'completion_step': []
+            'completion_step': [],
+            'zone_steps': [],
+            'zone_batch': []
         }
 
     def create_model(self):
@@ -135,9 +141,21 @@ class DQNAgent:
         return np.argmax(q_values)
 
     def remember(self, state, action, reward, new_state, done):
+        # Reward stats
         self.bound_reward = [min(reward, self.bound_reward[0]),
                              max(reward, self.bound_reward[1])]
         self.cs_reward += reward
+
+        #Zone stats
+        if reward == self.zone_rewards['completion']:
+            self.zone_dict['completion'] += 1
+        elif reward == self.zone_rewards['cone']:
+            self.zone_dict['cone'] += 1
+        elif reward == self.zone_rewards['torus_col']:
+            self.zone_dict['torus_col'] += 1
+        else:
+            self.zone_dict['outside'] += 1
+
         self.memory.append([state, action, reward, new_state, done])
         if self.log_mem:
             self.mem_log.append([state.tolist(), action, float(reward), new_state.tolist(), done])
@@ -185,6 +203,16 @@ class DQNAgent:
             samples['reward'].append(s[2])
             samples['new_state'].append(s[3][0])
             samples['done'].append(s[4])
+
+            #Batch zone stats
+            if s[2] == self.zone_rewards['completion']:
+                self.batch_dict['completion'] += 1
+            elif s[2] == self.zone_rewards['cone']:
+                self.batch_dict['cone'] += 1
+            elif s[2] == self.zone_rewards['torus_col']:
+                self.batch_dict['torus_col'] += 1
+            else:
+                self.batch_dict['outside'] += 1
 
         # Update is done to late so what's the point in using the target network principle here?
         targets = self.target_model.predict_on_batch(np.array(samples['state']))
@@ -317,6 +345,8 @@ class DQNAgent:
         self.metrics['mae'].append(self.mae)
         self.metrics['loss'].append(self.loss)
         self.metrics['completion_step'].append((steps, self.env._notCompleted, trial_len))
+        self.metrics['zone_steps'].append(self.zone_dict)
+        self.metrics['zone_batch'].append(self.batch_dict)
 
         # Reset Statistics
         self.cs_action = 0
@@ -328,6 +358,8 @@ class DQNAgent:
         self.bound_qval = [0, 0]
         self.mae = -1
         self.loss = -1
+        self.zone_dict = {'outside': 0, 'cone': 0, 'torus_col': 0, 'completion': 0}
+        self.batch_dict = {'outside': 0, 'cone': 0, 'torus_col': 0, 'completion': 0}
 
 
 def main(args):
