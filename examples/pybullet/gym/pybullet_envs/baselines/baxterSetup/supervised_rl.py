@@ -23,7 +23,7 @@ class ModelAgent:
         self.target_net_update_freq = target_net_update_freq
         # Create train test set split, memory is train set loss calculated on test set.
 
-        self.memory = random.shuffle(data) #deque(maxlen=self.mem_init_size)
+        self.memory = random.sample(data, len(data))  #deque(maxlen=self.mem_init_size)
         self.batch_idx = 0
         self.batch_size = bs
         self.tau = .125
