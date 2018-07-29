@@ -71,17 +71,17 @@ class DQNAgent:
         minibatch = random.sample(self.memory, batch_size)
         for state, action, reward, next_state, done in minibatch:
             target = reward
+            q_vals = self.model.predict(next_state)[0]
             if not done:
-                #Print stats
-                print("Q-vals:", self.model.predict(next_state)[0])
+                #print("Q-vals:", q_vals)
                 target = (reward + self.gamma *
                           np.amax(self.model.predict(next_state)[0]))
             target_f = self.model.predict(state)
             target_f[0][action] = target
 
-            mean_qval += np.mean(target)
-            bound_qval[0] += min(target)
-            bound_qval[1] += max(target)
+            mean_qval += np.mean(q_vals)
+            bound_qval[0] += min(q_vals)
+            bound_qval[1] += max(q_vals)
 
             self.model.fit(state, target_f, epochs=1, verbose=0)
         if self.epsilon > self.epsilon_min:
@@ -139,6 +139,7 @@ if __name__ == "__main__":
     env = gym.make('CartPole-v1')
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.n
+    print("State and action space:", state_size, action_size)
     agent = DQNAgent(state_size, action_size)
     # agent.load("./save/cartpole-dqn.h5")
     done = False
