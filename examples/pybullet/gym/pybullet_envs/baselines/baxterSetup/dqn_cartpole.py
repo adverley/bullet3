@@ -111,17 +111,13 @@ class DQNAgent:
             steps += 1
         mean_q = float(round(self.cs_qval / steps, 4))
         mean_bound_q = [float(round(x / steps, 4)) for x in self.bound_qval]
-        mean_action = float(self.cs_action) / self.action_counter
         mean_bound_reward = [round(x, 4) for x in self.bound_reward]
 
         print("\n{}/{}".format(ep, ep_tot),
               "Execution time: {} steps/s".format(round(steps/time, 2)),
               "Episode reward:", self.cs_reward, mean_bound_reward,
-              "Mean action:", mean_action, self.bound_action,
               "Mean Q:", mean_q, mean_bound_q,
               "Curr epsilon:", self.epsilon,
-              "Mae:", self.mae,
-              "Loss:", self.loss
              ) #trail_len
 
         self.metrics['episode'].append(ep)
@@ -170,7 +166,7 @@ if __name__ == "__main__":
         # if e % 10 == 0:
         #     agent.save("./save/cartpole-dqn.h5")
 
-        agent.print_stats(e, EPISODES, 500, time.time() - start_time, time)
+        agent.print_stats(e, EPISODES, 500, time.time() - start_time, t)
         if e % 500:
             agent.save_data(os.path.join(filepath_experiment, 'dqn_{}_data.json'.format("cartpole")))
 
