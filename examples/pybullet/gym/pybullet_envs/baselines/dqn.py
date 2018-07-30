@@ -30,9 +30,32 @@ class DQNAgent:
     def __init__(self, env, exp_num, use_ddqn=False, log_mem=False):
         exp = experiments[exp_num]
         print(exp)
-
         self.env = env
-        self.memory = deque(maxlen=exp['memory_size'])
+
+        try:
+            self.zone_queue = exp['zone_queue']
+            print("\nUsing zone partitioned memory")
+            if exp['zone_dist'] is None:
+                self.zone_dist = [0.25, 0.25, 0.25, 0.25]
+            else:
+                self.zone_dist = exp['zone_dist']
+
+            print("Zone dist", type(self.zone_dist))
+        except KeyError:
+            print("\nZone memory partition information not present in config!")
+            self.zone_queue = False
+
+        if self.zone_queue:
+            self.memory_outside = deque(maxlen=int(exp['memory_size']*self.zone_dist[0]))
+            self.memory_cone = deque(maxlen=int(exp['memory_size']*self.zone_dist[1]))
+            self.memory_coll = deque(maxlen=int(exp['memory_size']*self.zone_dist[2]))
+            self.memory_completion = deque(maxlen=int(exp['memory_size']*self.zone_dist[3]))
+        else:
+            self.memory = deque(maxlen=exp['memory_size'])
+
+        #Reward structure
+        #self.zone_rewards = {'outside': -10, 'cone': 100, 'torus_col': -100, 'completion': 10000}
+        self.zone_rewards = {'outside': -0.1, 'cone': 1, 'torus_col': -1, 'completion': 10}
 
         self.gamma = exp['gamma'] #0.85
         self.epsilon = 1.0
@@ -68,7 +91,6 @@ class DQNAgent:
         self.mae = -1.
         self.loss = -1.
         # Metric only works for some reward functions and for some type of scaling
-        self.zone_rewards = {'outside': -10, 'cone': 100, 'torus_col': -100, 'completion': 10000}
         self.zone_dict = {'outside': 0, 'cone': 0, 'torus_col': 0, 'completion': 0}
         self.batch_dict = {'outside': 0, 'cone': 0, 'torus_col': 0, 'completion': 0}
 
@@ -156,7 +178,17 @@ class DQNAgent:
         else:
             self.zone_dict['outside'] += 1
 
-        self.memory.append([state, action, reward, new_state, done])
+        if self.zone_queue:
+            if reward == self.zone_rewards['completion']:
+                self.memory_completion.append([state, action, reward, new_state, done])
+            elif reward == self.zone_rewards['cone']:
+                self.memory_cone.append([state, action, reward, new_state, done])
+            elif reward == self.zone_rewards['torus_col']:
+                self.memory_coll.append([state, action, reward, new_state, done])
+            else:
+                self.memory_outside.append([state, action, reward, new_state, done])
+        else:
+            self.memory.append([state, action, reward, new_state, done])
         if self.log_mem:
             self.mem_log.append([state.tolist(), action, float(reward), new_state.tolist(), done])
 
@@ -171,15 +203,33 @@ class DQNAgent:
             new_state, reward, done, _ = self.env.step(action)
 
             new_state = new_state.reshape(1, state_size)
-            self.memory.append([cur_state, action, reward, new_state, done])
+            if self.zone_queue:
+                if reward == self.zone_rewards['completion']:
+                    self.memory_completion.append([cur_state, action, reward, new_state, done])
+                elif reward == self.zone_rewards['cone']:
+                    self.memory_cone.append([cur_state, action, reward, new_state, done])
+                elif reward == self.zone_rewards['torus_col']:
+                    self.memory_coll.append([cur_state, action, reward, new_state, done])
+                else:
+                    self.memory_outside.append([cur_state, action, reward, new_state, done])
+            else:
+                self.memory.append([cur_state, action, reward, new_state, done])
             if self.log_mem:
                 self.mem_log.append([cur_state.tolist(), action, float(reward), new_state.tolist(), done])
             cur_state = new_state
 
     def replay(self):
         #batch_size = 32
-        if len(self.memory) < self.batch_size:
-            return
+        if self.zone_queue:
+            if len(self.memory_outside) < int(self.batch_size*self.zone_dist[0]) or \
+                len(self.memory_cone) < int(self.batch_size * self.zone_dist[1]) or \
+                len(self.memory_coll) < int(self.batch_size * self.zone_dist[2]) or \
+                len(self.memory_completion) < int(self.batch_size * self.zone_dist[3]):
+                print("\nNot enough zone samples!")
+                return
+        else:
+            if len(self.memory) < self.batch_size:
+                return
 
         samples = {
             'state': [],
@@ -195,7 +245,21 @@ class DQNAgent:
         mean_qval = 0
         bound_qval = [0, 0]
 
-        sample = random.sample(self.memory, self.batch_size)
+        if self.zone_queue:
+            bs = self.batch_size
+            sample1 = random.sample(self.memory_outside, int(self.batch_size*self.zone_dist[0]))
+            bs -= int(self.batch_size*self.zone_dist[0])
+            sample2 = random.sample(self.memory_cone, int(self.batch_size*self.zone_dist[1]))
+            bs -= int(self.batch_size * self.zone_dist[1])
+            sample3 = random.sample(self.memory_coll, int(self.batch_size*self.zone_dist[2]))
+            bs -= int(self.batch_size * self.zone_dist[2])
+            sample4 = random.sample(self.memory_completion, bs)
+
+            #print("\nBatch composition:", len(sample1), len(sample2), len(sample3), len(sample4))
+
+            sample = sample1+sample2+sample3+sample4
+        else:
+            sample = random.sample(self.memory, self.batch_size)
         for s in sample:
             #state, action, reward, new_state, done = sample
             samples['state'].append(s[0][0])
@@ -433,7 +497,7 @@ def main(args):
                 dqn_agent.remember(cur_state, action, reward, new_state, done)
 
                 dqn_agent.replay()       # internally iterates default (prediction) model
-                tot_step += 1            # Used to determine replay memory update
+                tot_step += 1            # Used to determine target network update
 
                 if tot_step % dqn_agent.replay_mem_update_freq == 0:
                     print("Updating target network...")
