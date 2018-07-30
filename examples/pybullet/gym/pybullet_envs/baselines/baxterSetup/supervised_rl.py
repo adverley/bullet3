@@ -69,8 +69,8 @@ class ModelAgent:
             samples['new_state'].append(s[3][0])
             samples['done'].append(s[4])
 
-        targets = self.target_model.predict_on_batch(np.array(samples['state']))
-        q_vals = self.target_model.predict_on_batch(np.array(samples['new_state']))
+        targets = self.model.predict_on_batch(np.array(samples['state']))
+        q_vals = self.model.predict_on_batch(np.array(samples['new_state']))
 
         for_set = zip(targets, q_vals, samples['state'], samples['new_state'],
                       samples['action'], samples['reward'], samples['done'])
@@ -141,7 +141,8 @@ def main(args):
 
                 if tot_step % agent.target_net_update_freq == 0:
                     #print("Updating target network...")
-                    agent.target_train()  # iterates target model
+                    #agent.target_train()  # iterates target model
+                    pass
 
             if ep % 2000 == 0:
                 agent.print_stats(ep, EPISODES, time.time() - start_time, step)
