@@ -289,7 +289,7 @@ class RewardZoo():
         x1 = block_pos
 
         distance = norm((x0 - x1) - vdot((x0 - x1), dir_vector) * dir_vector)
-        reward = -10
+        reward = -0.1
 
         tan_a = env._baxter.torusRad / torus_pos[0]
         env.logger.debug("Distance:", distance, "Cone height:", tan_a * x1[0])
@@ -297,13 +297,13 @@ class RewardZoo():
         # Only valid if torus angle doesn't change over iterations
         if (distance < tan_a * x1[0]):
             # distance = norm(torus_pos - block_pos)
-            reward = 100
+            reward = 1
 
         if env._useTorusCollision:
             cp_list = p.getContactPoints(
                 env._baxter.baxterUid, env._baxter.torusUid)
             if any(cp_list):
-                reward = -10000
+                reward = -1
 
         x_bool = (torus_pos[0] + env._baxter.margin) < block_pos[0]
         y_bool = (torus_pos[1] - env._baxter.torusRad) < block_pos[1] and (torus_pos[1] + env._baxter.torusRad) > \
@@ -317,7 +317,7 @@ class RewardZoo():
                     str(block_pos), str(torus_pos)))
             env.logger.debug("env._envStepCounter: %s" %
                              str(env._envStepCounter))
-            reward = 10000
+            reward = 10
 
         env.logger.debug("Reward: %s \n" % str(reward))
         return reward
