@@ -30,8 +30,8 @@ class ModelAgent:
         self.gamma = 0.999
 
         #Stats
-        self.loss = -1.
-        self.mae = -1.
+        self.loss = []
+        self.mae = []
 
     def create_model(self, n1=32, n2=16):
         model = Sequential()
@@ -83,8 +83,8 @@ class ModelAgent:
 
         # Take only the last value of each episode
         losses = self.model.train_on_batch(np.array(_states), np.array(_targets))
-        self.loss = float(losses[0])
-        self.mae = float(losses[1])
+        self.loss.append(float(losses[0]))
+        self.mae.append(float(losses[1]))
 
     def target_train(self):
         weights = self.model.get_weights()
@@ -99,8 +99,8 @@ class ModelAgent:
 
         print("\n{}/{}".format(ep, ep_tot),
               "Execution time: {} steps/s".format(round(steps/time, 2)),
-              "Mae:", self.mae,
-              "Loss:", self.loss
+              "Mae:", np.average(self.mae),
+              "Loss:", np.average(self.loss)
              ) #trail_len
 
 def main(args):
@@ -112,6 +112,12 @@ def main(args):
                 (0.0001, 64, 32, 32, 10000),
                 (0.0001, 64, 32, 64, 10000),
                 (0.0001, 64, 32, 128, 10000),
+
+                #Test impact larger network
+                (0.0001, 1024, 512, 32, 10000),
+                (0.0001, 1024, 512, 64, 10000),
+                (0.0001, 1024, 512, 128, 10000),
+
                ] #(lr, n1, n2, bs, gamma)
 
     results = [] #(exp, los, mae)
@@ -146,8 +152,10 @@ def main(args):
 
             if ep % 2000 == 0:
                 agent.print_stats(ep, EPISODES, time.time() - start_time, step)
-            metrics['loss'].append(agent.loss)
-            metrics['mae'].append(agent.mae)
+            metrics['loss'].append(np.average(agent.loss))
+            metrics['mae'].append(np.average(agent.mae))
+            agent.loss = []
+            agent.mae = []
 
         results.append((exp_counter, metrics['loss'], metrics['mae']))
         exp_counter += 1
@@ -172,7 +180,7 @@ def save_output(fn, output):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', type=str, default='train')
-    parser.add_argument('-out', type=str, default='train_output')
+    parser.add_argument('-f', type=str, default='baxter_dqn_exp26_config_net2layer_small_mem_log.json')
+    parser.add_argument('-out', type=str, default='test')
     args = parser.parse_args()
     main(args)
