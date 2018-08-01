@@ -88,8 +88,8 @@ class DQNAgent:
         self.bound_reward = [sys.maxsize, -sys.maxsize - 1]
         self.cs_qval = 0
         self.bound_qval = [0, 0]
-        self.mae = -1.
-        self.loss = -1.
+        self.mae = []
+        self.loss = []
         # Metric only works for some reward functions and for some type of scaling
         self.zone_dict = {'outside': 0, 'cone': 0, 'torus_col': 0, 'completion': 0}
         self.batch_dict = {'outside': 0, 'cone': 0, 'torus_col': 0, 'completion': 0}
@@ -322,8 +322,8 @@ class DQNAgent:
 
         # Take only the last value of each episode
         losses = self.model.train_on_batch(np.array(_states), np.array(_targets))
-        self.loss = float(losses[0])
-        self.mae = float(losses[1])
+        self.loss.append(float(losses[0]))
+        self.mae.append(float(losses[1]))
 
         # Stats
         self.cs_qval += mean_qval / float(self.batch_size)
@@ -391,8 +391,8 @@ class DQNAgent:
               "Mean action:", mean_action, self.bound_action,
               "Mean Q:", mean_q, mean_bound_q,
               "Curr epsilon:", self.epsilon,
-              "Mae:", self.mae,
-              "Loss:", self.loss
+              "Mae:", np.average(self.mae),
+              "Loss:", np.average(self.loss)
              ) #trail_len
 
         self.metrics['episode'].append(ep)
@@ -406,8 +406,8 @@ class DQNAgent:
         self.metrics['min_action'].append(self.bound_action[0])
         self.metrics['max_action'].append(self.bound_action[1])
         self.metrics['epsilon'].append(self.epsilon)
-        self.metrics['mae'].append(self.mae)
-        self.metrics['loss'].append(self.loss)
+        self.metrics['mae'].append(np.average(self.mae))
+        self.metrics['loss'].append(np.average(self.loss))
         self.metrics['completion_step'].append((steps, self.env._notCompleted, trial_len))
         self.metrics['zone_steps'].append(self.zone_dict)
         self.metrics['zone_batch'].append(self.batch_dict)
@@ -420,8 +420,8 @@ class DQNAgent:
         self.bound_reward = [sys.maxsize, -sys.maxsize - 1]
         self.cs_qval = 0
         self.bound_qval = [0, 0]
-        self.mae = -1
-        self.loss = -1
+        self.mae = []
+        self.loss = []
         self.zone_dict = {'outside': 0, 'cone': 0, 'torus_col': 0, 'completion': 0}
         self.batch_dict = {'outside': 0, 'cone': 0, 'torus_col': 0, 'completion': 0}
 
