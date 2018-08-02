@@ -537,6 +537,9 @@ def main(args):
         EPISODES = 5
         trail_len = env._maxSteps
 
+        #Stats
+        action_list = [[] for x in range(EPISODES)]
+
         for ep in range(EPISODES):
             cur_state = env.reset().reshape(1, state_size)
             start_time = time.time()
@@ -551,6 +554,7 @@ def main(args):
                 new_state, reward, done, _ = env.step(action)
 
                 # Stats
+                action_list[ep].append(action)
                 ep_reward += reward
                 ep_action += action
                 action_counter += 1
@@ -573,6 +577,16 @@ def main(args):
             if step < trial_len - 1:
                 print("Completed in {} steps".format(step))
 
+        def save_test_data(data, fn):
+            def default(o):
+                if isinstance(o, np.int64): return int(o)
+                raise TypeError
+
+            with open(fn, 'w') as fp:
+                json.dump(data, fp, default=default)
+
+        save_test_data(action_list,
+                       os.path.join(filepath_experiment, 'baxter_dqn_{}_testData.json'.format(EXP_NAME)))
 
     elif args.mode == 'test':
         # load weights
