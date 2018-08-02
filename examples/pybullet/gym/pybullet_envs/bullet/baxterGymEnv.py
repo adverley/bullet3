@@ -47,6 +47,7 @@ class BaxterGymEnv(gym.Env):
                  useRandomPos=True,
                  useTorusCollision=False,
                  use2D=False,
+                 stepExploration=None,
                  _algorithm='DDPG',
                  _reward_function=None,
                  _action_type='discrete',
@@ -70,6 +71,8 @@ class BaxterGymEnv(gym.Env):
         self._useHack = useHack
         self._useBlock = useBlock
         self._useRandomPos = useRandomPos
+        self._stepExploration = stepExploration
+        self._success_rate = None
         self._useTorusCollision = useTorusCollision
         self._use2d = use2D
         self._algorithm = _algorithm
@@ -153,6 +156,9 @@ class BaxterGymEnv(gym.Env):
         # Set action according to randomized gripper position
         # TODO: curriculum learning
         if self._useRandomPos:
+            if self._stepExploration is not None:
+                self._baxter.setExplorationSpace(self._stepExploration)
+
             self.old_pos = self._baxter.getEndEffectorPos()
             self._baxter.randomizeGripperPos()
 

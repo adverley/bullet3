@@ -81,6 +81,7 @@ class DQNAgent:
             self.mem_log = []
 
         #Statistics
+        self.ep_reset = 0
         self.cs_action = 0
         self.action_counter = 0
         self.bound_action = [sys.maxsize, -sys.maxsize - 1]
@@ -392,7 +393,9 @@ class DQNAgent:
               "Mean Q:", mean_q, mean_bound_q,
               "Curr epsilon:", self.epsilon,
               "Mae:", np.average(self.mae),
-              "Loss:", np.average(self.loss)
+              "Loss:", np.average(self.loss),
+              "Success rate:", self.env._success_rate,
+              "Exploration zone:", self.env._stepExploration
              ) #trail_len
 
         self.metrics['episode'].append(ep)
@@ -411,6 +414,15 @@ class DQNAgent:
         self.metrics['completion_step'].append((steps, self.env._notCompleted, trial_len))
         self.metrics['zone_steps'].append(self.zone_dict)
         self.metrics['zone_batch'].append(self.batch_dict)
+
+        # Set env variable (add parameters for values)
+        if abs(self.ep_reset - ep) >= 100:
+            self.env._success_rate = np.average(
+                [(i[0] < (i[2]-1)) and not i[1] for i in self.metrics['completion_step'][self.ep_reset:self.ep_reset + 20]])
+            self.ep_reset += 100
+
+            if self.env._success_rate is not None and self.env._success_rate > 0.7:
+                self.env._stepExploration += 1
 
         # Reset Statistics
         self.cs_action = 0
@@ -439,6 +451,11 @@ def main(args):
     else:
         EXP['use2D'] = False
 
+    try:
+        print("\nUsing incremental exploration!", EXP['stepExploration'])
+    except KeyError:
+        EXP['stepExploration'] = None
+
     #env = gym.make("MountainCar-v0")
     env = BaxterGymEnv(
             renders=args.render,
@@ -446,6 +463,7 @@ def main(args):
             useRandomPos=EXP['randomPos'],
             useTorusCollision=EXP['torusCollision'],
             use2D=EXP['use2D'],
+            stepExploration=EXP['stepExploration'],
             maxSteps=400,
             dv=0.1,
             _algorithm='DQN',

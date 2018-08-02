@@ -691,4 +691,26 @@ experiments = [
      'zone_queue': True,
      'zone_dist': [0.2, 0.4, 0.2, 0.2]
      },
+    #Started using incremental exploration (stepExploration)
+    {'name': 'exp36',
+     'learning_rate' : 0.0001,
+     'memory_size': 200000,
+     'gamma': 0.999,
+     'replay_mem_update_freq': 10000,
+     'replay_mem_init_size': 200000,
+     'loss_function': 'mse',
+     'optimizer': 'adam',
+     'reward': 'advanced_sparse_reward',
+     'randomPos': True,
+     'epsilon_start': 500,
+     'epsilon_decay': 0.9977,
+     'epsilon_guided': False,
+     'batch_size': 64,
+     'model': "3layer_LH",
+     'torusCollision': True,
+     'action_type': '2D',
+     'zone_queue': True,
+     'zone_dist': [0.2, 0.4, 0.2, 0.2],
+     'stepExploration': 0
+     },
 ]

@@ -62,12 +62,12 @@ class Baxter:
             zpos = 1.
         else:
             zpos = 1. + 0.05 * np.random.random()
-        torus_coord = [1.1, ypos, zpos]
+        self.torus_coord = [1.1, ypos, zpos]
         # ang = 3.1415925438 * random.random() --> TODO maybe randomize angle as dom randomization
         # orn = p.getQuaternionFromEuler([0, 0, ang])
 
         self.torusUid = p.loadURDF(os.path.join(
-            self.urdfRootPath, "torus/torus.urdf"), torus_coord,
+            self.urdfRootPath, "torus/torus.urdf"), self.torus_coord,
             orn, useFixedBase=True, globalScaling=self.torusScale)
 
         if self.useBlock:
@@ -90,13 +90,13 @@ class Baxter:
         # Create line for reward function
         orn = np.array(p.getEulerFromQuaternion(p.getBasePositionAndOrientation(self.torusUid)[1]))
         orn[2] = orn[2] + math.pi / 2.  # Rotate within plane perpendicular to torus
-        line_coord = torus_coord
+        line_coord = self.torus_coord
         # This needs to be made more general if torus orn changes so multiply by dir vector from reward function
         #dir = vdot(dir_vector, np.array([0, 0, -0.2]))
         #line_coord += dir
         line_coord[0] -= 0.2
         self.torusLineUid = p.loadURDF(os.path.join(self.urdfRootPath, "block_line.urdf"),
-                                       torus_coord, p.getQuaternionFromEuler(orn), useFixedBase=True)
+                                       self.torus_coord, p.getQuaternionFromEuler(orn), useFixedBase=True)
 
         self.motorNames = []
         self.motorIndices = [12, 13, 14, 15, 16, 18, 19]
@@ -120,15 +120,37 @@ class Baxter:
             zpos = 1.
         else:
             zpos = 1. + 0.05 * np.random.random()
-        torus_coord = np.array([1.1, ypos, zpos])
+        self.torus_coord = np.array([1.1, ypos, zpos])
         orn = p.getQuaternionFromEuler([0, 0, math.pi / 2.])
-        p.resetBasePositionAndOrientation(self.torusUid, torus_coord, orn)
+        p.resetBasePositionAndOrientation(self.torusUid, self.torus_coord, orn)
 
         # Reset torusLine
         orn = np.array(p.getEulerFromQuaternion(p.getBasePositionAndOrientation(self.torusUid)[1]))
         orn[2] = orn[2] + math.pi / 2.  # Rotate within plane perpendicular to torus
-        line_coord = torus_coord
-        p.resetBasePositionAndOrientation(self.torusLineUid, torus_coord, p.getQuaternionFromEuler(orn))
+        line_coord = self.torus_coord
+        p.resetBasePositionAndOrientation(self.torusLineUid, self.torus_coord, p.getQuaternionFromEuler(orn))
+
+    def setExplorationSpace(self, space):
+        if space == 0:
+            # Spawn in font of torus
+            self.llSpace = [0.8, self.torus_coord[1] - self.torusRad, self.torus_coord[2] - self.torusRad]
+            self.ulSpace = [1.1, self.torus_coord[1] + self.torusRad, self.torus_coord[2] + self.torusRad]
+        elif space == 1:
+            # First semi-circle
+            self.llSpace = [0.8333, -0.5, 0.64]
+            self.ulSpace = [1.1, -0.2, 1.22]
+        elif space == 2:
+            # Second semi-circle
+            self.llSpace = [0.5666, -0.65, 0.35]
+            self.ulSpace = [1.1, -0.05, 1.51]
+        else:
+            # Third semi-circle
+            self.llSpace = [0.3, -0.8, 0.06]  # x,y,z
+            self.ulSpace = [1.1, 0.1, 1.8]  # x,y,z
+
+        if self.use2d:
+            self.llSpace[2] = 1.
+            self.ulSpace[2] = 1.
 
     def getActionDimension(self):
         return len(self.motorIndices)
