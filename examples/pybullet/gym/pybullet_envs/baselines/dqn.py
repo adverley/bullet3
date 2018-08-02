@@ -418,7 +418,8 @@ class DQNAgent:
         # Set env variable (add parameters for values)
         if abs(self.ep_reset - ep) >= 100:
             self.env._success_rate = np.average(
-                [(i[0] < (i[2]-1)) and not i[1] for i in self.metrics['completion_step'][self.ep_reset:self.ep_reset + 20]])
+                [(i[0] < (i[2]-1)) and not i[1] for i in
+                 self.metrics['completion_step'][self.ep_reset:self.ep_reset + 100]])
             self.ep_reset += 100
 
             if self.env._stepExploration is not None and \
