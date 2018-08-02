@@ -421,7 +421,9 @@ class DQNAgent:
                 [(i[0] < (i[2]-1)) and not i[1] for i in self.metrics['completion_step'][self.ep_reset:self.ep_reset + 20]])
             self.ep_reset += 100
 
-            if self.env._success_rate is not None and self.env._success_rate > 0.7:
+            if self.env._stepExploration is not None and \
+                    self.env._success_rate is not None and \
+                    self.env._success_rate > 0.6:
                 self.env._stepExploration += 1
 
         # Reset Statistics
