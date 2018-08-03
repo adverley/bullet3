@@ -113,7 +113,8 @@ class DQNAgent:
             'loss': [],
             'completion_step': [],
             'zone_steps': [],
-            'zone_batch': []
+            'zone_batch': [],
+            'completion': []
         }
 
     def create_model(self):
@@ -416,6 +417,7 @@ class DQNAgent:
         self.metrics['completion_step'].append((steps, self.env._notCompleted, trial_len))
         self.metrics['zone_steps'].append(self.zone_dict)
         self.metrics['zone_batch'].append(self.batch_dict)
+        self.metrics['completion'].append(self.env.completion)
 
         # Set env variable (add parameters for values)
         if abs(self.ep_reset - ep) >= 100:
@@ -436,7 +438,7 @@ class DQNAgent:
                 ep == (self.EPISODES - 100) and \
                 self.EPISODES == 10000 and \
                 self.env._success_rate < 0.9:
-                self.EPISODES += 5000
+                self.EPISODES += 10000
 
         # Reset Statistics
         self.cs_action = 0

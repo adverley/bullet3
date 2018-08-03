@@ -86,6 +86,7 @@ class BaxterGymEnv(gym.Env):
         self.action = [0, 0, 0, 0, 0, 0, 0]
         self.old_pos = None
         self.clipped_counter = 0
+        self.completion = 0
         self._p = p
         if self._renders:
             cid = p.connect(p.SHARED_MEMORY)
@@ -193,6 +194,7 @@ class BaxterGymEnv(gym.Env):
         self._notCompleted = 0
         self._envStepCounter = 0
         self.clipped_counter = 0
+        self.completion = 0
         # p.setGravity(0, 0, -10)
 
         p.stepSimulation()
@@ -452,6 +454,7 @@ class BaxterGymEnv(gym.Env):
             #print("Average action:", self.createActionHist("action_hist.png"))
             print("Task completed!")
             self._terminated = 1
+            self.completion = 1
 
         if(self._terminated or self._envStepCounter >= self._maxSteps or self.clipped_counter > 2):
             self._observation = self.getExtendedObservation()
