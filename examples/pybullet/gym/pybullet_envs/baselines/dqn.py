@@ -67,6 +67,8 @@ class DQNAgent:
         self.use_ddqn = use_ddqn
         self.batch_size = exp['batch_size']
 
+        self.EPISODES = 10000
+
         self.replay_mem_init_size = exp['replay_mem_init_size']
         self.replay_mem_update_freq = exp['replay_mem_update_freq']
 
@@ -424,8 +426,17 @@ class DQNAgent:
 
             if self.env._stepExploration is not None and \
                     self.env._success_rate is not None and \
-                    self.env._success_rate > 0.6:
+                    self.env._success_rate > 0.9 and \
+                    self.epsilon == self.epsilon_min:
                 self.env._stepExploration += 1
+                self.epsilon = 1.0 # Reset exploration for each zone
+                self.EPISODES = min(self.EPISODES+10000, self.env._stepExploration*10000)
+
+            if self.env._stepExploration == 0 and \
+                ep == (self.EPISODES - 100) and \
+                self.EPISODES == 10000 and \
+                self.env._success_rate < 0.9:
+                self.EPISODES += 5000
 
         # Reset Statistics
         self.cs_action = 0
@@ -506,8 +517,9 @@ def main(args):
                 pass
 
         tot_step = 0
+        ep = 0
 
-        for ep in range(EPISODES):
+        while ep < dqn_agent.EPISODES:
             cur_state = env.reset().reshape(1, state_size)
             start_time = time.time()
             for step in range(trial_len):
@@ -532,7 +544,7 @@ def main(args):
             if ep > EXP['epsilon_start']:
                 dqn_agent.update_exploration()
 
-            dqn_agent.print_stats(ep, EPISODES, trial_len, time.time() - start_time, step)
+            dqn_agent.print_stats(ep, dqn_agent.EPISODES, trial_len, time.time() - start_time, step)
             if ep % 2000 == 0:
                 print("Saving data...")
                 dqn_agent.save_data(os.path.join(filepath_experiment, 'baxter_dqn_{}_data.json'.format(EXP_NAME)))
@@ -546,6 +558,9 @@ def main(args):
             if ep % 100 == 0:
                 weights_filename = os.path.join(filepath_experiment, "baxter_dqn_checkpoint_{}.h5f".format(EXP_NAME))
                 dqn_agent.save_model(weights_filename)
+
+            # Update while loop
+            ep += 1
 
         print("Saving weights and data...")
         weights_filename = os.path.join(filepath_experiment, "baxter_dqn_{}.h5f".format(EXP_NAME))

@@ -133,13 +133,21 @@ class Baxter:
     def setExplorationSpace(self, space):
         if space == 0:
             # Spawn in font of torus
-            self.llSpace = [0.8, self.torus_coord[1] - self.torusRad, self.torus_coord[2] - self.torusRad]
+            self.llSpace = [0.98, self.torus_coord[1] - self.torusRad, self.torus_coord[2] - self.torusRad]
             self.ulSpace = [1.1, self.torus_coord[1] + self.torusRad, self.torus_coord[2] + self.torusRad]
         elif space == 1:
+            # Extended spawn in front of torus
+            self.llSpace = [0.94, self.torus_coord[1] - self.torusRad, self.torus_coord[2] - self.torusRad]
+            self.ulSpace = [1.1, self.torus_coord[1] + self.torusRad, self.torus_coord[2] - self.torusRad]
+        elif space == 2:
+            # Extended spawn in front of torus
+            self.llSpace = [0.9, self.torus_coord[1] - self.torusRad, self.torus_coord[2] - self.torusRad]
+            self.ulSpace = [1.1, self.torus_coord[1] + self.torusRad, self.torus_coord[2] - self.torusRad]
+        elif space == 3:
             # First semi-circle
             self.llSpace = [0.8333, -0.5, 0.64]
             self.ulSpace = [1.1, -0.2, 1.22]
-        elif space == 2:
+        elif space == 4:
             # Second semi-circle
             self.llSpace = [0.5666, -0.65, 0.35]
             self.ulSpace = [1.1, -0.05, 1.51]
