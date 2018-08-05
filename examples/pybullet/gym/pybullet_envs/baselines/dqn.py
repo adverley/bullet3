@@ -430,16 +430,17 @@ class DQNAgent:
             self.ep_reset += 100
 
             if self.env._stepExploration is not None and \
+                    self.env._stepExploration <= 5 and \
                     self.env._success_rate is not None and \
                     self.env._success_rate > 0.9 and \
                     self.epsilon == self.epsilon_min:
                 self.env._stepExploration += 1
                 self.epsilon = 1.0 # Reset exploration for each zone
-                self.EPISODES = min(self.EPISODES+10000, self.env._stepExploration*10000)
+                self.EPISODES = self.EPISODES+10000
 
-            if self.env._stepExploration == 0 and \
+            if self.env._stepExploration is not None and \
+                self.env._stepExploration <= 5 and \
                 ep == (self.EPISODES - 100) and \
-                self.EPISODES == 10000 and \
                 self.env._success_rate < 0.9:
                 self.EPISODES += 10000
 
