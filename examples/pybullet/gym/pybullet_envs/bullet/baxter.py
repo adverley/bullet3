@@ -133,16 +133,16 @@ class Baxter:
     def setExplorationSpace(self, space):
         if space == 0:
             # Spawn in font of torus
-            self.llSpace = [0.97, self.torus_coord[1] - self.torusRad*2/3., self.torus_coord[2] - self.torusRad]
-            self.ulSpace = [1.0, self.torus_coord[1] + self.torusRad*2/3., self.torus_coord[2] + self.torusRad]
+            self.llSpace = [0.97, self.torus_coord[1] - self.torusRad*1/5., self.torus_coord[2] - self.torusRad*1/5.]
+            self.ulSpace = [1.0, self.torus_coord[1] + self.torusRad*1/5., self.torus_coord[2] + self.torusRad*1/5.]
         elif space == 1:
             # Extended spawn in front of torus
-            self.llSpace = [0.94, self.torus_coord[1] - self.torusRad*4/5., self.torus_coord[2] - self.torusRad]
-            self.ulSpace = [1.0, self.torus_coord[1] + self.torusRad*4/5., self.torus_coord[2] - self.torusRad]
+            self.llSpace = [0.94, self.torus_coord[1] - self.torusRad*1/3., self.torus_coord[2] - self.torusRad*1/3.]
+            self.ulSpace = [1.0, self.torus_coord[1] + self.torusRad*1/3., self.torus_coord[2] - self.torusRad*1/3.]
         elif space == 2:
             # Extended spawn in front of torus
-            self.llSpace = [0.9, self.torus_coord[1] - self.torusRad, self.torus_coord[2] - self.torusRad]
-            self.ulSpace = [1.0, self.torus_coord[1] + self.torusRad, self.torus_coord[2] - self.torusRad]
+            self.llSpace = [0.9, self.torus_coord[1] - self.torusRad*3/5., self.torus_coord[2] - self.torusRad*3/5.]
+            self.ulSpace = [1.0, self.torus_coord[1] + self.torusRad*3/5., self.torus_coord[2] - self.torusRad*3/5.]
         elif space == 3:
             # First semi-circle
             self.llSpace = [0.8333, -0.5, 0.64]
