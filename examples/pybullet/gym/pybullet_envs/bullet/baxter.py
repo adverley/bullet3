@@ -145,16 +145,26 @@ class Baxter:
             self.ulSpace = [1.0, self.torus_coord[1] + self.torusRad*3/5., self.torus_coord[2] - self.torusRad*3/5.]
         elif space == 3:
             # Extended spawn in front of torus
+            # Added
             self.llSpace = [0.87, self.torus_coord[1] - self.torusRad*4/5., self.torus_coord[2] - self.torusRad*4/5.]
             self.ulSpace = [1.0, self.torus_coord[1] + self.torusRad*4/5., self.torus_coord[2] - self.torusRad*4/5.]
         elif space == 4:
-            self.llSpace = [0.85, -0.35, 0.74]
-            self.ulSpace = [1.1, -0.2, 1.2]
+            # Added
+            self.llSpace = [0.86, -0.30, 0.77]
+            self.ulSpace = [1.0, -0.13, 1.19]
         elif space == 5:
+            # Added
+            self.llSpace = [0.85, -0.32, 0.72]
+            self.ulSpace = [1.0, -0.165, 1.2]
+        elif space == 6:
+            # Added
+            self.llSpace = [0.84, -0.35, 0.68]
+            self.ulSpace = [1.0, -0.2, 1.21]
+        elif space == 7:
             # First semi-circle
             self.llSpace = [0.8333, -0.5, 0.64]
             self.ulSpace = [1.1, -0.2, 1.22]
-        elif space == 6:
+        elif space == 8:
             # Second semi-circle
             self.llSpace = [0.5666, -0.65, 0.35]
             self.ulSpace = [1.1, -0.05, 1.51]
