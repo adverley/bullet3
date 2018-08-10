@@ -431,7 +431,7 @@ class BaxterGymEnv(gym.Env):
         torus_pos = np.array(
             p.getBasePositionAndOrientation(self._baxter.torusUid)[0])
 
-        if self._useBlock:
+        if False:
             block_pos = np.array(
                 p.getBasePositionAndOrientation(self._baxter.blockUid)[0])
         else:

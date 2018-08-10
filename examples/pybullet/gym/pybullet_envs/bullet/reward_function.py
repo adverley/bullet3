@@ -268,7 +268,7 @@ class RewardZoo():
             p.getBasePositionAndOrientation(env._baxter.torusUid)[0])
         env.logger.debug("Reward torus position: %s" % str(torus_pos))
 
-        if env._useBlock:
+        if False:
             block_pos = np.array(
                 p.getBasePositionAndOrientation(env._baxter.blockUid)[0])
         else:
