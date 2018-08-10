@@ -28,7 +28,7 @@ class Baxter:
         self.use2d = use2D
         self.torusScale = 1.
         self.torusRad = 0.23 * self.torusScale
-        self.margin = 0.06
+        self.margin = 0.#0.06
         self.maxIter = 40
         # First semi-circle
         #   self.llSpace = [0.8333, -0.5, 0.64]
