@@ -430,7 +430,7 @@ class DQNAgent:
             self.ep_reset += 100
 
             if self.env._stepExploration is not None and \
-                    self.env._stepExploration <= 10 and \
+                    self.env._stepExploration <= 11 and \
                     self.env._success_rate is not None and \
                     self.env._success_rate > 0.9 and \
                     self.epsilon == self.epsilon_min:
@@ -439,7 +439,7 @@ class DQNAgent:
                 self.EPISODES = self.EPISODES+10000
 
             if self.env._stepExploration is not None and \
-                self.env._stepExploration <= 10 and \
+                self.env._stepExploration <= 11 and \
                 ep == (self.EPISODES - 100) and \
                 self.env._success_rate < 0.9:
                 self.EPISODES += 10000

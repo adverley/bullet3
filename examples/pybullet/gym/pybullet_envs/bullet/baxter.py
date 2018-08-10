@@ -169,6 +169,9 @@ class Baxter:
             self.llSpace = [0.8333, -0.5, 0.64]
             self.ulSpace = [1.1, -0.2, 1.22]
         elif space == 9:
+            self.llSpace = [0.69, -0.55, 0.46]
+            self.ulSpace = [1.1, -0.1, 1.36]
+        elif space == 10:
             # Second semi-circle
             self.llSpace = [0.5666, -0.65, 0.35]
             self.ulSpace = [1.1, -0.05, 1.51]
